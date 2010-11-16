@@ -430,13 +430,6 @@ int main()
         //Erase screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-/*        
-        //Rotate camera
-        glRotatef(Clock.GetElapsedTime() * 2, 1, 0, 0);    //yaw
-        glRotatef(Clock.GetElapsedTime() * 30, 0, 1, 0);    //Rotate about Y axis
-        //glRotatef(Clock.GetElapsedTime() * 90, 0, 0, 1);    //roll
-*/
-
 /*
         // Draw some text on top of our OpenGL object
         sf::String Text("This is a rotating cube");
@@ -475,6 +468,9 @@ int main()
                 Running = false;
             }
         }
+        
+        //Sleep some to decrease CPU usage
+        sf::Sleep(0.01f);
     }
     return 0;
 }
