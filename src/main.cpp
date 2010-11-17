@@ -745,6 +745,7 @@ Planted item = 0xF
     setBlockInfo( 12, 18, 18, 18, 18, 18, 18, 0x01);  //Sand
     setBlockInfo( 13, 19, 19, 19, 19, 19, 19, 0x01);  //Gravel
     //...
+    setBlockInfo( 17, 20, 20, 21, 21, 20, 20, 0);  //Log
     setBlockInfo( 18, 52, 52, 52, 52, 52, 52, 0x04);  //Leaves
     setBlockInfo( 20, 49, 49, 49, 49, 49, 49, 0x04);  //Glass
     
@@ -754,11 +755,27 @@ Planted item = 0xF
 //Load the list of chunks to vector
 bool loadChunks(vector<mc__Chunk>& chunkList) {
     
-    const GLint X=0, Y=0, Z=0;
-    const uint8_t size_X=7, size_Y=1, size_Z=15;
+    const GLint X=-8, Y=-8, Z=0;
+    const uint8_t size_X=15, size_Y=15, size_Z=0;
     const uint32_t array_len = (size_X+1)*(size_Y+1)*(size_Z+1);
     
+    //Allocate array of blocks
     mc__Block *firstBlockArray = new mc__Block[array_len];
+
+/*
+typedef struct {
+    uint8_t blockID;
+    uint8_t metadata;
+    uint8_t lighting;
+} mc__Block;
+*/
+    //Assign blocks
+    size_t index;
+    for (index = 0; index < array_len; index++) {
+        firstBlockArray[index].blockID = index;
+    }
+    
+    //Create chunk
     mc__Chunk firstChunk = { X, Y, Z, size_X, size_Y, size_Z, array_len, firstBlockArray};
     chunkList.push_back(firstChunk);
     
