@@ -52,6 +52,7 @@
 #include <string>
 #include <iomanip>
 #include <fstream>
+#include <vector>
 
 using std::cout;
 using std::cerr;
@@ -63,6 +64,8 @@ using std::setw;
 using std::setfill;
 using std::ofstream;
 using std::ios;
+using std::vector;
+using std::map;
 
 //Compiler specific options
 #ifdef _MSC_VER
@@ -70,32 +73,6 @@ using std::ios;
 #else
     #include <stdint.h>
 #endif
-
-//Constants
-const string imageFilename("terrain.png");
-
-//Currently selected texture for drawing
-uint16_t texmap_selected = 7;
-
-GLint camera_X = 0;
-GLint camera_Y = 0;
-GLint camera_Z = -96;
-
-//Input state variables
-bool mouse_press[sf::Mouse::ButtonCount];
-int mouse_press_X[sf::Mouse::ButtonCount];
-int mouse_press_Y[sf::Mouse::ButtonCount];
-int mouse_X, mouse_Y;
-
-//DevIL texture map information
-ILuint il_texture_map;
-const size_t texmap_TILE_PIXELS = 16;    //pixels in tile (1D)
-const size_t texmap_TILES = 16;         //tiles in map (1D)
-const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
-ILuint ilImageList[texmap_TILE_MAX];
-
-//openGL image
-GLuint image;
 
 //
 // Types
@@ -125,6 +102,51 @@ typedef struct {
     uint16_t health;
 } mc__Item;
 
+//Chunk of blocks (brick shaped, uncompressed)
+typedef struct {
+    GLint X, Y, Z;
+    uint8_t size_X, size_Y, size_Z;
+    uint32_t array_length; //array len = size_X * size_Y * size_Z, precomputed
+    mc__Block *block_array; 
+} mc__Chunk;
+
+//
+// Global variables
+//
+
+//Constants
+const string texture_map_file("terrain.png");
+const size_t texmap_TILE_PIXELS = 16;    //pixels in tile (1D)
+const size_t texmap_TILES = 16;         //tiles in map (1D)
+const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
+
+//Currently selected texture for new block
+uint16_t texmap_selected = 7;
+
+//Initial camera position
+GLint camera_X = 0;
+GLint camera_Y = 0;
+GLint camera_Z = -96;
+
+//Input state variables
+bool mouse_press[sf::Mouse::ButtonCount];
+int mouse_press_X[sf::Mouse::ButtonCount];
+int mouse_press_Y[sf::Mouse::ButtonCount];
+int mouse_X, mouse_Y;
+
+//DevIL textures
+ILuint il_texture_map;
+ILuint ilTextureList[texmap_TILE_MAX];
+
+//openGL image
+GLuint image;
+
+//Map block ID to block information
+mc__BlockInfo blockInfo[256];
+
+//Blocks placed in the world
+vector<mc__Block> blocks;
+vector<mc__Chunk> chunks;
 
 //
 // Functions
@@ -183,7 +205,18 @@ void drawCubes(GLint x, GLint y, GLint z) {
     GLint D = (y << 4) + 8;
     GLint E = (z << 4) - 8;
     GLint F = (z << 4) + 8;
-    
+
+/*
+       ADF ---- BDF
+       /.       /|
+      / .      / |
+    ADE ---- BDE |
+     | ACF . .| BCF
+     | .      | /
+     |.       |/
+    ACE ---- BCE
+*/
+
     //A
     glTexCoord2i(0,0); glVertex3i( A, C, E);  //Lower left:  ACE
     glTexCoord2i(1,0); glVertex3i( A, C, F);  //Lower right: ACF
@@ -222,6 +255,8 @@ void drawCubes(GLint x, GLint y, GLint z) {
 }
 
 
+
+/*
 //Blit from texture map to current OpenGL texture
 ILuint blitTexture( ILuint texmap, ILuint SrcX, ILuint SrcY, ILuint Width, ILuint Height) {
     //Take out a specific block from the texture grid (Blit)
@@ -241,12 +276,13 @@ ILuint blitTexture( ILuint texmap, ILuint SrcX, ILuint SrcY, ILuint Width, ILuin
         ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
         ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
 
-//filters?
-    ilDeleteImages(1, &il_blocktex);  //free memory used by DevIL
+    //free memory used by DevIL
+    ilDeleteImages(1, &il_blocktex);  
     return il_blocktex;
 }
+*/
 
-//Choose texture from loaded image list
+//choose OpenGL drawing texture from image list
 ILuint chooseTexture( ILuint* ilImages, size_t index) {
   
     //ilBind image from list
@@ -276,6 +312,9 @@ bool splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y, ILuint* ilI
     
     //Create blank images in the array
     ilGenImages(tiles_x * tiles_y, ilImages);
+    
+    //Copy alpha channel when blitting, don't blend it.
+    ilDisable(IL_BLIT_BLEND);
 
     //For each tile...
     size_t x, y, index;
@@ -293,6 +332,108 @@ bool splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y, ILuint* ilI
     
     return true;
 }
+
+
+//Draw a block in openGL
+void drawBlock( const mc__Block& block, GLint x, GLint y, GLint z)
+{
+
+    GLint A = (x << 4) - 8;
+    GLint B = (x << 4) + 8;
+    GLint C = (y << 4) - 8;
+    GLint D = (y << 4) + 8;
+    GLint E = (z << 4) - 8;
+    GLint F = (z << 4) + 8;
+
+    //For each face, load the appropriate texture for the block ID, and draw square
+    
+    //A
+    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[0]);
+    glBegin(GL_QUADS);
+    glTexCoord2i(0,0); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2i(1,0); glVertex3i( A, C, F);  //Lower right: ACF
+    glTexCoord2i(1,1); glVertex3i( A, D, F);  //Top right:   ADF
+    glTexCoord2i(0,1); glVertex3i( A, D, E);  //Top left:    ADE
+    glEnd();
+
+    //B
+    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[1]);
+    glBegin(GL_QUADS);
+    glTexCoord2i(0,0); glVertex3i( B, C, F);  //Lower left:  BCF
+    glTexCoord2i(1,0); glVertex3i( B, C, E);  //Lower right: BCE
+    glTexCoord2i(1,1); glVertex3i( B, D, E);  //Top right:   BDE
+    glTexCoord2i(0,1); glVertex3i( B, D, F);  //Top left:    BDF
+    glEnd();
+    
+    //C
+    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[2]);
+    glBegin(GL_QUADS);
+    glTexCoord2i(0,0); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2i(1,0); glVertex3i( B, C, E);  //Lower right: BCE
+    glTexCoord2i(1,1); glVertex3i( B, C, F);  //Top right:   BCF
+    glTexCoord2i(0,1); glVertex3i( A, C, F);  //Top left:    ACF
+    glEnd();
+    
+    //D
+    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[3]);
+    glBegin(GL_QUADS);
+    glTexCoord2i(0,0); glVertex3i( A, D, F);  //Lower left:  ADF
+    glTexCoord2i(1,0); glVertex3i( B, D, F);  //Lower right: BDF
+    glTexCoord2i(1,1); glVertex3i( B, D, E);  //Top right:   BDE
+    glTexCoord2i(0,1); glVertex3i( A, D, E);  //Top left:    ADE
+    glEnd();
+    
+    //E
+    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[4]);
+    glBegin(GL_QUADS);
+    glTexCoord2i(0,0); glVertex3i( B, C, E);  //Lower left:  BCE
+    glTexCoord2i(1,0); glVertex3i( A, C, E);  //Lower right: ACE
+    glTexCoord2i(1,1); glVertex3i( A, D, E);  //Top right:   ADE
+    glTexCoord2i(0,1); glVertex3i( B, D, E);  //Top left:    BDE
+    glEnd();
+    
+    //F
+    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[5]);
+    glBegin(GL_QUADS);
+    glTexCoord2i(0,0); glVertex3i( A, C, F);  //Lower left:  ACF
+    glTexCoord2i(1,0); glVertex3i( B, C, F);  //Lower right: BCF
+    glTexCoord2i(1,1); glVertex3i( B, D, F);  //Top right:   BDF
+    glTexCoord2i(0,1); glVertex3i( A, D, F);  //Top left:    ADF
+    glEnd();
+}
+
+//Draw blocks in chunk list
+void drawChunks()
+{
+
+    //Iterator for moving through chunk list
+    vector<mc__Chunk>::const_iterator iter;
+    
+    //Offset in block array of chunk
+    size_t index;
+    
+    //Keep track of block coordinates for each chunk in block
+    GLint off_x, off_y, off_z, x, y, z;
+    
+    //For each chunk...
+    for (iter = chunks.begin(); iter != chunks.end(); iter++)
+    {
+        //Get the chunk
+        const mc__Chunk& myChunk = *iter;
+        index=0;
+        
+        //Draw every block in chunk.  x,y,z determined by position in array.
+        for (off_z=0, z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, z++) {
+        for (off_y=0, y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, y++) {
+        for (off_x=0, x=myChunk.X; off_x <= myChunk.size_X; off_x++, x++)
+        {
+            drawBlock( myChunk.block_array[index], x, y, z);
+            index++;
+        }}}
+    }
+}
+
+
 
 //Set up buffer, perspective, blah blah blah
 void startOpenGL() {
@@ -334,12 +475,10 @@ void startOpenGL() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  //GL_LINEAR?
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 
-
 }
 
-
-//Load the image file using DevIL
-ILuint loadImageFile() {
+//Load image file using DevIL
+ILuint loadImageFile( const string &imageFilename) {
   
     ILuint il_texture;
   
@@ -370,7 +509,7 @@ ILuint loadImageFile() {
     return il_texture;
 }
 
-//Respond to user input
+//Process user input
 bool handleSfEvent( const sf::Event& Event )
 {
     bool result=true;
@@ -390,19 +529,19 @@ bool handleSfEvent( const sf::Event& Event )
                     break;
                 case sf::Key::Up:           //Choose texture
                     texmap_selected = (texmap_selected - texmap_TILES) % texmap_TILE_MAX;
-                    chooseTexture(ilImageList, texmap_selected);
+                    chooseTexture(ilTextureList, texmap_selected);
                     break;
                 case sf::Key::Down:         //Choose texture
                     texmap_selected = (texmap_selected + texmap_TILES) % texmap_TILE_MAX;
-                    chooseTexture(ilImageList, texmap_selected);
+                    chooseTexture(ilTextureList, texmap_selected);
                     break;
                 case sf::Key::Left:         //Choose texture
                     texmap_selected = (texmap_selected - 1) % texmap_TILE_MAX;
-                    chooseTexture(ilImageList, texmap_selected);
+                    chooseTexture(ilTextureList, texmap_selected);
                     break;
                 case sf::Key::Right:        //Choose texture
                     texmap_selected = (texmap_selected + 1) % texmap_TILE_MAX;
-                    chooseTexture(ilImageList, texmap_selected);
+                    chooseTexture(ilTextureList, texmap_selected);
                     break;
                 default:
                     break;
@@ -510,7 +649,11 @@ bool drawWorld()
 */
 
     //Draw quads
-    glBegin(GL_QUADS);
+    //glBegin(GL_QUADS);
+
+    drawChunks();
+
+/*
     drawCubes(0, 0, 0);
     drawCubes(0, 1, 0);
     drawCubes(0, 2, 0);
@@ -525,9 +668,100 @@ bool drawWorld()
     drawCubes(2, 2, 0);
     drawCubes(2, 3, 0);
     drawCubes(2, 4, 0);
+*/
+    //glEnd();
 
-    glEnd();
+    return true;
+}
 
+//Copy block info to struct
+void setBlockInfo( uint8_t index,
+    uint8_t A, uint8_t B,
+    uint8_t C, uint8_t D,
+    uint8_t E, uint8_t F,
+    uint8_t properties)
+{
+/*
+    uint16_t textureID[6];  //texture of faces A, B, C, D, E, F
+    uint8_t  properties;
+        //Bytes 0-3: Glow  : 0-7=How much light it emits
+        //Byte  4  : Shape : 0=cube, 1=object
+        //Byte  5  : Glass : 0=opqaue, 1=see-through
+        //Bytes 6-7: State : 0=solid, 1=loose, 2=liquid, 3=gas
+*/
+    blockInfo[index].textureID[0] = A;
+    blockInfo[index].textureID[1] = B;
+    blockInfo[index].textureID[2] = C;
+    blockInfo[index].textureID[3] = D;
+    blockInfo[index].textureID[4] = E;
+    blockInfo[index].textureID[5] = F;
+    blockInfo[index].properties = properties;
+}
+
+//Map block ID to block type information
+bool loadBlockInfo()
+{
+    uint8_t blockID;
+
+    //Set all block information to defaults
+    for (blockID = 0; blockID != 0xFF; blockID++) {
+        setBlockInfo( blockID, blockID, blockID, blockID, blockID, blockID, blockID, 0);
+    }
+
+/*  Block geometry
+
+   ADF ---- BDF
+   /.       /|
+  / .      / |
+ADE ---- BDE |
+ | ACF . .| BCF
+ | .      | /
+ |.       |/
+ACE ---- BCE
+
+//Properties
+Bit 0-3: Glow  : 0-15=How much light it emits
+
+Bit 4  : Shape : 0=cube, 1=object
+Bit 5  : Glass : 0=opqaue, 1=see-through
+Bit 6-7: State : 0=solid, 1=loose, 2=liquid, 3=gas
+
+Planted item = 0xF
+*/
+
+    //Set specific blocks
+    setBlockInfo( 0, 11, 11, 11, 11, 11, 11, 0x07);//Air
+    setBlockInfo( 1, 1, 1, 1, 1, 1, 1, 0);  //Stone
+    setBlockInfo( 2, 3, 3, 2, 0, 3, 3, 0);  //Grass
+    setBlockInfo( 3, 2, 2, 2, 2, 2, 2, 0);  //Dirt
+    setBlockInfo( 4, 16, 16, 16, 16, 16, 16, 0);//Cobblestone
+    setBlockInfo( 5, 4, 4, 4, 4, 4, 4, 0);  //Wood
+    setBlockInfo( 6, 15, 15, 15, 15, 15, 15, 0x0F);  //Sapling
+    setBlockInfo( 7, 37, 37, 37, 37, 37, 37, 0);  //Bedrock
+    setBlockInfo( 8, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0x06);  //Water
+    setBlockInfo( 9, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0x06);  //Water
+    setBlockInfo( 10, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED, 0xC2);  //Lava
+    setBlockInfo( 11, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED, 0xC2);  //Lava
+    setBlockInfo( 12, 18, 18, 18, 18, 18, 18, 0x01);  //Sand
+    setBlockInfo( 13, 19, 19, 19, 19, 19, 19, 0x01);  //Gravel
+    //...
+    setBlockInfo( 18, 52, 52, 52, 52, 52, 52, 0x04);  //Leaves
+    setBlockInfo( 20, 49, 49, 49, 49, 49, 49, 0x04);  //Glass
+    
+    return true;
+}
+
+//Load the list of chunks to vector
+bool loadChunks(vector<mc__Chunk>& chunkList) {
+    
+    const GLint X=0, Y=0, Z=0;
+    const uint8_t size_X=7, size_Y=1, size_Z=15;
+    const uint32_t array_len = (size_X+1)*(size_Y+1)*(size_Z+1);
+    
+    mc__Block *firstBlockArray = new mc__Block[array_len];
+    mc__Chunk firstChunk = { X, Y, Z, size_X, size_Y, size_Z, array_len, firstBlockArray};
+    chunkList.push_back(firstChunk);
+    
     return true;
 }
 
@@ -538,6 +772,15 @@ int main()
         cerr << "devIL wrong DLL version" << endl;
         return 1;
     }
+
+
+    //Load game block information
+    loadBlockInfo();
+    
+    //Load game chunk(s)
+    loadChunks( chunks);
+    
+    //Extract chunks to individual blocks?
   
     //SFML variables
     sf::Clock Clock;
@@ -555,21 +798,18 @@ int main()
 
     //Start DevIL
     ilInit();
-    
-    //Copy alpha channel when blitting, don't blend it.
-    ilDisable(IL_BLIT_BLEND);
 
     //Load terrain image map
-    il_texture_map = loadImageFile();
+    il_texture_map = loadImageFile(texture_map_file);
     if (il_texture_map == 0) {
         return 0;   //error, exit program
     }
     
     //Split texture map into individual IL images
-    splitTextureMap(il_texture_map, texmap_TILES, texmap_TILES, ilImageList);
+    splitTextureMap(il_texture_map, texmap_TILES, texmap_TILES, ilTextureList);
     
     //Set OpenGL texture
-    chooseTexture(ilImageList, texmap_selected);
+    chooseTexture(ilTextureList, texmap_selected);
 
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
@@ -577,6 +817,12 @@ int main()
 
     //Move camera to starting position
     glTranslatef(camera_X, camera_Y, camera_Z);
+
+    //Initial drawing
+    App.SetActive();
+    drawWorld();
+    App.Display();
+    sf::Sleep(0.01f);
 
     //Cube location variables: TODO
 
