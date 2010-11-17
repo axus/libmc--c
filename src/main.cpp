@@ -1,4 +1,44 @@
-//SFML test app
+//Block viewer app
+// axus 2010
+
+/*
+    OpenGL has specific meaning for x, y, and z axes.
+    
+    z-axis is distance from the initial viewpoint.  As Z increases, the
+    location gets further from the initial viewpoint. (negative is behind)
+    
+    y-axis is "up" relative to the initial viewpoint.  As Y increases,
+    the location moves further "up".
+    
+    x-axis is "right" relative to the intial viewpoint.  As X increases,
+    the location moves further "right".
+*/
+
+/*
+    Block faces are always aligned with major axes. So, we can say that each
+    face is on an axis, and is "high" or "low" compared to the opposing face.
+     
+    On the x axis: A = left,    B = right
+    On the y axis: C = down,    D = up
+    On the z axis: E = closer,  F = farther
+    
+    We can refer to the corners of the cube by which faces they are part of.
+    Each of those 3 faces will describe a different axis.  For example:
+        ADF is  x=left, y=up, z=far.
+    
+    You can visualize the cube with those 8 points:
+           ADF ---- BDF
+           /.       /|
+          / .      / |
+        ADE ---- BDE |
+         | ACF . .| BCF
+         | .      | /
+         |.       |/
+        ACE ---- BCE
+
+    A face will have four points containing its letter.
+    
+*/
 
 //SFML
 #include <SFML/Graphics.hpp>
@@ -24,15 +64,18 @@ using std::setfill;
 using std::ofstream;
 using std::ios;
 
+//Compiler specific options
+#ifdef _MSC_VER
+    #include "ms_stdint.h"
+#else
+    #include <stdint.h>
+#endif
+
 //Constants
 const string imageFilename("terrain.png");
 
-//openGL image
-GLuint image;
-
-//Drawing state variables
-size_t texmap_X = 1;
-size_t texmap_Y = 3;
+//Currently selected texture for drawing
+uint16_t texmap_selected = 7;
 
 GLint camera_X = 0;
 GLint camera_Y = 0;
@@ -44,11 +87,50 @@ int mouse_press_X[sf::Mouse::ButtonCount];
 int mouse_press_Y[sf::Mouse::ButtonCount];
 int mouse_X, mouse_Y;
 
-//DevIL globals
+//DevIL texture map information
 ILuint il_texture_map;
-const size_t texmap_SIZE = 16;
+const size_t texmap_TILE_PIXELS = 16;    //pixels in tile (1D)
+const size_t texmap_TILES = 16;         //tiles in map (1D)
+const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
+ILuint ilImageList[texmap_TILE_MAX];
 
-//Dump DevIL texture info
+//openGL image
+GLuint image;
+
+//
+// Types
+//
+
+//Block in the game world
+typedef struct {
+    uint8_t blockID;
+    uint8_t metadata;
+    uint8_t lighting;
+} mc__Block;
+
+//Physical properties, to associate with blockID
+typedef struct {
+    uint16_t textureID[6];  //texture of faces A, B, C, D, E, F
+    uint8_t  properties;
+        //Bytes 0-3: Glow  : 0-7=How much light it emits
+        //Byte  4  : Shape : 0=cube, 1=object
+        //Byte  5  : Glass : 0=opqaue, 1=see-through
+        //Bytes 6-7: State : 0=solid, 1=loose, 2=liquid, 3=gas
+} mc__BlockInfo;
+
+//Item properties, on ground or in inventory
+typedef struct {
+    uint16_t itemID;
+    uint8_t  count;
+    uint16_t health;
+} mc__Item;
+
+
+//
+// Functions
+//
+
+//Dump DevIL texture info to "texture.log"
 void outputRGBAData() {
     
     //Return if wrong format
@@ -95,11 +177,6 @@ void outputRGBAData() {
 void drawCubes(GLint x, GLint y, GLint z) {
     
     //Draw cube
-    
-    //x axis: A = -8, B = +8
-    //y axis: C = -8, D = +8
-    //z axis: E = -8, F = +8
-    
     GLint A = (x << 4) - 8;
     GLint B = (x << 4) + 8;
     GLint C = (y << 4) - 8;
@@ -164,14 +241,58 @@ ILuint blitTexture( ILuint texmap, ILuint SrcX, ILuint SrcY, ILuint Width, ILuin
         ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
         ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
 
-    //Set zoom filters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  //GL_LINEAR?
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-
+//filters?
     ilDeleteImages(1, &il_blocktex);  //free memory used by DevIL
     return il_blocktex;
 }
 
+//Choose texture from loaded image list
+ILuint chooseTexture( ILuint* ilImages, size_t index) {
+  
+    //ilBind image from list
+    ILuint ilImage = ilImages[index];
+    ilBindImage( ilImage );
+    
+    //glBind texture
+    glBindTexture(GL_TEXTURE_2D, image);
+    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+        
+    return ilImage;
+}
+
+//Chop texture map into ilImages array (don't bind anything to GL)
+bool splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y, ILuint* ilImages)
+{
+    ILuint SrcX, SrcY, Width, Height;
+    Width = texmap_TILE_PIXELS;
+    Height = texmap_TILE_PIXELS;
+    
+    //User should have allocated ilImages array
+    if (ilImages == NULL) {
+        return false;
+    }
+    
+    //Create blank images in the array
+    ilGenImages(tiles_x * tiles_y, ilImages);
+
+    //For each tile...
+    size_t x, y, index;
+    for (y = 0, index=0; y < tiles_y; y++) {
+        for (x = 0; x < tiles_x; x++, index++) {
+            //Bind the image
+            ilBindImage(ilImages[index]);
+            ilTexImage( Width, Height, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, NULL);
+
+            //Blit the rectangle from texmap to il_blocktex
+            SrcX = x * Width; SrcY = y * Height;
+            ilBlit( texmap, 0, 0, 0, SrcX, SrcY, 0, Width, Height, 1);
+        }
+    }
+    
+    return true;
+}
 
 //Set up buffer, perspective, blah blah blah
 void startOpenGL() {
@@ -207,6 +328,13 @@ void startOpenGL() {
 
     //Create OpenGL texture
     glGenTextures(1, &image);
+    glBindTexture(GL_TEXTURE_2D, image);    //bind empty texture
+    
+    //Set texture zoom filters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  //GL_LINEAR?
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+
 }
 
 
@@ -239,8 +367,6 @@ ILuint loadImageFile() {
         return 0;
     }
 
-    //outputRGBAData();
-
     return il_texture;
 }
 
@@ -263,24 +389,20 @@ bool handleSfEvent( const sf::Event& Event )
                     result = false;
                     break;
                 case sf::Key::Up:           //Choose texture
-                    texmap_Y = (texmap_Y - 1) % 16;
-                    blitTexture( il_texture_map, texmap_X * texmap_SIZE,
-                        texmap_Y * texmap_SIZE, texmap_SIZE, texmap_SIZE);
+                    texmap_selected = (texmap_selected - texmap_TILES) % texmap_TILE_MAX;
+                    chooseTexture(ilImageList, texmap_selected);
                     break;
                 case sf::Key::Down:         //Choose texture
-                    texmap_Y = (texmap_Y + 1) % 16;
-                    blitTexture( il_texture_map, texmap_X * texmap_SIZE,
-                        texmap_Y * texmap_SIZE, texmap_SIZE, texmap_SIZE);
+                    texmap_selected = (texmap_selected + texmap_TILES) % texmap_TILE_MAX;
+                    chooseTexture(ilImageList, texmap_selected);
                     break;
                 case sf::Key::Left:         //Choose texture
-                    texmap_X = (texmap_X - 1) % 16;
-                    blitTexture( il_texture_map, texmap_X * texmap_SIZE,
-                        texmap_Y * texmap_SIZE, texmap_SIZE, texmap_SIZE);
+                    texmap_selected = (texmap_selected - 1) % texmap_TILE_MAX;
+                    chooseTexture(ilImageList, texmap_selected);
                     break;
                 case sf::Key::Right:        //Choose texture
-                    texmap_X = (texmap_X + 1) % 16;
-                    blitTexture( il_texture_map, texmap_X * texmap_SIZE,
-                        texmap_Y * texmap_SIZE, texmap_SIZE, texmap_SIZE);
+                    texmap_selected = (texmap_selected + 1) % texmap_TILE_MAX;
+                    chooseTexture(ilImageList, texmap_selected);
                     break;
                 default:
                     break;
@@ -289,9 +411,8 @@ bool handleSfEvent( const sf::Event& Event )
             
         //Mousewheel
         case sf::Event::MouseWheelMoved: {
-            //Change camera position
+            //Change camera position (in increments of 16)
             GLint move_Z = (Event.MouseWheel.Delta << 4);
-            //camera_Z += move_Z;
             glTranslatef(0, 0, move_Z);
             break;
         }
@@ -315,6 +436,7 @@ bool handleSfEvent( const sf::Event& Event )
                     break;
             }
             break;
+            
         //Mouse un-clicked
         case sf::Event::MouseButtonReleased:
         
@@ -373,6 +495,41 @@ bool handleSfEvent( const sf::Event& Event )
     return result;
 }
 
+//OpenGL rendering of cubes.  No update to camera.
+bool drawWorld()
+{
+    //Erase openGL world
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+/*
+    // Draw some text on top of our OpenGL object
+    sf::String Text("This is a rotating cube");
+    Text.SetPosition(250.f, 300.f);
+    Text.SetColor(sf::Color(128, 128, 128));
+    App.Draw(Text);
+*/
+
+    //Draw quads
+    glBegin(GL_QUADS);
+    drawCubes(0, 0, 0);
+    drawCubes(0, 1, 0);
+    drawCubes(0, 2, 0);
+    drawCubes(0, 3, 0);
+    drawCubes(0, 4, 0);
+    
+    drawCubes(1, 2, 0);
+    drawCubes(1, 4, 0);
+
+    drawCubes(2, 0, 0);
+    drawCubes(2, 1, 0);
+    drawCubes(2, 2, 0);
+    drawCubes(2, 3, 0);
+    drawCubes(2, 4, 0);
+
+    glEnd();
+
+    return true;
+}
 
 int main()
 {
@@ -408,10 +565,12 @@ int main()
         return 0;   //error, exit program
     }
     
-    //Pick a texture
-    blitTexture( il_texture_map, texmap_X * texmap_SIZE, texmap_Y * texmap_SIZE,
-        texmap_SIZE, texmap_SIZE);
-        
+    //Split texture map into individual IL images
+    splitTextureMap(il_texture_map, texmap_TILES, texmap_TILES, ilImageList);
+    
+    //Set OpenGL texture
+    chooseTexture(ilImageList, texmap_selected);
+
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
@@ -419,55 +578,35 @@ int main()
     //Move camera to starting position
     glTranslatef(camera_X, camera_Y, camera_Z);
 
+    //Cube location variables: TODO
+
     //Event loop    
     sf::Event Event;
     bool Running = true;
+    bool something_happened;
     while (Running && App.IsOpened()) {
       
         //Set window
         App.SetActive();
 
-        //Erase screen
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-/*
-        // Draw some text on top of our OpenGL object
-        sf::String Text("This is a rotating cube");
-        Text.SetPosition(250.f, 300.f);
-        Text.SetColor(sf::Color(128, 128, 128));
-        App.Draw(Text);
-*/
-
-        //Draw quads
-        glBegin(GL_QUADS);
-        drawCubes(0, 0, 0);
-        drawCubes(0, 1, 0);
-        drawCubes(0, 2, 0);
-        drawCubes(0, 3, 0);
-        drawCubes(0, 4, 0);
-        
-        drawCubes(1, 2, 0);
-        drawCubes(1, 4, 0);
-
-        drawCubes(2, 0, 0);
-        drawCubes(2, 1, 0);
-        drawCubes(2, 2, 0);
-        drawCubes(2, 3, 0);
-        drawCubes(2, 4, 0);
-
-        glEnd();
-
-        //Display the rendered frame
-        App.Display();
-
         //Check events  
+        something_happened=false;
         while (App.GetEvent(Event))
         {
             if (!handleSfEvent(Event)) {
                 //Stop running when Esc is pressed
                 Running = false;
             }
+            something_happened=true;
         }
+        
+        //Update the world if something happened
+        if (something_happened) {
+            drawWorld();
+        }
+
+        //Display the rendered frame
+        App.Display();
         
         //Sleep some to decrease CPU usage
         sf::Sleep(0.01f);
