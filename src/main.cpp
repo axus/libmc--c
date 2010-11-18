@@ -85,17 +85,30 @@ typedef struct {
     uint8_t lighting;
 } mc__Block;
 
-//Physical properties, to associate with blockID
+//Physical properties, to associate with blockID (internal to engine)
 typedef struct {
     uint16_t textureID[6];  //texture of faces A, B, C, D, E, F
     GLfloat tx[6];          //X coordinate (0.0 - 1.0) of block texture in texture map
     GLfloat ty[6];          //Y coordinate (0.0 - 1.0) of block texture in texture map
     uint8_t  properties;
-        //Bytes 0-3: Glow  : 0-7=How much light it emits
-        //Byte  4  : Shape : 0=cube, 1=object
-        //Byte  5  : Glass : 0=opqaue, 1=see-through
-        //Bytes 6-7: State : 0=solid, 1=loose, 2=liquid, 3=gas
+//0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
+//              4=wallsign, 5=ladder, 6=track, 7=1/4 block
+//              8=portal, 9=fence, A=door, B=floorplate
+//              C=1/3 block, D=wallsign, E=button, F=plant
+//0x08: Type  : 0=cube, 1=object
+//0x04: Vision: 0=opqaue, 1=see-through
+//0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
 } mc__BlockInfo;
+
+/* TODO: Smarter physical properties flags
+//0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
+//              4=wallsign, 5=ladder, 6=track, 7=1/4 block
+//              8=portal, 9=fence, A=door, B=floorplate
+//              C=snow?, D=wallsign, E=button, F=planted
+//0x08: Bright: 0=dark, 1=lightsource
+//0x04: Vision: 0=opqaue, 1=see-through
+//0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
+*/
 
 //Item properties, on ground or in inventory
 typedef struct {
@@ -343,6 +356,11 @@ bool splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y, ILuint* ilI
 void drawBlock( const mc__Block& block, GLint x, GLint y, GLint z)
 {
 
+    //Don't draw completely transparent blocks
+    if (block.blockID == 0) {
+        return;
+    }
+
     GLint A, B, C, D, E, F;     //Face coordinates (in pixels)
     GLint G, H;                 //non-cube quad offsets
 
@@ -379,8 +397,11 @@ void drawBlock( const mc__Block& block, GLint x, GLint y, GLint z)
     //
     // (tx_0, ty_0)      (tx_1, ty_0)
 
-  if (blockInfo[block.blockID].properties & 0x8) {
 
+  //Test if block ID is a cube
+  if (blockInfo[block.blockID].properties & 0x08) {
+
+    //Draw a "planted object"
     A = (x << 4) + 0;
     B = (x << 4) + texmap_TILE_PIXELS;
     C = (y << 4) + 0;
@@ -406,6 +427,9 @@ void drawBlock( const mc__Block& block, GLint x, GLint y, GLint z)
     glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left:    HDF
 
   } else {
+    
+    //TODO: test for stairs, half-block shapes
+    
     //Draw a solid cube
     A = (x << 4) + 0;
     B = (x << 4) + texmap_TILE_PIXELS;
@@ -845,6 +869,7 @@ Normal block = 0x00: cube, opaque, solid
 }
 
 //Load the list of chunks to vector
+// TODO: load from a file instead of making it up!
 bool loadChunks(vector<mc__Chunk>& chunkList) {
     
     const GLint X=-8, Y=-8, Z=0;
@@ -864,15 +889,6 @@ bool loadChunks(vector<mc__Chunk>& chunkList) {
             index++;
         }
     }
-    /*
-    for (index = 0; index < array_len; index++) {
-        if ((index >> 4)& 1) {
-            firstBlockArray[index].blockID = ((index ^ 0xF0)|(index&0x0F));
-        } else {
-            firstBlockArray[index].blockID = 0;
-        }
-    }
-    */
     
     //Create chunk
     mc__Chunk firstChunk = { X, Y, Z, size_X, size_Y, size_Z, array_len, firstBlockArray};
