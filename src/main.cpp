@@ -5,7 +5,7 @@
     OpenGL has specific meaning for x, y, and z axes.
     
     z-axis is distance from the initial viewpoint.  As Z increases, the
-    location gets further from the initial viewpoint. (negative is behind)
+    location gets closer to the initial viewpoint. (negative is farther)
     
     y-axis is "up" relative to the initial viewpoint.  As Y increases,
     the location moves further "up".
@@ -20,21 +20,21 @@
      
     On the x axis: A = left,    B = right
     On the y axis: C = down,    D = up
-    On the z axis: E = closer,  F = farther
+    On the z axis: E = farther, F = closer
     
     We can refer to the corners of the cube by which faces they are part of.
     Each of those 3 faces will describe a different axis.  For example:
-        ADF is  x=left, y=up, z=far.
+        ADF is  x=left, y=up, z=close.
     
     You can visualize the cube with those 8 points:
-           ADF ---- BDF
+           ADE ---- BDE
            /.       /|
           / .      / |
-        ADE ---- BDE |
-         | ACF . .| BCF
+        ADF ---- BDF |
+         | ACE . .| BCE
          | .      | /
          |.       |/
-        ACE ---- BCE
+        ACF ---- BCF
 
     A face will have four points containing its letter.
     
@@ -88,6 +88,8 @@ typedef struct {
 //Physical properties, to associate with blockID
 typedef struct {
     uint16_t textureID[6];  //texture of faces A, B, C, D, E, F
+    GLfloat tx[6];          //X coordinate (0.0 - 1.0) of block texture in texture map
+    GLfloat ty[6];          //Y coordinate (0.0 - 1.0) of block texture in texture map
     uint8_t  properties;
         //Bytes 0-3: Glow  : 0-7=How much light it emits
         //Byte  4  : Shape : 0=cube, 1=object
@@ -119,14 +121,15 @@ const string texture_map_file("terrain.png");
 const size_t texmap_TILE_PIXELS = 16;    //pixels in tile (1D)
 const size_t texmap_TILES = 16;         //tiles in map (1D)
 const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
+const float tmr = 1.0f/((float)texmap_TILES);   //Texture map ratio:  tile:texmap length
 
 //Currently selected texture for new block
 uint16_t texmap_selected = 7;
 
 //Initial camera position
 GLint camera_X = 0;
-GLint camera_Y = 0;
-GLint camera_Z = -96;
+GLint camera_Y = -256;
+GLint camera_Z = -160;
 
 //Input state variables
 bool mouse_press[sf::Mouse::ButtonCount];
@@ -194,6 +197,7 @@ void outputRGBAData() {
     outfile.close();
 }
 
+/*
 //draw cube faces for cube at block address (x,y,z)
 //Call this inside "glBegin(), glEnd()"
 void drawCubes(GLint x, GLint y, GLint z) {
@@ -206,16 +210,16 @@ void drawCubes(GLint x, GLint y, GLint z) {
     GLint E = (z << 4) - 8;
     GLint F = (z << 4) + 8;
 
-/*
-       ADF ---- BDF
-       /.       /|
-      / .      / |
-    ADE ---- BDE |
-     | ACF . .| BCF
-     | .      | /
-     |.       |/
-    ACE ---- BCE
-*/
+
+//       ADE ---- BDE
+//       /.       /|
+//      / .      / |
+//    ADF ---- BDF |
+//     | ACE . .| BCE
+//     | .      | /
+//     |.       |/
+//    ACF ---- BCF
+
 
     //A
     glTexCoord2i(0,0); glVertex3i( A, C, E);  //Lower left:  ACE
@@ -253,7 +257,7 @@ void drawCubes(GLint x, GLint y, GLint z) {
     glTexCoord2i(1,1); glVertex3i( B, D, F);  //Top right:   BDF
     glTexCoord2i(0,1); glVertex3i( A, D, F);  //Top left:    ADF
 }
-
+*/
 
 
 /*
@@ -282,6 +286,7 @@ ILuint blitTexture( ILuint texmap, ILuint SrcX, ILuint SrcY, ILuint Width, ILuin
 }
 */
 
+/*
 //choose OpenGL drawing texture from image list
 ILuint chooseTexture( ILuint* ilImages, size_t index) {
   
@@ -332,73 +337,144 @@ bool splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y, ILuint* ilI
     
     return true;
 }
+*/
 
-
-//Draw a block in openGL
+//Draw a mc__Block in openGL
 void drawBlock( const mc__Block& block, GLint x, GLint y, GLint z)
 {
 
-    GLint A = (x << 4) - 8;
-    GLint B = (x << 4) + 8;
-    GLint C = (y << 4) - 8;
-    GLint D = (y << 4) + 8;
-    GLint E = (z << 4) - 8;
-    GLint F = (z << 4) + 8;
+    GLint A, B, C, D, E, F;     //Face coordinates (in pixels)
+    GLint G, H;                 //non-cube quad offsets
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Start putting quads in memory
+    glBegin(GL_QUADS);
 
     //For each face, load the appropriate texture for the block ID, and draw square
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //   Texture map was loaded upside down...
+    // 0.0 -------------> 1.0 (X)
+    // |
+    // |
+    // |
+    // |
+    // |
+    // |
+    // v
+    // 1.0
+    // (Y)
     
+    //
+    // (tx_0, ty_1)      (tx_1, ty_1)
+    //
+    // (tx_0, ty_0)      (tx_1, ty_0)
+
+  if (blockInfo[block.blockID].properties & 0x8) {
+
+    A = (x << 4) + 0;
+    B = (x << 4) + texmap_TILE_PIXELS;
+    C = (y << 4) + 0;
+    D = (y << 4) + texmap_TILE_PIXELS;
+    E = (z << 4) + 0;
+    F = (z << 4) + texmap_TILE_PIXELS;
+    G = (z << 4) + (texmap_TILE_PIXELS/2);
+    H = (x << 4) + (texmap_TILE_PIXELS/2);
+
+    //Draw a planted object, using only 1 texture
+    tx_0 = blockInfo[block.blockID].tx[0];
+    tx_1 = blockInfo[block.blockID].tx[0] + tmr;
+    ty_0 = blockInfo[block.blockID].ty[0] + tmr;    //flip y
+    ty_1 = blockInfo[block.blockID].ty[0];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+
+    glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left:  HCF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left:    HDF
+
+  } else {
+    //Draw a solid cube
+    A = (x << 4) + 0;
+    B = (x << 4) + texmap_TILE_PIXELS;
+    C = (y << 4) + 0;
+    D = (y << 4) + texmap_TILE_PIXELS;
+    E = (z << 4) + 0;
+    F = (z << 4) + texmap_TILE_PIXELS;
+
     //A
-    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[0]);
-    glBegin(GL_QUADS);
-    glTexCoord2i(0,0); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2i(1,0); glVertex3i( A, C, F);  //Lower right: ACF
-    glTexCoord2i(1,1); glVertex3i( A, D, F);  //Top right:   ADF
-    glTexCoord2i(0,1); glVertex3i( A, D, E);  //Top left:    ADE
-    glEnd();
+    tx_0 = blockInfo[block.blockID].tx[0];
+    tx_1 = blockInfo[block.blockID].tx[0] + tmr;
+    ty_0 = blockInfo[block.blockID].ty[0] + tmr;    //flip y
+    ty_1 = blockInfo[block.blockID].ty[0];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
 
     //B
-    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[1]);
-    glBegin(GL_QUADS);
-    glTexCoord2i(0,0); glVertex3i( B, C, F);  //Lower left:  BCF
-    glTexCoord2i(1,0); glVertex3i( B, C, E);  //Lower right: BCE
-    glTexCoord2i(1,1); glVertex3i( B, D, E);  //Top right:   BDE
-    glTexCoord2i(0,1); glVertex3i( B, D, F);  //Top left:    BDF
-    glEnd();
+    tx_0 = blockInfo[block.blockID].tx[1];
+    tx_1 = blockInfo[block.blockID].tx[1] + tmr;
+    ty_0 = blockInfo[block.blockID].ty[1] + tmr;
+    ty_1 = blockInfo[block.blockID].ty[1];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
     
     //C
-    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[2]);
-    glBegin(GL_QUADS);
-    glTexCoord2i(0,0); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2i(1,0); glVertex3i( B, C, E);  //Lower right: BCE
-    glTexCoord2i(1,1); glVertex3i( B, C, F);  //Top right:   BCF
-    glTexCoord2i(0,1); glVertex3i( A, C, F);  //Top left:    ACF
-    glEnd();
+    tx_0 = blockInfo[block.blockID].tx[2];
+    tx_1 = blockInfo[block.blockID].tx[2] + tmr;
+    ty_0 = blockInfo[block.blockID].ty[2] + tmr;
+    ty_1 = blockInfo[block.blockID].ty[2];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
     
     //D
-    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[3]);
-    glBegin(GL_QUADS);
-    glTexCoord2i(0,0); glVertex3i( A, D, F);  //Lower left:  ADF
-    glTexCoord2i(1,0); glVertex3i( B, D, F);  //Lower right: BDF
-    glTexCoord2i(1,1); glVertex3i( B, D, E);  //Top right:   BDE
-    glTexCoord2i(0,1); glVertex3i( A, D, E);  //Top left:    ADE
-    glEnd();
+    tx_0 = blockInfo[block.blockID].tx[3];
+    tx_1 = blockInfo[block.blockID].tx[3] + tmr;
+    ty_0 = blockInfo[block.blockID].ty[3] + tmr;
+    ty_1 = blockInfo[block.blockID].ty[3];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
     
     //E
-    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[4]);
-    glBegin(GL_QUADS);
-    glTexCoord2i(0,0); glVertex3i( B, C, E);  //Lower left:  BCE
-    glTexCoord2i(1,0); glVertex3i( A, C, E);  //Lower right: ACE
-    glTexCoord2i(1,1); glVertex3i( A, D, E);  //Top right:   ADE
-    glTexCoord2i(0,1); glVertex3i( B, D, E);  //Top left:    BDE
-    glEnd();
+    tx_0 = blockInfo[block.blockID].tx[4];
+    tx_1 = blockInfo[block.blockID].tx[4] + tmr;
+    ty_0 = blockInfo[block.blockID].ty[4] + tmr;
+    ty_1 = blockInfo[block.blockID].ty[4];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
     
     //F
-    chooseTexture(ilTextureList, blockInfo[block.blockID].textureID[5]);
-    glBegin(GL_QUADS);
-    glTexCoord2i(0,0); glVertex3i( A, C, F);  //Lower left:  ACF
-    glTexCoord2i(1,0); glVertex3i( B, C, F);  //Lower right: BCF
-    glTexCoord2i(1,1); glVertex3i( B, D, F);  //Top right:   BDF
-    glTexCoord2i(0,1); glVertex3i( A, D, F);  //Top left:    ADF
+    tx_0 = blockInfo[block.blockID].tx[5];
+    tx_1 = blockInfo[block.blockID].tx[5] + tmr;
+    ty_0 = blockInfo[block.blockID].ty[5] + tmr;
+    ty_1 = blockInfo[block.blockID].ty[5];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+  }
+    //Draw
     glEnd();
 }
 
@@ -528,29 +604,29 @@ bool handleSfEvent( const sf::Event& Event )
                     result = false;
                     break;
                 case sf::Key::Up:           //Choose texture
-                    texmap_selected = (texmap_selected - texmap_TILES) % texmap_TILE_MAX;
-                    chooseTexture(ilTextureList, texmap_selected);
+                    //texmap_selected = (texmap_selected - texmap_TILES) % texmap_TILE_MAX;
+                    //chooseTexture(ilTextureList, texmap_selected);
                     break;
                 case sf::Key::Down:         //Choose texture
-                    texmap_selected = (texmap_selected + texmap_TILES) % texmap_TILE_MAX;
-                    chooseTexture(ilTextureList, texmap_selected);
+                    //texmap_selected = (texmap_selected + texmap_TILES) % texmap_TILE_MAX;
+                    //chooseTexture(ilTextureList, texmap_selected);
                     break;
                 case sf::Key::Left:         //Choose texture
-                    texmap_selected = (texmap_selected - 1) % texmap_TILE_MAX;
-                    chooseTexture(ilTextureList, texmap_selected);
+                    //texmap_selected = (texmap_selected - 1) % texmap_TILE_MAX;
+                    //chooseTexture(ilTextureList, texmap_selected);
                     break;
                 case sf::Key::Right:        //Choose texture
-                    texmap_selected = (texmap_selected + 1) % texmap_TILE_MAX;
-                    chooseTexture(ilTextureList, texmap_selected);
+                    //texmap_selected = (texmap_selected + 1) % texmap_TILE_MAX;
+                    //chooseTexture(ilTextureList, texmap_selected);
                     break;
                 default:
                     break;
             }
             break;
             
-        //Mousewheel
+        //Mousewheel scroll
         case sf::Event::MouseWheelMoved: {
-            //Change camera position (in increments of 16)
+            //Change camera position (in increments of 16).  Down zooms out.
             GLint move_Z = (Event.MouseWheel.Delta << 4);
             glTranslatef(0, 0, move_Z);
             break;
@@ -640,36 +716,13 @@ bool drawWorld()
     //Erase openGL world
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-/*
-    // Draw some text on top of our OpenGL object
-    sf::String Text("This is a rotating cube");
-    Text.SetPosition(250.f, 300.f);
-    Text.SetColor(sf::Color(128, 128, 128));
-    App.Draw(Text);
-*/
-
-    //Draw quads
-    //glBegin(GL_QUADS);
-
+    //Draw the loaded chunks
     drawChunks();
-
-/*
-    drawCubes(0, 0, 0);
-    drawCubes(0, 1, 0);
-    drawCubes(0, 2, 0);
-    drawCubes(0, 3, 0);
-    drawCubes(0, 4, 0);
     
-    drawCubes(1, 2, 0);
-    drawCubes(1, 4, 0);
-
-    drawCubes(2, 0, 0);
-    drawCubes(2, 1, 0);
-    drawCubes(2, 2, 0);
-    drawCubes(2, 3, 0);
-    drawCubes(2, 4, 0);
-*/
-    //glEnd();
+    mc__Block block1 = {2, 0, 0};   //Grass
+    drawBlock( block1, 0, 0, 2);
+    mc__Block block2 = {19, 0, 0};    //Leaves
+    drawBlock( block2, 2, 2, 2);
 
     return true;
 }
@@ -681,20 +734,39 @@ void setBlockInfo( uint8_t index,
     uint8_t E, uint8_t F,
     uint8_t properties)
 {
-/*
-    uint16_t textureID[6];  //texture of faces A, B, C, D, E, F
-    uint8_t  properties;
+    //A - F contain texture ID of the corresponding face (textureID = 0 - 255)
+
+    //For each face,  precompute OpenGL texture offsets in texture map
+    // (Remember that texture map was loaded upside down!)
+    blockInfo[index].textureID[0] = A;
+    blockInfo[index].tx[0] = float(A & (texmap_TILES-1))/((float)texmap_TILES);
+    blockInfo[index].ty[0] = float(A/texmap_TILES)/((float)texmap_TILES);
+
+    blockInfo[index].textureID[1] = B;
+    blockInfo[index].tx[1] = float(B & (texmap_TILES-1))/((float)texmap_TILES);
+    blockInfo[index].ty[1] = float(B/texmap_TILES)/((float)texmap_TILES);
+
+    blockInfo[index].textureID[2] = C;
+    blockInfo[index].tx[2] = float(C & (texmap_TILES-1))/((float)texmap_TILES);
+    blockInfo[index].ty[2] = float(C/texmap_TILES)/((float)texmap_TILES);
+
+    blockInfo[index].textureID[3] = D;
+    blockInfo[index].tx[3] = float(D & (texmap_TILES-1))/((float)texmap_TILES);
+    blockInfo[index].ty[3] = float(D/texmap_TILES)/((float)texmap_TILES);
+
+    blockInfo[index].textureID[4] = E;
+    blockInfo[index].tx[4] = float(E & (texmap_TILES-1))/((float)texmap_TILES);
+    blockInfo[index].ty[4] = float(E/texmap_TILES)/((float)texmap_TILES);
+    
+    blockInfo[index].textureID[5] = F;
+    blockInfo[index].tx[5] = float(F & (texmap_TILES-1))/((float)texmap_TILES);
+    blockInfo[index].ty[5] = float(F/texmap_TILES)/((float)texmap_TILES);
+    
+    //Assign properties
         //Bytes 0-3: Glow  : 0-7=How much light it emits
         //Byte  4  : Shape : 0=cube, 1=object
         //Byte  5  : Glass : 0=opqaue, 1=see-through
         //Bytes 6-7: State : 0=solid, 1=loose, 2=liquid, 3=gas
-*/
-    blockInfo[index].textureID[0] = A;
-    blockInfo[index].textureID[1] = B;
-    blockInfo[index].textureID[2] = C;
-    blockInfo[index].textureID[3] = D;
-    blockInfo[index].textureID[4] = E;
-    blockInfo[index].textureID[5] = F;
     blockInfo[index].properties = properties;
 }
 
@@ -710,44 +782,64 @@ bool loadBlockInfo()
 
 /*  Block geometry
 
-   ADF ---- BDF
+   ADE ---- BDE
    /.       /|
   / .      / |
-ADE ---- BDE |
- | ACF . .| BCF
+ADF ---- BDF |
+ | ACE . .| BCE
  | .      | /
  |.       |/
-ACE ---- BCE
+ACF ---- BCF
 
 //Properties
-Bit 0-3: Glow  : 0-15=How much light it emits
+0xF0: Shape : 0=cube, 1=stairs, 2=half-cube, 3=fence, 4=door, 5=wall, 6=floor
+0x08: Type  : 0=cube, 1=object
+0x04: Vision: 0=opqaue, 1=see-through
+0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
 
-Bit 4  : Shape : 0=cube, 1=object
-Bit 5  : Glass : 0=opqaue, 1=see-through
-Bit 6-7: State : 0=solid, 1=loose, 2=liquid, 3=gas
-
-Planted item = 0xF
+Planted item = 0x0F: object, see-through, move-through
+Normal block = 0x00: cube, opaque, solid
 */
 
     //Set specific blocks
-    setBlockInfo( 0, 11, 11, 11, 11, 11, 11, 0x07);//Air
-    setBlockInfo( 1, 1, 1, 1, 1, 1, 1, 0);  //Stone
-    setBlockInfo( 2, 3, 3, 2, 0, 3, 3, 0);  //Grass
-    setBlockInfo( 3, 2, 2, 2, 2, 2, 2, 0);  //Dirt
-    setBlockInfo( 4, 16, 16, 16, 16, 16, 16, 0);//Cobblestone
-    setBlockInfo( 5, 4, 4, 4, 4, 4, 4, 0);  //Wood
-    setBlockInfo( 6, 15, 15, 15, 15, 15, 15, 0x0F);  //Sapling
-    setBlockInfo( 7, 37, 37, 37, 37, 37, 37, 0);  //Bedrock
-    setBlockInfo( 8, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0x06);  //Water
-    setBlockInfo( 9, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0x06);  //Water
-    setBlockInfo( 10, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED, 0xC2);  //Lava
-    setBlockInfo( 11, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED, 0xC2);  //Lava
-    setBlockInfo( 12, 18, 18, 18, 18, 18, 18, 0x01);  //Sand
-    setBlockInfo( 13, 19, 19, 19, 19, 19, 19, 0x01);  //Gravel
-    //...
-    setBlockInfo( 17, 20, 20, 21, 21, 20, 20, 0);  //Log
-    setBlockInfo( 18, 52, 52, 52, 52, 52, 52, 0x04);  //Leaves
-    setBlockInfo( 20, 49, 49, 49, 49, 49, 49, 0x04);  //Glass
+    setBlockInfo( 0, 11, 11, 11, 11, 11, 11, 0x07);         //Air
+    setBlockInfo( 1, 1, 1, 1, 1, 1, 1, 0);                  //Stone
+    setBlockInfo( 2, 3, 3, 2, 0, 3, 3, 0);                  //Grass
+    setBlockInfo( 3, 2, 2, 2, 2, 2, 2, 0);                  //Dirt
+    setBlockInfo( 4, 16, 16, 16, 16, 16, 16, 0);            //Cobblestone
+    setBlockInfo( 5, 4, 4, 4, 4, 4, 4, 0);                  //Wood
+    setBlockInfo( 6, 15, 15, 15, 15, 15, 15, 0x0F);         //Sapling
+    setBlockInfo( 7, 17, 17, 17, 17, 17, 17, 0);            //Bedrock
+    setBlockInfo( 8, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0x06);     //Water
+    setBlockInfo( 9, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0x06);     //Water
+    setBlockInfo( 10, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED, 0x02);    //Lava
+    setBlockInfo( 11, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED, 0x02);    //Lava
+    setBlockInfo( 12, 18, 18, 18, 18, 18, 18, 0x01);        //Sand
+    setBlockInfo( 13, 19, 19, 19, 19, 19, 19, 0x01);        //Gravel
+    setBlockInfo( 14, 32, 32, 32, 32, 32, 32, 0);           //GoldOre
+    setBlockInfo( 15, 33, 33, 33, 33, 33, 33, 0);           //IronOre
+    setBlockInfo( 16, 34, 34, 34, 34, 34, 34, 0);           //CoalOre
+    setBlockInfo( 17, 20, 20, 21, 21, 20, 20, 0);           //Log
+    setBlockInfo( 18, 48, 48, 48, 48, 48, 48, 0);           //Sponge
+    setBlockInfo( 19, 52, 52, 52, 53, 52, 52, 0x04);        //Leaves
+    setBlockInfo( 20, 49, 49, 49, 49, 49, 49, 0x04);        //Glass
+    for (blockID = 21; blockID < 37; blockID++) {
+        setBlockInfo( blockID, 64, 64, 64, 64, 64, 64, 0);  //Cloth (color?)
+    }
+    setBlockInfo( 37, 13, 0, 0, 0, 0, 0, 0x0F);         //Flower
+    setBlockInfo( 38, 12, 0, 0, 0, 0, 0, 0x0F);         //Rose
+    setBlockInfo( 39, 29, 0, 0, 0, 0, 0, 0x0F);         //BrownShroom
+    setBlockInfo( 40, 28, 0, 0, 0, 0, 0, 0x0F);         //RedShroom
+    setBlockInfo( 41, 39, 39, 55, 23, 39, 39, 0);       //GoldBlock
+    setBlockInfo( 42, 38, 38, 54, 22, 38, 38, 0);       //IronBlock
+    setBlockInfo( 43, 5, 5, 6, 6, 5, 5, 0);       //DoubleStep
+    setBlockInfo( 44, 5, 5, 6, 6, 5, 5, 0x20);       //Step
+    setBlockInfo( 45, 7, 7, 7, 7, 7, 7, 0);       //Brick
+    setBlockInfo( 46, 8, 8, 10, 9, 8, 8, 0);       //TNT
+    setBlockInfo( 47, 35, 35, 4, 4, 35, 35, 0);       //Bookshelf
+    setBlockInfo( 48, 36, 36, 16, 36, 36, 36, 0);      //Mossy
+    setBlockInfo( 49, 37, 37, 37, 37, 37, 37, 0);            //Obsidian
+    setBlockInfo( 50, 80, 80, 0, 0, 0, 0, 0x0F);   //Torch
     
     return true;
 }
@@ -756,24 +848,31 @@ Planted item = 0xF
 bool loadChunks(vector<mc__Chunk>& chunkList) {
     
     const GLint X=-8, Y=-8, Z=0;
-    const uint8_t size_X=15, size_Y=15, size_Z=0;
+    const uint8_t size_X=15, size_Y=31, size_Z=0;
     const uint32_t array_len = (size_X+1)*(size_Y+1)*(size_Z+1);
     
     //Allocate array of blocks
     mc__Block *firstBlockArray = new mc__Block[array_len];
 
-/*
-typedef struct {
-    uint8_t blockID;
-    uint8_t metadata;
-    uint8_t lighting;
-} mc__Block;
-*/
+
     //Assign blocks
-    size_t index;
-    for (index = 0; index < array_len; index++) {
-        firstBlockArray[index].blockID = index;
+    size_t index, x, y;
+    index=0;
+    for (y=0; y <= size_Y; y++) {
+        for (x=0; x <= size_X; x++) {
+            firstBlockArray[index].blockID = ( (y&1) ? 0 : ((((y>>1)<<4)^0xF0)| (x&0x0F)) );
+            index++;
+        }
     }
+    /*
+    for (index = 0; index < array_len; index++) {
+        if ((index >> 4)& 1) {
+            firstBlockArray[index].blockID = ((index ^ 0xF0)|(index&0x0F));
+        } else {
+            firstBlockArray[index].blockID = 0;
+        }
+    }
+    */
     
     //Create chunk
     mc__Chunk firstChunk = { X, Y, Z, size_X, size_Y, size_Z, array_len, firstBlockArray};
@@ -816,17 +915,21 @@ int main()
     //Start DevIL
     ilInit();
 
-    //Load terrain image map
+    //Load terrain texture map, bind it to current DevIL image
     il_texture_map = loadImageFile(texture_map_file);
     if (il_texture_map == 0) {
         return 0;   //error, exit program
     }
+    //The PNG file is "flipped" in memory relative to OpenGL coordinates.
     
-    //Split texture map into individual IL images
-    splitTextureMap(il_texture_map, texmap_TILES, texmap_TILES, ilTextureList);
+    //glBind texture before assigning it
+    glBindTexture(GL_TEXTURE_2D, image);
     
-    //Set OpenGL texture
-    chooseTexture(ilTextureList, texmap_selected);
+    //Copy current DevIL image to OpenGL image.  
+    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+
 
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
