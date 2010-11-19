@@ -1,0 +1,30 @@
+libmc--c depends on several libraries.  I've only built libmc--c using MinGW.
+
+DevIL 1.7.8
+    http://openil.sourceforge.net/
+SFML 1.6
+    http://www.sfml-dev.org/
+GCC 4.5.0 library and standard C++ library
+    http://gcc.gnu.org/install/build.html
+
+See https://sites.google.com/site/axusdev/builds/buildgcc/ for instructions on
+obtaining MinGW source and building libgcc and libstdc++ (as required by LGPL!)
+    
+A program using libmc--c requires these shared libraries:
+ILU.dll
+ILUT.dll
+SFML-system.dll
+SFML-graphics.dll
+SFML-window.dll
+libgcc_s_dw2-1.dll
+libstdc++-6.dll
+
+If rebuilding libmc--c, these headers are required on the INCLUDE path:
+<SFML/Graphics.hpp>
+<IL/il.h>
+<IL/ilu.h>
+<iostream>
+<string>
+<iomanip>
+<fstream>
+<vector>

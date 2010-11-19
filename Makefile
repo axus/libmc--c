@@ -1,13 +1,13 @@
-# Test SFML program
+# Minecraft client library functions
 
-BIN         = sfmltest.exe
+BIN         = libmc--c.exe
 SRCFILES    = main.cpp
 LIBS        = -L$(HOME)/lib -lopengl32 -lglu32 -lDevIL -lILU -lsfml-system -lsfml-window -lsfml-graphics
 INCLUDES    = -I$(HOME)/include
 ###DEBUG       = on
 MOREFLAGS   =
 
-#Build rules for a binary in MinGW
+#Generic MinGW build rules for a binary
 include bin.MinGW.mak
 
 #How to install
