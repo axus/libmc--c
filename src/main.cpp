@@ -233,8 +233,6 @@ int main()
     App.Display();
     sf::Sleep(0.01f);
 
-    //Cube location variables: TODO
-
     //Event loop    
     sf::Event Event;
     bool Running = true;
