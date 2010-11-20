@@ -40,11 +40,16 @@ World::~World()
     
 }
 
-//Load a compressed chunk
-bool World::addCompressedChunk( )
+bool World::addCompressedChunk(int32_t X, int8_t Y, int32_t Z)
 {
     return true;
 }
+
+bool World::addChunk(int32_t X, int8_t Y, int32_t Z)
+{
+    return true;
+}
+
 
 //Generate chunk representing block ID 0 - 96
 bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
