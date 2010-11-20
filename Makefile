@@ -1,7 +1,7 @@
 # Minecraft client library functions
 
 BIN         = libmc--c.exe
-SRCFILES    = main.cpp
+SRCFILES    = Chunk.cpp World.cpp Viewer.cpp main.cpp
 LIBS        = -L$(HOME)/lib -lopengl32 -lglu32 -lDevIL -lILU -lsfml-system -lsfml-window -lsfml-graphics
 INCLUDES    = -I$(HOME)/include
 ###DEBUG       = on
