@@ -20,13 +20,15 @@
 */
 
 #include <cstdlib>  //NULL
+#include <cstring>   //memcpy
 
 #include "Chunk.h"
 using mc__::Chunk;
 
 //Allocate space for chunk
 Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z):
-            size_X(size_x), size_Y(size_y), size_Z(size_z), block_array(NULL)
+            size_X(size_x), size_Y(size_y), size_Z(size_z), block_array(NULL),
+            compressed_length(0), compressed(NULL)
 {
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
     block_array = new Block[array_length];
@@ -36,7 +38,8 @@ Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z):
 Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z,
                 int32_t x, int8_t y, int32_t z):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
-            X(x), Y(y), Z(z), block_array(NULL)
+            X(x), Y(y), Z(z), block_array(NULL),
+            compressed_length(0), compressed(NULL)
 {
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
     block_array = new Block[array_length];
@@ -57,4 +60,17 @@ void Chunk::setCoord(int32_t x, int8_t y, int32_t z)
     X = x;
     Y = y;
     Z = z;
+}
+
+//Copy compressed data to chunk
+void Chunk::setCompressed(size_t size, uint8_t *data)
+{
+    //Erase old data if needed
+    if (compressed != NULL) {
+        delete compressed;
+    }
+  
+    compressed_length = size;
+    memcpy(compressed, data, size);
+
 }

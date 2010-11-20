@@ -57,6 +57,9 @@ namespace mc__ {
             //Set world block coordinates
             void setCoord(int32_t x, int8_t y, int32_t z);
             
+            //Copy compressed data to chunk
+            void setCompressed( size_t length, uint8_t *data);
+            
             //Dimension size - 1
             uint8_t size_X, size_Y, size_Z;
             
@@ -70,17 +73,11 @@ namespace mc__ {
         
             //Point to storage for blocks in chunk
             Block *block_array;
+            
+            //Also, keep compressed version
+            size_t compressed_length;
+            uint8_t *compressed;
     };
-/*
-    //Chunk of blocks (brick shaped, uncompressed)
-    typedef struct {
-        int32_t X, Y, Z;
-        uint8_t size_X, size_Y, size_Z;
-        uint32_t array_length; //array len = size_X * size_Y * size_Z, precomputed
-        Block *block_array; 
-    } Chunk;
-*/
-
 }
 
 #endif

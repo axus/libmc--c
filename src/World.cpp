@@ -40,13 +40,30 @@ World::~World()
     
 }
 
-bool World::addCompressedChunk(int32_t X, int8_t Y, int32_t Z)
+//Copy uncompressed chunk data
+bool World::addChunk(uint8_t* data,
+    int32_t X, int8_t Y, int32_t Z,
+    uint8_t size_X, uint8_t size_Y, uint8_t size_Z)
 {
+    //Allocate chunk
+    mc__::Chunk *newChunk = new mc__::Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
+    addChunk(newChunk);
+
     return true;
 }
 
-bool World::addChunk(int32_t X, int8_t Y, int32_t Z)
+//Will be deleted when World ends
+bool World::addChunk( Chunk *chunk)
 {
+    if (chunk == NULL) return false;
+  
+    //Map (X | Z | Y) -> Chunk*
+    uint64_t key =
+        (((uint64_t)chunk->X<<40)&0xFFFFFFFF00000000)|
+        (((uint64_t)chunk->Z<<8)&0xFFFFFFFF00)|
+        (chunk->Y&0xFF);
+    coordChunkMap[key] = chunk;
+    
     return true;
 }
 
@@ -57,16 +74,16 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     const uint8_t size_X=16, size_Y=13, size_Z=1;
 
     //Allocate chunk
-    mc__::Chunk *firstChunk = new mc__::Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
+    mc__::Chunk *testChunk = new mc__::Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
     
     //Allocate array of blocks
-    mc__::Block *&firstBlockArray = firstChunk->block_array;
+    mc__::Block *&firstBlockArray = testChunk->block_array;
 
     //Index variables
     size_t index=0, ID_x=0x00, ID_y=((size_Y/2)<<4);
     
     //Assign blocks from bottom right to top right.
-    for (index=0; index < firstChunk->array_length; index++ ) {
+    for (index=0; index < testChunk->array_length; index++ ) {
 
         //Every other row, create air.  This allows the viewer to see tops and bottoms.
         if (index&0x10) {
@@ -82,10 +99,8 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
         }
     }
 
-    //Map (X | Z | Y) -> Chunk*
-    uint64_t key = (((uint64_t)X<<40)&0xFFFFFFFF00000000)|(((uint64_t)Z<<8)&0xFFFFFFFF00)|(Y&0xFF);
-    coordChunkMap[key] = firstChunk;
-    
+    addChunk(testChunk );
+
     return true;
 }
 
@@ -115,8 +130,7 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
     }
 
     //Map (X | Z | Y) -> Chunk*
-    uint64_t key = (((uint64_t)X<<40)&0xFFFFFFFF00000000)|(((uint64_t)Z<<8)&0xFFFFFFFF00)|(Y&0xFF);
-    coordChunkMap[key] = flatChunk;
+    addChunk(flatChunk );
     
     return true;
 }

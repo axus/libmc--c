@@ -216,9 +216,9 @@ int main()
     //SFML variables
     sf::Clock Clock;
     sf::WindowSettings Settings;
-    Settings.DepthBits = 32;
+    Settings.DepthBits = 24;
     Settings.StencilBits = 0;
-    Settings.AntialiasingLevel = 2;
+    Settings.AntialiasingLevel = 0;
 
     //Create the program window, with settings
     sf::RenderWindow App(sf::VideoMode(800, 600, 32),
@@ -253,14 +253,12 @@ int main()
             something_happened=true;
         }
         
-        //Update the world if something happened
-        if (something_happened) {
-            viewer.drawWorld(world);
-            //Display the rendered frame
-        }
+        //Redraw the world       
+        viewer.drawWorld(world);
+        
+        //Update the window
         App.Display();
 
-        
         //Sleep some to decrease CPU usage
         sf::Sleep(0.01f);
     }

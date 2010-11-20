@@ -199,7 +199,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, aspectRatio, 0.1f, 1024.f);
+    gluPerspective(60, aspectRatio, 1.f, 1024.f);
     
     //Reload matrix mode
     glPushAttrib(GL_TRANSFORM_BIT);
@@ -391,9 +391,6 @@ void Viewer::drawChunks( const mc__::World& world)
     
     //Keep track of block coordinates for each chunk in block
     GLint off_x, off_y, off_z, x, y, z;
-    
-    //Start putting quads in memory
-    glBegin(GL_QUADS);
 
     //For each chunk...
     for (iter = chunks.begin(); iter != chunks.end(); iter++)
@@ -411,8 +408,7 @@ void Viewer::drawChunks( const mc__::World& world)
             index++;
         }}}
     }
-    //Draw
-    glEnd();
+
 }
 
 
@@ -456,6 +452,9 @@ void Viewer::startOpenGL() {
     //Set out-of-range texture coordinates
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+    
+    //No blending
+    glDisable(GL_BLEND);
 
 }
 
@@ -497,6 +496,9 @@ bool Viewer::drawWorld(const mc__::World& world)
 {
     //Erase openGL world
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    
+    //Start putting quads in memory
+    glBegin(GL_QUADS);
 
     //Draw the loaded chunks
     drawChunks(world);
@@ -506,6 +508,9 @@ bool Viewer::drawWorld(const mc__::World& world)
     mc__::Block block2 = {19, 0, 0};    //Leaves
     drawBlock( block2, 2, 2, 2);
 
+    //Finish putting quads in memory, and draw
+    glEnd();
+    
     return true;
 }
 

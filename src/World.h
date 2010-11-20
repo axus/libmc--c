@@ -63,9 +63,10 @@ namespace mc__ {
             //Armageddon
             ~World();
             
-            //Add chunk to list/map
-            bool addCompressedChunk(int32_t X, int8_t Y, int32_t Z);
-            bool addChunk(int32_t X, int8_t Y, int32_t Z);
+            //Add uncompressed chunk to list/map
+            bool addChunk(uint8_t* data,
+                int32_t X, int8_t Y, int32_t Z,
+                uint8_t size_X, uint8_t size_Y, uint8_t size_Z);
 
             //Generate chunk 16x13x1 containing block ID 0 - 96
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);
@@ -77,8 +78,9 @@ namespace mc__ {
             uint64Chunk0Map_t coordChunkMap;
 
         protected:
+           //Will be deleted when World ends
+            bool addChunk( Chunk *chunk);
     };
-
 }
 
 #endif
