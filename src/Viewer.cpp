@@ -125,49 +125,9 @@ bool Viewer::init(const std::string &filename)
     return true;
 }
 
-//Dump DevIL texture info to "texture.log"
-void Viewer::outputRGBAData() {
-    
-    //Return if wrong format
-    if (ilGetInteger(IL_IMAGE_FORMAT) != IL_RGBA) {
-        cerr << "Not RGBA" << endl;
-        return;
-    }
-    
-    //Get image information
-    size_t width = ilGetInteger(IL_IMAGE_WIDTH);
-    size_t height = ilGetInteger(IL_IMAGE_HEIGHT);
-    size_t bpp = ilGetInteger(IL_IMAGE_BPP);
-    size_t bytes_used = width*height*bpp;
-    ILubyte *data = ilGetData();
-
-    //Open output file (append)
-    ofstream outfile;
-    outfile.open("texture.log", ios::app);
-    
-    //Texture information
-    outfile << "Size=" << bytes_used << " BPP=" << bpp << " Width="
-        << width << " Height=" << height << endl;
-    
-    //Repeat for each byte
-    size_t bytenum, x, y, index;
-    index = 0;    
-    for (y = 0; y < height; y++) {
-        outfile << setw(4) << setfill(' ') << y << ": ";
-        for (x = 0; x < width; x++) {
-            for (bytenum = 0; bytenum < bpp; bytenum++, index++) {
-                outfile << hex << setw(2) << setfill('0') << (short)data[index];
-            }
-            outfile << " ";
-        }
-        outfile << endl << dec;
-    }
-    
-    //Close file
-    outfile.close();
-}
-
+//
 //Camera functions
+//
 
 //Look at a point from another point.  (up_x, up_y, up_z) is a vector point "up"
 void Viewer::lookAt( GLint from_x, GLint from_y, GLint from_z, 
@@ -690,10 +650,54 @@ Normal block = 0x00: cube, dark, opaque, solid
 }
 
 
+//Dump DevIL texture info to "texture.log"
+void Viewer::outputRGBAData() {
+    
+    //Return if wrong format
+    if (ilGetInteger(IL_IMAGE_FORMAT) != IL_RGBA) {
+        cerr << "Not RGBA" << endl;
+        return;
+    }
+    
+    //Get image information
+    size_t width = ilGetInteger(IL_IMAGE_WIDTH);
+    size_t height = ilGetInteger(IL_IMAGE_HEIGHT);
+    size_t bpp = ilGetInteger(IL_IMAGE_BPP);
+    size_t bytes_used = width*height*bpp;
+    ILubyte *data = ilGetData();
+
+    //Open output file (append)
+    ofstream outfile;
+    outfile.open("texture.log", ios::app);
+    
+    //Texture information
+    outfile << "Size=" << bytes_used << " BPP=" << bpp << " Width="
+        << width << " Height=" << height << endl;
+    
+    //Repeat for each byte
+    size_t bytenum, x, y, index;
+    index = 0;    
+    for (y = 0; y < height; y++) {
+        outfile << setw(4) << setfill(' ') << y << ": ";
+        for (x = 0; x < width; x++) {
+            for (bytenum = 0; bytenum < bpp; bytenum++, index++) {
+                outfile << hex << setw(2) << setfill('0') << (short)data[index];
+            }
+            outfile << " ";
+        }
+        outfile << endl << dec;
+    }
+    
+    //Close file
+    outfile.close();
+}
+
+
 
 /*
 //Blit from texture map to current OpenGL texture
-ILuint Viewer::blitTexture( ILuint texmap, ILuint SrcX, ILuint SrcY, ILuint Width, ILuint Height) {
+ILuint Viewer::blitTexture( ILuint texmap, ILuint SrcX, ILuint SrcY,
+        ILuint Width, ILuint Height) {
     //Take out a specific block from the texture grid (Blit)
     ILuint il_blocktex;
     ilGenImages(1, &il_blocktex);
@@ -735,7 +739,8 @@ ILuint Viewer::chooseTexture( ILuint* ilImages, size_t index) {
 }
 *//*
 //Chop texture map into ilImages array (don't bind anything to GL)
-bool Viewer::splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y, ILuint* ilImages)
+bool Viewer::splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y,
+    ILuint* ilImages)
 {
     ILuint SrcX, SrcY, Width, Height;
     Width = texmap_TILE_PIXELS;

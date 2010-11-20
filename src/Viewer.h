@@ -22,6 +22,9 @@
 #ifndef MC__VIEWER_H
 #define MC__VIEWER_H
 
+//Version 0.1
+#define MC__VIEWER_VERSION 0x0001
+
 //DevIL
 #include <IL/il.h>
 #include <IL/ilu.h>
@@ -40,8 +43,8 @@ namespace mc__ {
     //Physical properties, to associate with blockID (internal to engine)
     typedef struct {
         uint16_t textureID[6];  //texture of faces A, B, C, D, E, F
-        GLfloat tx[6];          //X coordinate (0.0 - 1.0) of block texture in texture map
-        GLfloat ty[6];          //Y coordinate (0.0 - 1.0) of block texture in texture map
+        GLfloat tx[6];          //X coordinate (0.0 - 1.0) in texture map
+        GLfloat ty[6];          //Y coordinate (0.0 - 1.0) in texture map
         uint8_t  properties;
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
     //              4=wallsign, 5=ladder, 6=track, 7=fire
@@ -56,7 +59,9 @@ namespace mc__ {
     const size_t texmap_TILE_PIXELS = 16;    //pixels in tile (1D)
     const size_t texmap_TILES = 16;         //tiles in map (1D)
     const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
-    const float tmr = 1.0f/((float)texmap_TILES);   //Texture map ratio:  tile:texmap length
+    
+    //Texture map ratio:  tile:texmap length
+    const float tmr = 1.0f/((float)texmap_TILES);
             
     class Viewer {
         public:
