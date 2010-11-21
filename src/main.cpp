@@ -1,4 +1,3 @@
-
 /*
   libmc--c main
   Test program for mc--c library
@@ -58,7 +57,11 @@ using std::map;
 // Global variables
 //
 
+//Texture file
 const string texture_map_filename("terrain.png");
+
+//Move the world in these directions at start
+const int start_X=0, start_Y=-16, start_Z=-320;
 
 //Input state variables
 bool mouse_press[sf::Mouse::ButtonCount];
@@ -66,6 +69,7 @@ int mouse_press_X[sf::Mouse::ButtonCount];
 int mouse_press_Y[sf::Mouse::ButtonCount];
 int mouse_X, mouse_Y;
 
+//Game world and viewer
 mc__::World world;
 mc__::Viewer viewer;
 
@@ -111,7 +115,7 @@ bool handleSfEvent( const sf::Event& Event )
         //Mousewheel scroll
         case sf::Event::MouseWheelMoved: {
             //Change camera position (in increments of 16).  Down zooms out.
-            GLint move_Z = (Event.MouseWheel.Delta << 4);
+            int move_Z = (Event.MouseWheel.Delta << 4);
             viewer.move(0, 0, move_Z);
             break;
         }
@@ -128,8 +132,8 @@ bool handleSfEvent( const sf::Event& Event )
             //Reset camera if middle mouse button pressed
             switch( Event.MouseButton.Button ) {
                 case sf::Mouse::Middle:
-                    glLoadIdentity();
-                    glTranslatef( viewer.camera_X, viewer.camera_Y, viewer.camera_Z);
+                    viewer.reset();
+                    viewer.move(start_X, start_Y, start_Z);
                     break;
                 default:
                     break;
@@ -154,7 +158,7 @@ bool handleSfEvent( const sf::Event& Event )
             if (mouse_press[sf::Mouse::Left]) {
 
                 //Move camera every 16 pixels on X-axis
-                GLint diff_X = (mouse_press_X[sf::Mouse::Left] - mouse_X)/16;
+                int diff_X = (mouse_press_X[sf::Mouse::Left] - mouse_X)/16;
                 
                 if (diff_X != 0) {
                     viewer.move((diff_X << 4), 0, 0);
@@ -164,7 +168,7 @@ bool handleSfEvent( const sf::Event& Event )
                 }
 
                 //Move camera every 16 pixels on Y-axis
-                GLint diff_Y = (mouse_Y - mouse_press_Y[sf::Mouse::Left])/16;
+                int diff_Y = (mouse_Y - mouse_press_Y[sf::Mouse::Left])/16;
                 if (diff_Y != 0) {
                     viewer.move(0, diff_Y << 4,0);
                     
@@ -232,8 +236,8 @@ int main()
     //Initialize the viewer
     viewer.init(texture_map_filename);
 
-    //Move the camera
-    viewer.move(0, -16, -320);
+    //Move the camera to start
+    viewer.move(start_X, start_Y, start_Z);
 
     //Initial drawing
     App.SetActive();

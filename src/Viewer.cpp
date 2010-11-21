@@ -118,13 +118,6 @@ bool Viewer::init(const std::string &filename)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-/*
-    //Move camera to starting position
-    camera_X = 0;
-    camera_Y = -64;
-    camera_Z = -314;
-    glTranslatef(camera_X, camera_Y, camera_Z);
-*/    
     return true;
 }
 
@@ -138,6 +131,11 @@ void Viewer::lookAt( GLint from_x, GLint from_y, GLint from_z,
              GLint up_x, GLint up_y, GLint up_z)
 {
     gluLookAt( from_x, from_y, from_z, at_x, at_y, at_z, up_x, up_y, up_z);
+}
+
+void Viewer::reset()
+{
+    glLoadIdentity();
 }
 
 //Move camera without rotating

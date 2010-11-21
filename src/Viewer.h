@@ -23,7 +23,7 @@
 #define MC__VIEWER_H
 
 //Version 0.1
-#define MC__VIEWER_VERSION 0x0001
+#define MC__VIEWER_VERSION 0x0002
 
 //DevIL
 #include <IL/il.h>
@@ -95,6 +95,7 @@ namespace mc__ {
             void move( GLint offset_x, GLint offset_y, GLint offset_z);
             void turn( GLint degrees, GLint axus_x=0, GLint axus_y=1, GLint axus_z=0);
             void viewport( GLint x, GLint y, GLsizei width, GLsizei height);
+            void reset();
 
         protected:
             //Remember texture map filename
