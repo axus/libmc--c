@@ -77,6 +77,8 @@ using std::ios;
 #include "Viewer.h"
 using mc__::Viewer;
 
+Viewer::Viewer(): camera_X(0), camera_Y(0), camera_Z(0) {;}
+
 //Start up OpenGL
 bool Viewer::init(const std::string &filename)
 {
@@ -116,12 +118,13 @@ bool Viewer::init(const std::string &filename)
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+/*
     //Move camera to starting position
     camera_X = 0;
     camera_Y = -64;
     camera_Z = -314;
     glTranslatef(camera_X, camera_Y, camera_Z);
-    
+*/    
     return true;
 }
 
@@ -465,10 +468,8 @@ bool Viewer::drawWorld(const mc__::World& world)
     //Draw the loaded chunks
     drawChunks(world);
     
-    mc__::Block block1 = {2, 0, 0};   //Grass
+    mc__::Block block1 = {58, 0, 0};   //Workbench
     drawBlock( block1, 0, 0, 2);
-    mc__::Block block2 = {19, 0, 0};    //Leaves
-    drawBlock( block2, 2, 2, 2);
 
     //Finish putting quads in memory, and draw
     glEnd();

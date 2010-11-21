@@ -210,6 +210,11 @@ int main()
     world.genFlatGrass(-8, -2, -8); //512 blocks at (-8,-2,-8)
     world.genChunkTest(-8, 0, -8);  //208 blocks at (-8, 0, -8)
     
+    //Grow some trees
+    world.genTree(5, 0, 5);
+    world.genTree(-2, 0, 7, 1); //skinny tall tree
+    
+    //Load chunks behind the camera
     world.genFlatGrass(-8, -2, 9);
     world.genChunkTest(-8, 1, 24);
     
@@ -226,7 +231,10 @@ int main()
 
     //Initialize the viewer
     viewer.init(texture_map_filename);
-    
+
+    //Move the camera
+    viewer.move(0, -16, -320);
+
     //Initial drawing
     App.SetActive();
     viewer.drawWorld(world);

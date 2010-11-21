@@ -45,6 +45,7 @@
 //Define class inside mc__ namespace
 namespace mc__ {
 
+    //Hash function for 64 bits (X&0x3FFF)<<36|(Z&0x3FFF)<<8|Y
     struct hash_uint64 {
       size_t operator()(const uint64_t in)  const {
         uint64_t ret = (in >> 32L) ^ (in & 0xFFFFFFFF);

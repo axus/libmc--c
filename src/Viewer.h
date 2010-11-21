@@ -66,6 +66,8 @@ namespace mc__ {
     class Viewer {
         public:
 
+            Viewer();
+            
             //Map block ID to block information
             BlockInfo blockInfo[256];
             
