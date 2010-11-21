@@ -2,25 +2,24 @@ libmc--c depends on several libraries.  I've only built libmc--c using MinGW.
 
 DevIL 1.7.8
     http://openil.sourceforge.net/
-SFML 1.6
-    http://www.sfml-dev.org/
 GCC 4.5.0 library and standard C++ library
     http://gcc.gnu.org/install/build.html
-
+    
 See https://sites.google.com/site/axusdev/builds/buildgcc/ for instructions on
 obtaining MinGW source and building libgcc and libstdc++ (as required by LGPL!)
-    
-A program using libmc--c requires these shared libraries:
+
+vLK has built an earlier version of libmc--c using MSVC, but he had to create a
+new project.  If you're as smart as him, it should be easy ;p
+
+
+A program using libmc--c and MinGW requires these shared libraries:
 ILU.dll
 ILUT.dll
-SFML-system.dll
-SFML-graphics.dll
-SFML-window.dll
 libgcc_s_dw2-1.dll
 libstdc++-6.dll
 
-If rebuilding libmc--c, these headers are required on the INCLUDE path:
-<SFML/Graphics.hpp>
+
+If rebuilding libmc--c with MinGW, these headers are required on INCLUDE path:
 <IL/il.h>
 <IL/ilu.h>
 <iostream>
@@ -28,3 +27,22 @@ If rebuilding libmc--c, these headers are required on the INCLUDE path:
 <iomanip>
 <fstream>
 <vector>
+<map>
+<cstdlib>
+<cstdint>
+
+
+*SFML*
+I've only tested libmc--c with SFML as the OpenGL framework, so it might be
+required.
+
+SFML 1.6
+    http://www.sfml-dev.org/
+
+You would need these DLLs:
+SFML-system.dll
+SFML-graphics.dll
+SFML-window.dll
+
+You would need to include this:
+<SFML/Graphics.hpp>

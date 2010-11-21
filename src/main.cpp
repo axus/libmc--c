@@ -215,8 +215,8 @@ int main()
     world.genChunkTest(-8, 0, -8);  //208 blocks at (-8, 0, -8)
     
     //Grow some trees
-    world.genTree(5, 0, 5);
-    world.genTree(-2, 0, 7, 1); //skinny tall tree
+    world.genTree(5, 0, 5);    //Normal tree
+    world.genTree(-2, 0, 7, 3, 10, 3); //skinny tall tree
     
     //Load chunks behind the camera
     world.genFlatGrass(-8, -2, 9);

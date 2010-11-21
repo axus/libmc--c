@@ -22,8 +22,8 @@
 #ifndef MC__VIEWER_H
 #define MC__VIEWER_H
 
-//Version 0.1
-#define MC__VIEWER_VERSION 0x0002
+//Version 0.10
+#define MC__VIEWER_VERSION 0x000A
 
 //DevIL
 #include <IL/il.h>
