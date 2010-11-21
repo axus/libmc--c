@@ -73,6 +73,10 @@ namespace mc__ {
             
             //Generate chunk 16x2x16 containing grass over dirt
             bool genFlatGrass(int32_t X, int8_t Y, int32_t Z);
+
+            //Generate a tree with bottom at X,Y,Z
+            bool genTree(const int32_t X, const int8_t Y, const int32_t Z,
+                uint8_t treeType=0);
             
             //Access this to see chunks in the world
             uint64Chunk0Map_t coordChunkMap;

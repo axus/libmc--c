@@ -43,6 +43,9 @@ namespace mc__ {
 
     class Chunk {
 
+        //When indexing block in chunk array,
+        //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
+
         public:
             //Allocate space for chunk.  Actual size is size_x+1, size_y+1, size_z+1
             Chunk(uint8_t size_x, int8_t size_y, int32_t size_z);

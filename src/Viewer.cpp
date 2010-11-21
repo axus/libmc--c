@@ -359,11 +359,13 @@ void Viewer::drawChunks( const mc__::World& world)
         mc__::Chunk& myChunk = *(iter->second);
         index=0;
 
+        //When indexing block in chunk array,
+        //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
+
         //Draw every block in chunk.  x,y,z determined by position in array.
+        for (off_x=0, x=myChunk.X; off_x <= myChunk.size_X; off_x++, x++) {
         for (off_z=0, z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, z++) {
         for (off_y=0, y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, y++) {
-        for (off_x=0, x=myChunk.X; off_x <= myChunk.size_X; off_x++, x++)
-        {
             drawBlock( myChunk.block_array[index], x, y, z);
             index++;
         }}}

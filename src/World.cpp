@@ -68,10 +68,10 @@ bool World::addChunk( Chunk *chunk)
 }
 
 
-//Generate chunk representing block ID 0 - 96
+//Generate chunk representing block ID 0 - 95
 bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     
-    const uint8_t size_X=16, size_Y=13, size_Z=1;
+    const uint8_t size_X=16, size_Y=11, size_Z=1;
 
     //Allocate chunk
     mc__::Chunk *testChunk = new mc__::Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
@@ -80,22 +80,19 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     mc__::Block *&firstBlockArray = testChunk->block_array;
 
     //Index variables
-    size_t index=0, ID_x=0x00, ID_y=((size_Y/2)<<4);
+    size_t index=0, ID_x=0x00, ID_y=0x50;
     
     //Assign blocks from bottom right to top right.
     for (index=0; index < testChunk->array_length; index++ ) {
 
         //Every other row, create air.  This allows the viewer to see tops and bottoms.
-        if (index&0x10) {
+
+        if ((index%size_Y)&1) {
             firstBlockArray[index].blockID = 0;
         } else {
+            ID_y = (5 - (index%size_Y)/2)<<4;
+            ID_x = index/size_Y;
             firstBlockArray[index].blockID = (ID_y|ID_x);
-            ID_x++;
-            //Check for next row
-            if (!(ID_x&0xF)) {
-                ID_x=0;
-                ID_y -= 0x10;
-            }
         }
     }
 
@@ -117,12 +114,15 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
 
     //Index variables
     size_t index=0;
-    
+
+    //When indexing block in chunk array,
+    //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
+
     //Assign blocks from bottom right to top right.
     for (index=0; index < flatChunk->array_length; index++ ) {
 
         //Alternate between dirt and grass
-        if (index&0x10) {
+        if (index&1) {
             firstBlockArray[index].blockID = 2; //Grass
         } else {
             firstBlockArray[index].blockID = 3; //Dirt
@@ -131,6 +131,84 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
 
     //Map (X | Z | Y) -> Chunk*
     addChunk(flatChunk );
+    
+    return true;
+}
+
+//Generate a leafy tree with base at (X,Y,Z), chunk origin will be different
+bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
+    uint8_t treeType)
+{
+    
+    uint8_t size_X, size_Y, size_Z, off_x, off_y, off_z;
+    int32_t origin_X, origin_Z;
+    
+    //Tree properties determined by treeType
+    switch( treeType ) {
+        case 0:
+        default:
+            size_X=5; size_Z=5; size_Y=7;
+            origin_X= X-3; origin_Z= Z-3;
+            break;
+    }
+
+    //Allocate chunk
+    mc__::Chunk *treeChunk = new mc__::Chunk(size_X-1, size_Y-1, size_Z-1,
+        origin_X, Y, origin_Z);
+    
+    //Allocate array of blocks
+    mc__::Block *&firstBlockArray = treeChunk->block_array;
+
+    //Index variables
+    size_t index=0;
+    uint8_t ID;
+
+    //Write every block in chunk.  x,y,z determined by position in array.
+    for (off_x=0; off_x <= size_X; off_x++) {
+    for (off_z=0; off_z <= size_Z; off_z++) {
+    for (off_y=0; off_y <= size_Y; off_y++) {
+        //Default is air
+        ID=0;
+      
+        if (off_y < 5 && off_x == X && off_z == Z) {
+            //Draw trunk up to trunk height
+            ID = 17;
+        } else {
+            //Drawing depends on current height
+            switch(off_y) {
+                case 0:
+                case 1:
+                case 2:
+                    //Air at levels 0-2
+                    break;
+                case 3:
+                    //Leaves in a pattern around trunk
+                    if (off_x + off_z > 1 && off_x + off_z < (size_X + size_Z - 3)) {
+                        ID=19;
+                    }
+                    break;
+                case 4:
+                    //Leaves in a bigger pattern around trunk
+                    if (off_x + off_z > 0 && off_x + off_z < (size_X + size_Z - 2)) {
+                        ID=19;
+                    }
+                    break;                
+                case 5:
+                    //Leaves in a square, no trunk
+                    if (off_x + off_z > 0 && off_x + off_z < 8) {
+                        ID=19;
+                    }
+                    break;                
+            }
+        }
+        
+        //Assign block ID and increment
+        firstBlockArray[index].blockID = ID;
+        index++;
+    }}}
+
+    //Map (X | Z | Y) -> Chunk*
+    addChunk(treeChunk );
     
     return true;
 }
