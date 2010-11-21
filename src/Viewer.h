@@ -40,11 +40,13 @@
 
 namespace mc__ {
 
+    enum face_ID { WEST=0, EAST=1, DOWN=2, UP=3, NORTH=4, SOUTH=5, FACE_MAX};
+        
     //Physical properties, to associate with blockID (internal to engine)
     typedef struct {
-        uint16_t textureID[6];  //texture of faces A, B, C, D, E, F
-        GLfloat tx[6];          //X coordinate (0.0 - 1.0) in texture map
-        GLfloat ty[6];          //Y coordinate (0.0 - 1.0) in texture map
+        uint16_t textureID[FACE_MAX];  //texture of faces A, B, C, D, E, F
+        GLfloat tx[FACE_MAX];          //X texture coordinate (0.0 - 1.0)
+        GLfloat ty[FACE_MAX];          //Y texture coordinate (0.0 - 1.0)
         uint8_t  properties;
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
     //              4=wallsign, 5=ladder, 6=track, 7=fire
@@ -56,7 +58,7 @@ namespace mc__ {
     } BlockInfo;
 
     //Constants
-    const size_t texmap_TILE_PIXELS = 16;    //pixels in tile (1D)
+    const size_t texmap_TILE_LENGTH = 16;   //openGL coords per tile
     const size_t texmap_TILES = 16;         //tiles in map (1D)
     const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
     
@@ -96,6 +98,10 @@ namespace mc__ {
             void turn( GLint degrees, GLint axus_x=0, GLint axus_y=1, GLint axus_z=0);
             void viewport( GLint x, GLint y, GLsizei width, GLsizei height);
             void reset();
+            
+            //RGB settings for leaves, grass :)
+            GLubyte leaf_color[4];
+            GLubyte grass_color[4];
 
         protected:
             //Remember texture map filename
@@ -113,6 +119,9 @@ namespace mc__ {
             void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
                 uint8_t D, uint8_t E, uint8_t F, uint8_t properties);
             bool loadBlockInfo();
+            
+            //Change face colors if needed by blockID
+            void setBlockColor(uint8_t blockID, face_ID face);
 
             //Debugging functions
             void outputRGBAData();

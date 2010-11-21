@@ -88,7 +88,8 @@ namespace mc__ {
             //Generate a tree with bottom at X,Y,Z
             //  optional: dimensions size_X, size_Y, size_Z
             bool genTree(const int32_t X, const int8_t Y, const int32_t Z,
-                uint8_t size_X=5, uint8_t size_Y=8, uint8_t size_Z=5);
+                uint8_t size_X=5, uint8_t size_Y=8, uint8_t size_Z=5,
+                uint8_t leavesID=18);
             
             //Access this to see chunks in the world
             uint64Chunk0Map_t coordChunkMap;

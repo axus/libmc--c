@@ -139,10 +139,13 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
 
 //Generate a leafy tree with base at (X,Y,Z), chunk origin will be different
 bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
-    uint8_t size_X, uint8_t size_Y, uint8_t size_Z)
+    uint8_t size_X, uint8_t size_Y, uint8_t size_Z, uint8_t leavesID)
 {
     //Offsets
     uint8_t off_x, off_y, off_z;
+    
+    //Block ID for log
+    const uint8_t logID=17;
     
     //Calculate chunk origin
     int32_t origin_X = X - size_X/2;
@@ -176,11 +179,11 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
                 
         if (center_dist == 0 && off_y < size_Y-2) {
             //Draw trunk up to trunk height - 2
-            ID = 17;
+            ID = logID;
         } else if (off_y > 1) {
             //Leaves over 2 height
             if (center_dist < (size_X+size_Z)/4 + (size_Y - center_y - 1) - 5 ) {
-                ID=19;
+                ID=leavesID;
             }
         }
         
