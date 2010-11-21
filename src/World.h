@@ -25,6 +25,7 @@
 //STL list
 #include <vector>
 
+/*
 //Hash_map... faster than map?
 #ifdef __GNUC__
     #if __GNUC__ <= 2
@@ -35,9 +36,25 @@
         using __gnu_cxx::hash_map;
     #endif
 #elif defined (_MSC_VER)
-    #include "stl_hash.h"
-    using std::hash_map;
+    #if _MSC_VER < 1500
+        #include "stl_hash.h"
+        using std::hash_map;
+    #else
+        #include <hash_map>
+        using stdext::hash_map
+    #endif
 #endif
+
+//Hash function for 64 bits (X&0x3FFF)<<36|(Z&0x3FFF)<<8|Y
+struct hash_uint64 {
+  size_t operator()(const uint64_t in)  const {
+    uint64_t ret = (in >> 32L) ^ (in & 0xFFFFFFFF);
+    return (size_t) ret;
+}   //TODO: bucket_size and min_buckets for MSVC
+
+//TODO: Replace with unordered_map
+*/
+#include <map>
 
 //mc__ classes
 #include "Chunk.h"
@@ -45,17 +62,12 @@
 //Define class inside mc__ namespace
 namespace mc__ {
 
-    //Hash function for 64 bits (X&0x3FFF)<<36|(Z&0x3FFF)<<8|Y
-    struct hash_uint64 {
-      size_t operator()(const uint64_t in)  const {
-        uint64_t ret = (in >> 32L) ^ (in & 0xFFFFFFFF);
-        return (size_t) ret;
-      }
     };
     
     //Types
     typedef std::vector<Chunk> chunkVector;
-    typedef hash_map< uint64_t, Chunk*, hash_uint64 > uint64Chunk0Map_t;
+    //typedef hash_map< uint64_t, Chunk*, hash_uint64 > uint64Chunk0Map_t;
+    typedef std::map< uint64_t, Chunk*> uint64Chunk0Map_t;
 
     //World class ;)
     class World {

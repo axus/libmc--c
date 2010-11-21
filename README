@@ -2,6 +2,7 @@ libmc--c: Minecraft Client Library
 
 Provides world representation data structures and OpenGL drawing functions.
 
+**********************************************************************
   Copyright 2010 axus
 
     libmc--c is free software: you can redistribute it and/or modify
@@ -17,3 +18,7 @@ Provides world representation data structures and OpenGL drawing functions.
     You should have received a copy of the GNU Lesser General Public
     License along with this program.  If not, see
     <http://www.gnu.org/licenses/>.
+**********************************************************************    
+
+Thanks to the following people for testing:
+vLK

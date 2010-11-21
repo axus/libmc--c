@@ -23,13 +23,15 @@
 
 using std::vector;
 using mc__::World;
+using mc__::Chunk;
+using mc__::Block;
 
 //Destroy world
 World::~World()
 {
     //Delete allocated chunks
     uint64Chunk0Map_t::iterator iter;
-    mc__::Chunk* chunk0;
+    Chunk* chunk0;
     for (iter = coordChunkMap.begin(); iter != coordChunkMap.end(); iter++)
     {
         chunk0 = iter->second;
@@ -46,7 +48,7 @@ bool World::addChunk(uint8_t* data,
     uint8_t size_X, uint8_t size_Y, uint8_t size_Z)
 {
     //Allocate chunk
-    mc__::Chunk *newChunk = new mc__::Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
+    Chunk *newChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
     addChunk(newChunk);
 
     return true;
@@ -79,11 +81,11 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     const uint8_t size_X=16, size_Y=11, size_Z=1;
 
     //Allocate chunk
-    mc__::Chunk *testChunk =
-        new mc__::Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
+    Chunk *testChunk =
+        new Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
     
     //Allocate array of blocks
-    mc__::Block *&firstBlockArray = testChunk->block_array;
+    Block *&firstBlockArray = testChunk->block_array;
 
     //Index variables
     size_t index=0, ID_x=0x00, ID_y=0x50;
@@ -114,10 +116,10 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
     const uint8_t size_X=16, size_Y=2, size_Z=16;
 
     //Allocate chunk
-    mc__::Chunk *flatChunk = new mc__::Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
+    Chunk *flatChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
     
     //Allocate array of blocks
-    mc__::Block *&firstBlockArray = flatChunk->block_array;
+    Block *&firstBlockArray = flatChunk->block_array;
 
     //Index variables
     size_t index=0;
@@ -167,11 +169,11 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     }
 
     //Allocate chunk
-    mc__::Chunk *treeChunk = new mc__::Chunk(size_X-1, size_Y-1, size_Z-1,
+    Chunk *treeChunk = new Chunk(size_X-1, size_Y-1, size_Z-1,
         origin_X, Y, origin_Z);
     
     //Allocate array of blocks
-    mc__::Block *&firstBlockArray = treeChunk->block_array;
+    Block *&firstBlockArray = treeChunk->block_array;
 
     //Index variables
     size_t index=0;
