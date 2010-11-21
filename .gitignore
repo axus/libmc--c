@@ -1,4 +1,6 @@
 *.dll
 *.exe
+*.a
+*.lib
 Painterly
 resource

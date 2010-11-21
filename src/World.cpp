@@ -59,13 +59,6 @@ bool World::addChunk( Chunk *chunk)
 {
     if (chunk == NULL) return false;
 
-/*
-    //Map (X | Z | Y) -> Chunk*
-    uint64_t key =
-        (((uint64_t)chunk->X<<40)&0xFFFFFFFF00000000)|
-        (((uint64_t)chunk->Z<<8)&0xFFFFFFFF00)|
-        (chunk->Y&0xFF);
-*/
     uint64_t key = ( (uint64_t)(chunk->X & 0x0FFFFFFF) << 40 )|
                    ( (uint64_t)(chunk->Z & 0x0FFFFFFF) << 8 )|
                    ( (uint64_t)(chunk->Y & 0xFF));
@@ -146,27 +139,14 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
 
 //Generate a leafy tree with base at (X,Y,Z), chunk origin will be different
 bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
-    uint8_t treeType)
+    uint8_t size_X, uint8_t size_Y, uint8_t size_Z)
 {
+    //Offsets
+    uint8_t off_x, off_y, off_z;
     
-    uint8_t size_X, size_Y, size_Z, off_x, off_y, off_z;
-    int32_t origin_X, origin_Z;
-    
-    //Tree properties determined by treeType
-    switch( treeType ) {
-        case 0:
-            size_X=5; size_Z=5; size_Y=8;
-            origin_X= X-3; origin_Z= Z-3;
-            break;
-        case 1:
-            size_X=3; size_Z=3; size_Y=10;
-            origin_X= X-3; origin_Z= Z-3;
-            break;
-        default:
-            size_X=5; size_Z=5; size_Y=8;
-            origin_X= X-3; origin_Z= Z-3;
-            break;
-    }
+    //Calculate chunk origin
+    int32_t origin_X = X - size_X/2;
+    int32_t origin_Z = Z - size_Z/2;    
 
     //Allocate chunk
     Chunk *treeChunk = new Chunk(size_X-1, size_Y-1, size_Z-1,
@@ -175,8 +155,10 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     //Allocate array of blocks
     Block *&firstBlockArray = treeChunk->block_array;
 
-    //Index variables
+    //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
     size_t index=0;
+    
+    //Block ID depends on distance to center of tree
     uint8_t ID, center_dist, center_x, center_y, center_z;
 
     //Write every block in chunk.  x,y,z determined by position in array.

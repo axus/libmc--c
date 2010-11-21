@@ -10,22 +10,23 @@ BUILD=build
 # -mconsole: Create a console application
 # -mwindows: Create a GUI application
 # -Wl,--enable-auto-import: Let the ld.exe linker automatically import from libraries
-LDFLAGS=-Wl,--enable-auto-import -mwindows
+LDFLAGS=-mwindows -Wl,--enable-auto-import
 
 #Minimum Windows version: Windows XP, IE 6.01
-#CPPFLAGS=-D_WIN32_WINNT=0x0500 -DWINVER=0x0500 -D_WIN32_IE=0x0601 $(MOREFLAGS)
-CPPFLAGS=$(MOREFLAGS) -Wno-deprecated
+CPPFLAGS=-D_WIN32_WINNT=0x0500 -DWINVER=0x0500 -D_WIN32_IE=0x0601 $(MOREFLAGS)
 
 #SRC files in SRCDIR directory
 SRC=$(addprefix $(SRCDIR)/, $(SRCFILES))
+HPP=$(addprefix $(SRCDIR)/, $(HEADERS))
 
 # Choose object file names from source file names
 OBJFILES=$(SRCFILES:.cpp=.o)
 OBJ=$(addprefix $(BUILD)/, $(OBJFILES))
+BBIN=$(addprefix $(BUILD)/, $(BIN))
 
 # Debug, or optimize
 ifeq ($(DEBUG),on)
-  CFLAGS=-Wall -g -pg -DDEBUG
+  CFLAGS=-Wall -g -DDEBUG
 else
   # All warnings, optimization level 3
   CFLAGS=-Wall -O3
@@ -34,19 +35,19 @@ endif
 
 # Default target of make is "all"
 .all: all      
-all: $(BIN) $(LIBBIN)
+all: $(BBIN) $(LIBBIN)
 
 # Build object files with chosen options
-$(BUILD)/%.o: $(SRCDIR)/%.cpp
+$(BUILD)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/%.h
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -o $@ -c $<
 
-# Build executable from objects and libraries to current directory
-$(BIN): $(OBJ)
-	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
-
-
+# Build library
+$(BBIN): $(OBJ)
+	ar r $@ $^
+	ranlib $@
+	
 # Remove object files and core files with "clean" (- prevents errors from exiting)
 RM=rm -f
 .clean: clean
 clean:
-	-$(RM) $(BIN) $(OBJ) core $(LOGFILES)
+	-$(RM) $(BBIN) $(OBJ) core $(LOGFILES)
