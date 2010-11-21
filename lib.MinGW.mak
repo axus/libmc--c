@@ -45,7 +45,25 @@ $(BUILD)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/%.h
 $(BBIN): $(OBJ)
 	ar r $@ $^
 	ranlib $@
+
+#Create install directories if needed
+$(INSTALL_LIB): 
+	@[ -d $@ ] || mkdir -p $@
 	
+$(INSTALL_INC):
+	@[ -d $@ ] || mkdir -p $@
+
+UNINSTALL_HPP = $(addprefix $(INSTALL_INC)/, $(HEADERS))
+
+install: $(INSTALL_LIB) $(INSTALL_INC)
+	cp $(BBIN) $(INSTALL_LIB)/
+	cp $(HPP) $(INSTALL_INC)/
+
+#How to uninstall
+uninstall:
+	-rm $(INSTALL_LIB)/$(BIN)
+	-rm $(UNINSTALL_HPP)
+
 # Remove object files and core files with "clean" (- prevents errors from exiting)
 RM=rm -f
 .clean: clean
