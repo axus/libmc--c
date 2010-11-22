@@ -17,16 +17,43 @@ test:  Minecraft libmc--c test program
     <http://www.gnu.org/licenses/>.
 **********************************************************************    
 
-Using:
-Copy terrain.png to bin/ directory.  This test program will preview how each
-block will look with this skin, using libmc--c.
+Building with MinGW/MSYS:
+    Build libmc--c:
+    set HOME environment variable to your development home directory
+    extract libmc--c to $HOME/
+    cd libmc--c
+    make
+    make install
+    
+    Build test app:
+    cd test
+    make
 
+
+Using:
+    Copy terrain.png to $HOME/libmc--c/bin.
+    Copy shared libraries to $HOME/libmc--c/bin:
+        DevIL.dll
+        ILU.dll
+        ILUT.dll
+        libgcc
+        libstdc++
+        sfml-graphics.dll
+        sfml-system.dll
+        sfml-window.dll
+    
+    cd $HOME/libmc--c/bin
+    mc--c
+    
+    This test program will preview how each block will look with this skin,
+    using libmc--c.
+    
 Controls:
-Zoom        Mouse-wheel scroll, PageUp, PageDown
-Move        Left-click drag, arrow keys, WASD
-Turn        Right-click drag, Home, End
-Respawn     Middle-click
-Tree color  R, G, B
+    Zoom        Mouse-wheel scroll, PageUp, PageDown
+    Move        Left-click drag, arrow keys, WASD
+    Turn        Right-click drag, Home, End
+    Respawn     Middle-click
+    Tree color  R, G, B
 
 Thanks to the following people for testing:
-vLK
+    vLK

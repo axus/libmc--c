@@ -20,5 +20,13 @@ Provides world representation data structures and OpenGL drawing functions.
     <http://www.gnu.org/licenses/>.
 **********************************************************************    
 
+Building with MinGW/MSYS:
+    set HOME environment variable to your development home directory
+    extract libmc--c to $HOME/
+    cd libmc--c
+    make
+    make install
+    
+
 Thanks to the following people for testing:
 vLK
