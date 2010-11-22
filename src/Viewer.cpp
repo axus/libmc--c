@@ -80,15 +80,16 @@ using mc__::face_ID;
 
 Viewer::Viewer(): camera_X(0), camera_Y(0), camera_Z(0)
 {
-    //Assign default colors
+    //Dark green tree leaves
     leaf_color[0] = 0x00;    //Red
     leaf_color[1] = 0xFF;    //Green
     leaf_color[2] = 0x00;    //Blue
     leaf_color[3] = 0xFF;    //Opaque
 
+    //Sort of a yellow/green grass
     grass_color[0] = 0x7F;    //Red
-    grass_color[1] = 0xFF;    //Green
-    grass_color[2] = 0x7F;    //Blue
+    grass_color[1] = 0xCF;    //Green
+    grass_color[2] = 0x1F;    //Blue
     grass_color[3] = 0xFF;    //Opaque
 
 }
@@ -183,8 +184,13 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
 //Set glColor if needed by block type and face
 void Viewer::setBlockColor(uint8_t blockID, face_ID face)
 {
+    //return; Uncomment to disable block coloring
+    
     GLubyte red, green, blue;
     switch (blockID) {
+        case 0:
+            glColor3ub( 255, 255, 255);
+            break;
         case 2:
             if (face == mc__::UP) {
                 red=grass_color[0]; green=grass_color[1]; blue=grass_color[2];
@@ -320,7 +326,7 @@ void Viewer::drawCube( uint8_t blockID, GLint x, GLint y, GLint z)
     glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
     
     //Return color to normal
-    glColor3ub( 255, 255, 255);
+    setBlockColor( 0, (face_ID)0);
 }
 
 //Draw item blockID which is placed as a block

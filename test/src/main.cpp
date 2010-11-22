@@ -102,10 +102,37 @@ bool handleSfEvent( const sf::Event& Event )
                     viewer.move(0, 16, 0);
                     break;
                 case sf::Key::Left:         //Move left
+                case sf::Key::A:
                     viewer.move(16, 0, 0);
                     break;
                 case sf::Key::Right:        //Move right
+                case sf::Key::D:
                     viewer.move(-16, 0, 0);
+                    break;
+                case sf::Key::PageUp:        //Zoom in
+                case sf::Key::W:
+                    viewer.move(0, 0, 16);
+                    break;
+                case sf::Key::PageDown:        //Zoom out
+                case sf::Key::S:
+                    viewer.move(0, 0, -16);
+                    break;
+                case sf::Key::Home:        //Turn left
+                case sf::Key::Q:
+                    viewer.turn(-15, 0, 1, 0);
+                    break;
+                case sf::Key::End:        //Turn right
+                case sf::Key::E:
+                    viewer.turn(15, 0, 1, 0);
+                    break;
+                case sf::Key::R:        //Change color
+                    viewer.leaf_color[0] += 16;
+                    break;
+                case sf::Key::G:        //Change color
+                    viewer.leaf_color[1] += 16;
+                    break;
+                case sf::Key::B:        //Change color
+                    viewer.leaf_color[2] += 16;
                     break;
                 default:
                     break;

@@ -1,9 +1,4 @@
 test:  Minecraft libmc--c test program
-Copyright 2010 axus
-
-Copy terrain.png to bin/ directory.  This test program will preview how each
-block will look with this skin, using libmc--c.
-
 **********************************************************************
   Copyright 2010 axus
 
@@ -21,6 +16,17 @@ block will look with this skin, using libmc--c.
     License along with this program.  If not, see
     <http://www.gnu.org/licenses/>.
 **********************************************************************    
+
+Using:
+Copy terrain.png to bin/ directory.  This test program will preview how each
+block will look with this skin, using libmc--c.
+
+Controls:
+Zoom        Mouse-wheel scroll, PageUp, PageDown
+Move        Left-click drag, arrow keys, WASD
+Turn        Right-click drag, Home, End
+Respawn     Middle-click
+Tree color  R, G, B
 
 Thanks to the following people for testing:
 vLK
