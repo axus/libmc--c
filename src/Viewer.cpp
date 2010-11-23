@@ -721,12 +721,12 @@ bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename)
     binFile.close();
     cerr << "Wrote " << chunk->byte_length << " bytes to " << filename << endl;
     
-    //Zipped file :)
-    ofstream zipFile("zipchunk.bin", ios::out | ios::binary);
-    zipFile.write( (char*)chunk->compressed, chunk->compressed_length);
+    //Zipped file... without that pesky zip header :)
+    ofstream zipFile("chunkzip.bin", ios::out | ios::binary);
+    zipFile.write( (char*)chunk->zipped, chunk->zipped_length);
     zipFile.close();
-    cerr << "Wrote " << chunk->compressed_length
-        << " bytes to zipchunk.bin" << endl;
+    cerr << "Wrote " << chunk->zipped_length
+        << " bytes to chunkzip.bin" << endl;
     
     return true;
 }

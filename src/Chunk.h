@@ -72,10 +72,10 @@ namespace mc__ {
             void unpackBlocks();
 
             //Copy compressed data to chunk
-            void setCompressed( size_t length, uint8_t *data);
+            void setZipped( size_t length, uint8_t *data);
             
             //Compress the packed byte_array to *compressed
-            void zip();
+            bool zip();
                         
             //Uncompress *compressed to packed byte_array
             bool unzip();
@@ -102,8 +102,8 @@ namespace mc__ {
             uint8_t *byte_array;
             
             //Also, keep compressed version
-            uLongf compressed_length;
-            Bytef *compressed;
+            uLongf zipped_length;
+            Bytef *zipped;
     };
 }
 

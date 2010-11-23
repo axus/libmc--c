@@ -32,7 +32,7 @@ using mc__::Block;
 Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
             block_array(NULL), byte_array(NULL),
-            compressed_length(0), compressed(NULL)
+            zipped_length(0), zipped(NULL)
 {
     //Calculate array lengths from sizes
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
@@ -50,7 +50,7 @@ Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z,
                 int32_t x, int8_t y, int32_t z):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
             X(x), Y(y), Z(z), block_array(NULL), byte_array(NULL),
-            compressed_length(0), compressed(NULL)
+            zipped_length(0), zipped(NULL)
 {
     //Calculate array lengths from sizes
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
@@ -156,38 +156,66 @@ void Chunk::setCoord(int32_t x, int8_t y, int32_t z)
 }
 
 //Copy compressed data to chunk
-void Chunk::setCompressed(size_t size, uint8_t *data)
+void Chunk::setZipped(size_t size, uint8_t *data)
 {
     //Erase old data if needed
-    if (compressed != NULL) {
-        delete compressed;
+    if (zipped != NULL) {
+        delete zipped;
     }
   
-    compressed_length = size;
-    memcpy(compressed, data, size);
+    zipped_length = size;
+    memcpy(zipped, data, size);
 }
 
 //Compress the packed byte_array to *compressed, set compressed_length
-void Chunk::zip()
+bool Chunk::zip()
 {
-    //zlib states that the source buffer must be at least 0.1
-    //times larger than the source buffer plus 12 bytes
-    //to cope with the overhead of zlib data streams
-    compressed = new Bytef[ byte_length/10 + 13 ];
+    //Delete old zip
+    if (zipped != NULL) { delete zipped; }
 
-    int result = compress2( compressed, &compressed_length,
+    //Allocate more space for compressed than uncompressed, for header bytes
+    zipped_length = compressBound(byte_length);
+    //byte_length + (byte_length>>3) + 12;
+    zipped = new Bytef[ zipped_length ];
+
+    //Use Zlib to compress the byte_array
+    int result = compress2( zipped, &zipped_length,
         (const Bytef*)byte_array, (uLong)byte_length, Z_BEST_SPEED);
     
-    //TODO: RETURNS FALSE FOR SOME REASON
-    if (result != Z_OK) { compressed = NULL; }
+    //Problem?
+    if (result != Z_OK)
+    {
+        if (zipped != NULL) { delete zipped; }
+        zipped = NULL;
+        zipped_length = 0;
+        return false;
+    }
+    
+    return true;
 }
 
-//Uncompress *compressed to packed byte_array
+//Uncompress *compressed to packed byte_array, after setting byte_length
 bool Chunk::unzip()
 {
+    //Delete old byte array
+    if (byte_array != NULL) { delete byte_array; }
 
-    //TODO: uncompress() function
+    //Allocate space for byte_array (byte_length must be pre-set!!)
+    byte_array = new uint8_t[byte_length];
 
+    //Use Zlib to uncompress the zipped data to byte_array
+    int result = uncompress( byte_array, (uLongf*)&byte_length,
+        zipped, zipped_length );
+    
+    //Problem?
+    if (result != Z_OK)
+    {
+        if (byte_array != NULL) { delete byte_array; }
+        byte_array = NULL;
+        byte_length = 0;
+        return false;
+    }
+    
     return true;
 }
             
