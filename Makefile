@@ -3,7 +3,7 @@
 BIN         = libmc--c.a
 SRCFILES    = Chunk.cpp World.cpp Viewer.cpp
 HEADERS     = Chunk.h World.h Viewer.h
-LIBS        = -L$(HOME)/lib -lopengl32 -lglu32 -lDevIL -lILU
+LIBS        = -L$(HOME)/lib -lopengl32 -lglu32 -lDevIL -lILU -lz
 INCLUDES    = -I$(HOME)/include
 ###DEBUG       = on
 MOREFLAGS   =

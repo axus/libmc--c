@@ -67,6 +67,33 @@ bool World::addChunk( Chunk *chunk)
     return true;
 }
 
+//Check key for coordinates
+uint64_t World::getKey(const int32_t X, const int8_t Y, const int32_t Z) const
+{
+    uint64_t key = ( (uint64_t)(X & 0x0FFFFFFF) << 40 )|
+                 ( (uint64_t)(Z & 0x0FFFFFFF) << 8 )|
+                 ( (uint64_t)(Y & 0xFF));
+                 
+    return key;
+}
+
+//Return chunk at location
+mc__::Chunk* World::getChunk(int32_t X, int8_t Y, int32_t Z)
+{
+    mc__::Chunk* result;
+    
+    //Lookup chunk by key
+    uint64_t key = ( (uint64_t)(X & 0x0FFFFFFF) << 40 )|
+                   ( (uint64_t)(Z & 0x0FFFFFFF) << 8 )|
+                   ( (uint64_t)(Y & 0xFF));
+    uint64Chunk0Map_t::const_iterator iter = coordChunkMap.find(key);
+    
+    //Set result to chunk, if found, otherwise NULL
+    result = (iter != coordChunkMap.end())? iter->second : NULL;
+    
+    return result;
+}
+
 
 //Generate chunk representing block ID 0 - 95
 bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
@@ -97,6 +124,10 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
             firstBlockArray[index].blockID = (ID_y|ID_x);
         }
     }
+
+    //Pack blocks in chunk and zip
+    testChunk->packBlocks();
+    testChunk->zip();
 
     addChunk(testChunk );
 
@@ -130,6 +161,10 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
             firstBlockArray[index].blockID = 3; //Dirt
         }
     }
+
+    //Pack blocks in chunk and zip
+    flatChunk->packBlocks();
+    flatChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
     addChunk(flatChunk );
@@ -191,6 +226,10 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
         firstBlockArray[index].blockID = ID;
         index++;
     }}}
+
+    //Pack blocks in chunk, and zip
+    treeChunk->packBlocks();
+    treeChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
     addChunk(treeChunk );

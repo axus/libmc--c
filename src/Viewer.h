@@ -29,8 +29,9 @@
 #include <IL/il.h>
 #include <IL/ilu.h>
 
-//SFML
-#include <SFML/Graphics.hpp>
+//OpenGL
+#include <gl/gl.h>
+#include <gl/glu.h>
 
 //STL
 #include <string>
@@ -61,10 +62,10 @@ namespace mc__ {
     const size_t texmap_TILE_LENGTH = 16;   //openGL coords per tile
     const size_t texmap_TILES = 16;         //tiles in map (1D)
     const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
-    
+
     //Texture map ratio:  tile:texmap length
     const float tmr = 1.0f/((float)texmap_TILES);
-            
+
     class Viewer {
         public:
 
@@ -98,6 +99,9 @@ namespace mc__ {
             void turn( GLint degrees, GLint axus_x=0, GLint axus_y=1, GLint axus_z=0);
             void viewport( GLint x, GLint y, GLsizei width, GLsizei height);
             void reset();
+            
+            //Export functions
+            bool writeChunkBin( mc__::Chunk *chunk, const string& filename);
             
             //RGB settings for leaves, grass :)
             GLubyte leaf_color[4];

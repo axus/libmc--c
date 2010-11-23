@@ -19,40 +19,133 @@
     <http://www.gnu.org/licenses/>.
 */
 
+//Standard lib
 #include <cstdlib>  //NULL
-#include <cstring>   //memcpy
+#include <cstring>   //memcpy, memset
 
+//libmc--
 #include "Chunk.h"
 using mc__::Chunk;
+using mc__::Block;
 
 //Allocate space for chunk
 Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z):
-            size_X(size_x), size_Y(size_y), size_Z(size_z), block_array(NULL),
+            size_X(size_x), size_Y(size_y), size_Z(size_z),
+            block_array(NULL), byte_array(NULL),
             compressed_length(0), compressed(NULL)
 {
+    //Calculate array lengths from sizes
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
+    byte_length = (array_length<<1) + ((array_length+1)>>1);
+    
+    //Assign array and clear to 0
     block_array = new Block[array_length];
+    byte_array = new uint8_t[ byte_length ];
+    memset(block_array, 0, array_length*sizeof(mc__::Block));
+    memset(byte_array, 0, byte_length);
 }
 
 //Allocate space and set x,y,z
 Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z,
                 int32_t x, int8_t y, int32_t z):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
-            X(x), Y(y), Z(z), block_array(NULL),
+            X(x), Y(y), Z(z), block_array(NULL), byte_array(NULL),
             compressed_length(0), compressed(NULL)
 {
+    //Calculate array lengths from sizes
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
+    byte_length = (array_length<<1) + ((array_length+1)>>1);
+
+    //Assign array and clear to 0
     block_array = new Block[array_length];
+    byte_array = new uint8_t[ byte_length ];
+    memset(block_array, 0, array_length*sizeof(mc__::Block));
+    memset(byte_array, 0, byte_length);
 }
 
 //Deallocate chunk space
 Chunk::~Chunk()
 {
-    if (block_array != NULL) {
-        delete block_array;
-        block_array = NULL;
+    if (byte_array != NULL) {
+        delete byte_array;
+        byte_array = NULL;
     }
 }
+
+//Copy block_array to byte_array
+void  Chunk::packBlocks()
+{
+    size_t index;
+    mc__::Block* block;
+    bool half_byte=false;
+
+    //Offsets to data in byte array
+    size_t off_meta=array_length;
+    
+    size_t off_light= array_length + (array_length/2);
+    
+    size_t off_sky= array_length<<1;
+    
+    //For each block...
+    for ( index=0; index < array_length; index++)
+    {
+        //Assign blockID
+        block = block_array + index;
+        byte_array[index] = block->blockID;
+        
+        //Pack the metadata, light, and sky, according to half-byte
+        if (!half_byte) {
+            byte_array[off_meta] = (block->metadata << 4);
+            byte_array[off_light] |= (block->lighting >> 4); off_light++;
+            byte_array[off_sky] = (block->lighting << 4);
+        } else {
+            byte_array[off_meta] |= (block->metadata & 0x0F); off_meta++;
+            byte_array[off_light] = (block->lighting & 0xF0);
+            byte_array[off_sky] |= (block->lighting & 0x0F); off_sky++;
+        }
+        
+        //Toggle half-byte status, go to next block
+        half_byte = !half_byte;
+    }
+}
+
+//Load byte_array to block_array
+void  Chunk::unpackBlocks()
+{
+    size_t index;
+    mc__::Block* block;
+    bool half_byte=false;
+
+    //Offsets to data in byte array
+    size_t off_meta=array_length;
+    size_t off_light= array_length + (array_length/2);
+    size_t off_sky= array_length<<1;
+    
+    //For each block...
+    for ( index=0; index < array_length; index++)
+    {
+        //Assign blockID from start of byte array
+        block = block_array + index;
+        block->blockID = byte_array[index];
+        
+        //Unpack the metadata, light, and sky, according to half-byte
+        if (!half_byte) {
+            block->metadata = (byte_array[off_meta] >> 4);
+            block->lighting = (byte_array[off_light] << 4) |
+                              (byte_array[off_sky] >> 4);
+                              off_light++;
+        } else {
+            block->metadata = (byte_array[off_meta] & 0x0F);
+            block->lighting = (byte_array[off_light] & 0xF0) |
+                              (byte_array[off_sky] & 0x0F);
+                              off_meta++; off_sky++;
+        }
+        
+        //Toggle half-byte status, go to next block
+        half_byte = !half_byte;
+    }
+}
+
 
 //Set world block coordinates
 void Chunk::setCoord(int32_t x, int8_t y, int32_t z)
@@ -72,5 +165,29 @@ void Chunk::setCompressed(size_t size, uint8_t *data)
   
     compressed_length = size;
     memcpy(compressed, data, size);
-
 }
+
+//Compress the packed byte_array to *compressed, set compressed_length
+void Chunk::zip()
+{
+    //zlib states that the source buffer must be at least 0.1
+    //times larger than the source buffer plus 12 bytes
+    //to cope with the overhead of zlib data streams
+    compressed = new Bytef[ byte_length/10 + 13 ];
+
+    int result = compress2( compressed, &compressed_length,
+        (const Bytef*)byte_array, (uLong)byte_length, Z_BEST_SPEED);
+    
+    //TODO: RETURNS FALSE FOR SOME REASON
+    if (result != Z_OK) { compressed = NULL; }
+}
+
+//Uncompress *compressed to packed byte_array
+bool Chunk::unzip()
+{
+
+    //TODO: uncompress() function
+
+    return true;
+}
+            

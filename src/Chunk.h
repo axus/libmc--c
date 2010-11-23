@@ -29,11 +29,14 @@
     #include <stdint.h>
 #endif
 
+//Zlib
+#include <zlib.h>
+
 namespace mc__ {
 
     //Block in the game world
     typedef struct {
-        uint8_t blockID; uint8_t metadata; uint8_t lighting;
+        uint8_t blockID; uint8_t metadata; uint8_t lighting; uint8_t padding;
     } Block;
     
     //Item properties, on ground or in inventory
@@ -48,9 +51,11 @@ namespace mc__ {
 
         public:
             //Allocate space for chunk.  Actual size is size_x+1, size_y+1, size_z+1
+            //  ID, metadata, and lighting are set to 0
             Chunk(uint8_t size_x, int8_t size_y, int32_t size_z);
             
             //Allocate space and set x,y,z
+            //  ID, metadata, and lighting are set to 0
             Chunk(uint8_t size_x, int8_t size_y, int32_t size_z,
                     int32_t x, int8_t y, int32_t z);
             
@@ -60,9 +65,21 @@ namespace mc__ {
             //Set world block coordinates
             void setCoord(int32_t x, int8_t y, int32_t z);
             
+            //Pack block_array to byte_array
+            void packBlocks();
+            
+            //Unpack byte_array to block_array
+            void unpackBlocks();
+
             //Copy compressed data to chunk
             void setCompressed( size_t length, uint8_t *data);
             
+            //Compress the packed byte_array to *compressed
+            void zip();
+                        
+            //Uncompress *compressed to packed byte_array
+            bool unzip();
+                        
             //Dimension size - 1
             uint8_t size_X, size_Y, size_Z;
             
@@ -71,15 +88,22 @@ namespace mc__ {
             int8_t Y;
             int32_t Z;
             
-            //Precompute size_X * size_Y * size_Z
-            size_t array_length;
+            //Precompute size_X * size_Y * size_Z, number of bytes in uncompressed chunk
+            size_t array_length, byte_length;
         
-            //Point to storage for blocks in chunk
+            //Point to storage for blocks in chunk (don't use!!!)
             Block *block_array;
             
+            //Uncompressed block data storage. Size=array_length*2.5
+            //  uint8_t item_ID[array_length];
+            //  uint4_t metadata[array_length];
+            //  uint4_t block_light[array_length];
+            //  uint4_t sky_light[array_length];
+            uint8_t *byte_array;
+            
             //Also, keep compressed version
-            size_t compressed_length;
-            uint8_t *compressed;
+            uLongf compressed_length;
+            Bytef *compressed;
     };
 }
 

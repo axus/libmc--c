@@ -78,6 +78,8 @@ namespace mc__ {
             bool addChunk(uint8_t* data,
                 int32_t X, int8_t Y, int32_t Z,
                 uint8_t size_X, uint8_t size_Y, uint8_t size_Z);
+                
+            mc__::Chunk* getChunk(int32_t X, int8_t Y, int32_t Z);
 
             //Generate chunk 16x13x1 containing block ID 0 - 96
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);
@@ -90,6 +92,9 @@ namespace mc__ {
             bool genTree(const int32_t X, const int8_t Y, const int32_t Z,
                 uint8_t size_X=5, uint8_t size_Y=8, uint8_t size_Z=5,
                 uint8_t leavesID=18);
+            
+            //Check key for coordinates
+            uint64_t getKey(const int32_t X, const int8_t Y, const int32_t Z) const;
             
             //Access this to see chunks in the world
             uint64Chunk0Map_t coordChunkMap;

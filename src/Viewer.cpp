@@ -708,6 +708,29 @@ Normal block = 0x00: cube, dark, opaque, solid
     return true;
 }
 
+//Write binary data of uncompressed chunk
+bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename)
+{
+    //Validate pointer
+    if (chunk == NULL) { return false; }
+    
+    //Open binary file for output
+    ofstream binFile(filename.c_str(), ios::out | ios::binary);
+    uint8_t *bytes = chunk->byte_array;
+    binFile.write( (char*)bytes, chunk->byte_length);
+    binFile.close();
+    cerr << "Wrote " << chunk->byte_length << " bytes to " << filename << endl;
+    
+    //Zipped file :)
+    ofstream zipFile("zipchunk.bin", ios::out | ios::binary);
+    zipFile.write( (char*)chunk->compressed, chunk->compressed_length);
+    zipFile.close();
+    cerr << "Wrote " << chunk->compressed_length
+        << " bytes to zipchunk.bin" << endl;
+    
+    return true;
+}
+
 
 //Dump DevIL texture info to "texture.log"
 void Viewer::outputRGBAData() {

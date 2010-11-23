@@ -3,7 +3,7 @@
 BIN         = bin/mc--c.exe
 SRCFILES    = main.cpp
 LIBS        = -L$(HOME)/lib -lnet-- -lwsock32 -lmc--c -lopengl32 -lglu32 -lDevIL -lILU \
--lsfml-system -lsfml-window -lsfml-graphics
+-lsfml-system -lsfml-window -lsfml-graphics -lz
 
 INCLUDES    = -I$(HOME)/include
 LOGFILES    = network.log

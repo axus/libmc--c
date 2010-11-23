@@ -134,6 +134,17 @@ bool handleSfEvent( const sf::Event& Event )
                 case sf::Key::B:        //Change color
                     viewer.leaf_color[2] += 16;
                     break;
+                case sf::Key::Tilde:        //Write a chunk
+                {
+                    mc__::Chunk *chunk = world.getChunk(3,0,3);
+                    if (chunk != NULL) {
+                        viewer.writeChunkBin( chunk, "chunk.bin");
+                    } else {
+                        cerr << "Chunk not found, key=0x" << hex
+                            << world.getKey(3,0,3) << dec << endl;
+                    }
+                }
+                    break;
                 default:
                     break;
             }
