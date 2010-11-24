@@ -206,31 +206,38 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
 
     //Write every block in chunk.  x,y,z determined by position in array.
     for (off_x=0; off_x < size_X; off_x++) {
-    for (off_z=0; off_z < size_Z; off_z++) {
-    for (off_y=0; off_y < size_Y; off_y++) {
-        //Default is air
-        ID=0;
-      
-        //Calculate distance from "Y-axus" of tree
-        center_x = (size_X/2 < off_x ? off_x - size_X/2 : size_X/2 - off_x );
-        center_z = (size_Z/2 < off_z ? off_z - size_Z/2 : size_Z/2 - off_z );
-        center_y = (size_Y/2 < off_y ? off_y - size_Y/2 : size_Y/2 - off_y );
-        center_dist = center_x + center_z;
+        center_x = (size_X/2 < off_x ? off_x - size_X/2 : size_X/2 - off_x);
+        
+        for (off_z=0; off_z < size_Z; off_z++) {  
+            center_z = (size_Z/2 < off_z ?off_z - size_Z/2: size_Z/2 - off_z);
+            
+            //Calculate distance from "Y-axus" of tree
+            center_dist = center_x + center_z;
+
+            for (off_y=0; off_y < size_Y; off_y++) {
+                center_y=(size_Y/2<off_y? off_y - size_Y/2: size_Y/2 - off_y);
                 
-        if (center_dist == 0 && off_y < size_Y-2) {
-            //Draw trunk up to trunk height - 2
-            ID = logID;
-        } else if (off_y > 1) {
-            //Leaves over 2 height
-            if (center_dist < (size_X+size_Z)/4 + (size_Y - center_y - 1) - 5 ) {
-                ID=leavesID;
+                //Default is air
+                ID=0;
+      
+                if (center_dist == 0 && off_y < size_Y-2) {
+                    //Draw trunk up to trunk height - 2
+                    ID = logID;
+                } else if (off_y > 1) {
+                    //Leaves over 2 height
+                    if (center_dist <
+                        ((size_X+size_Z)/4 + (size_Y - center_y - 1) - 5))
+                    {
+                        ID=leavesID;
+                    }
+                }
+        
+                //Assign block ID and increment
+                firstBlockArray[index].blockID = ID;
+                index++;
             }
         }
-        
-        //Assign block ID and increment
-        firstBlockArray[index].blockID = ID;
-        index++;
-    }}}
+    }
 
     //Pack blocks in chunk, and zip
     treeChunk->packBlocks();
