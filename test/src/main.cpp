@@ -19,6 +19,9 @@
     <http://www.gnu.org/licenses/>.
 */
 
+#include "UserInterface.hpp"
+
+/*
 //SFML
 #include <SFML/Graphics.hpp>
 
@@ -41,210 +44,31 @@ using std::ofstream;
 using std::ios;
 using std::vector;
 using std::map;
-
-//Compiler specific options
-#ifdef _MSC_VER
-    #include "ms_stdint.h"
-#else
-    #include <stdint.h>
-#endif
-
-//libmc--c classes
-#include "mc--/World.hpp"
-#include "mc--/Viewer.hpp"
+*/
 
 //
 // Global variables
 //
 
-//Texture file
-const string texture_map_filename("terrain.png");
-
-//Move the world in these directions at start
-const int start_X=0, start_Y=-16, start_Z=-320;
-
+/*
 //Input state variables
 bool mouse_press[sf::Mouse::ButtonCount];
 int mouse_press_X[sf::Mouse::ButtonCount];
 int mouse_press_Y[sf::Mouse::ButtonCount];
 int mouse_X, mouse_Y;
+*/
 
 //Game world and viewer
 mc__::World world;
+
+/*
 mc__::Viewer viewer;
+*/
 
 //
 // Functions
 //
 
-//Process user input
-bool handleSfEvent( const sf::Event& Event )
-{
-    bool result=true;
-    
-    switch( Event.Type) {
-      
-        //Window resize
-        case sf::Event::Resized:
-            viewer.viewport(0,0, Event.Size.Width, Event.Size.Height);
-            break;
-        
-        //Key pressed
-        case sf::Event::KeyPressed:
-            switch ( Event.Key.Code) {
-                case sf::Key::Escape:       //Quit
-                    result = false;
-                    break;
-                case sf::Key::Up:           //Move Up
-                    viewer.move(0, -16, 0);
-                    break;
-                case sf::Key::Down:         //Move Down
-                    viewer.move(0, 16, 0);
-                    break;
-                case sf::Key::Left:         //Move left
-                case sf::Key::A:
-                    viewer.move(16, 0, 0);
-                    break;
-                case sf::Key::Right:        //Move right
-                case sf::Key::D:
-                    viewer.move(-16, 0, 0);
-                    break;
-                case sf::Key::PageUp:        //Zoom in
-                case sf::Key::W:
-                    viewer.move(0, 0, 16);
-                    break;
-                case sf::Key::PageDown:        //Zoom out
-                case sf::Key::S:
-                    viewer.move(0, 0, -16);
-                    break;
-                case sf::Key::Home:        //Turn left
-                case sf::Key::Q:
-                    viewer.turn(-15, 0, 1, 0);
-                    break;
-                case sf::Key::End:        //Turn right
-                case sf::Key::E:
-                    viewer.turn(15, 0, 1, 0);
-                    break;
-                case sf::Key::R:        //Change color
-                    viewer.leaf_color[0] += 16;
-                    break;
-                case sf::Key::G:        //Change color
-                    viewer.leaf_color[1] += 16;
-                    break;
-                case sf::Key::B:        //Change color
-                    viewer.leaf_color[2] += 16;
-                    break;
-                case sf::Key::Tilde:        //Write a chunk
-                {
-                    mc__::Chunk *chunk = world.getChunk(3,0,3);
-                    if (chunk != NULL) {
-                        viewer.writeChunkBin( chunk, "chunk.bin");
-                    } else {
-                        cerr << "Chunk not found, key=0x" << hex
-                            << world.getKey(3,0,3) << dec << endl;
-                    }
-                }
-                    break;
-                default:
-                    break;
-            }
-            break;
-            
-        //Mousewheel scroll
-        case sf::Event::MouseWheelMoved: {
-            //Change camera position (in increments of 16).  Down zooms out.
-            int move_Z = (Event.MouseWheel.Delta << 4);
-            viewer.move(0, 0, move_Z);
-            break;
-        }
-        
-        //Mouse clicks
-        case sf::Event::MouseButtonPressed:
-        
-            //Remember where this mouse button was pressed
-            mouse_press[Event.MouseButton.Button] = true;
-            mouse_press_X[Event.MouseButton.Button] = mouse_X;
-            mouse_press_Y[Event.MouseButton.Button] = mouse_Y;
-            
-            
-            //Reset camera if middle mouse button pressed
-            switch( Event.MouseButton.Button ) {
-                case sf::Mouse::Middle:
-                    viewer.reset();
-                    viewer.move(start_X, start_Y, start_Z);
-                    break;
-                default:
-                    break;
-            }
-            break;
-            
-        //Mouse un-clicked
-        case sf::Event::MouseButtonReleased:
-        
-            //Forget that this mouse button was pressed
-            mouse_press[Event.MouseButton.Button] = false;
-            break;
-        
-        //Mouse move
-        case sf::Event::MouseMoved:
-
-            //Get latest position from event
-            mouse_X = Event.MouseMove.X;
-            mouse_Y = Event.MouseMove.Y;
-
-            //Translate camera if moved while holding left button
-            if (mouse_press[sf::Mouse::Left]) {
-
-                //Move camera every 16 pixels on X-axis
-                int diff_X = (mouse_press_X[sf::Mouse::Left] - mouse_X)/16;
-                
-                if (diff_X != 0) {
-                    viewer.move((diff_X << 4), 0, 0);
-                    
-                    //Save new mouse position
-                    mouse_press_X[sf::Mouse::Left] = mouse_X;
-                }
-
-                //Move camera every 16 pixels on Y-axis
-                int diff_Y = (mouse_Y - mouse_press_Y[sf::Mouse::Left])/16;
-                if (diff_Y != 0) {
-                    viewer.move(0, diff_Y << 4,0);
-                    
-                    //Save new mouse position
-                    mouse_press_Y[sf::Mouse::Left] = mouse_Y;
-                }
-                
-                /*//Move camera 1 pixel at a time on X-axis
-                viewer.move(mouse_press_X[sf::Mouse::Left] - mouse_X, 0, 0);
-                mouse_press_X[sf::Mouse::Left] = mouse_X;
-                
-                //Move camera one pixel at a time on Y-axis
-                viewer.move(0, mouse_Y - mouse_press_Y[sf::Mouse::Left], 0);
-                mouse_press_Y[sf::Mouse::Left] = mouse_Y;
-                */
-            }
-
-            //Rotate camera if mouse moved while holding right button
-            if (mouse_press[sf::Mouse::Right]) {
-              
-                //Use change in X position to rotate about Y-axis
-                viewer.turn(mouse_press_X[sf::Mouse::Right] - mouse_X, 0, 1, 0);
-
-                //Don't rotate about X-axis
-                //viewer.turn(mouse_Y - mouse_press_Y[sf::Mouse::Right], 1, 0, 0);
-                
-                //Update mouse press position for right mouse button
-                mouse_press_X[sf::Mouse::Right] = mouse_X;
-                mouse_press_Y[sf::Mouse::Right] = mouse_Y;
-            }
-            break;
-        //Unhandled events
-        default:
-            break;
-    }
-    
-    return result;
-}
 
 int main()
 {   
@@ -259,10 +83,17 @@ int main()
     //Load chunks behind the camera
     world.genFlatGrass(-8, -2, 9);
     world.genChunkTest(-8, 1, 24);
-    
+
+    //Move the world in these directions at start
+    world.spawn_X = 0;
+    world.spawn_Y = -16;
+    world.spawn_Z = -320;
+
     //SFML variables
-    sf::Clock Clock;
-    sf::WindowSettings Settings;
+    //sf::Clock Clock;
+
+//    sf::WindowSettings Settings;
+/*
     Settings.DepthBits = 24;
     Settings.StencilBits = 0;
     Settings.AntialiasingLevel = 0;
@@ -287,6 +118,17 @@ int main()
     sf::Event Event;
     bool Running = true;
     bool something_happened;
+*/
+
+    //Create user interface to world
+    mc__::UserInterface ui("libmc--c example", world);
+    
+    //Run until user exits
+    while (ui.run()) {
+        //Sleep some to decrease CPU usage
+        sf::Sleep(0.01f);
+    }
+/*
     while (Running && App.IsOpened()) {
       
         //Set window
@@ -312,5 +154,6 @@ int main()
         //Sleep some to decrease CPU usage
         sf::Sleep(0.01f);
     }
+*/
     return 0;
 }

@@ -101,7 +101,7 @@ namespace mc__ {
             void reset();
             
             //Export functions
-            bool writeChunkBin( mc__::Chunk *chunk, const string& filename);
+            bool writeChunkBin( mc__::Chunk *chunk, const std::string& filename);
             
             //RGB settings for leaves, grass :)
             GLubyte leaf_color[4];

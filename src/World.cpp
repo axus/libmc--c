@@ -26,6 +26,11 @@ using mc__::World;
 using mc__::Chunk;
 using mc__::Block;
 
+//Create empty world
+World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0)
+{
+}
+
 //Destroy world
 World::~World()
 {

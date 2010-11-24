@@ -35,8 +35,11 @@ using mc__::Item;
 //Definition
 namespace mc__ {
   
-    enum inv_type_t { INVTYPE_MAIN=0, INVTYPE_EQUIPPED, INVTYPE_CRAFTING,
+    //Types
+    enum inv_type_t { INVTYPE_MAIN=0, INVTYPE_EQUIPPED=1, INVTYPE_CRAFTING=2,
         INVTYPE_MAX };
+        
+    //Constants
     const uint8_t invSlotsMax = 36;
     const uint8_t invSlots[INVTYPE_MAX]={ invSlotsMax, 4, 4 };
     

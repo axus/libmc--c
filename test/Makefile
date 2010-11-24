@@ -1,7 +1,7 @@
 # Test MineCraft client for libmc--c.
 
 BIN         = bin/mc--c.exe
-SRCFILES    = main.cpp
+SRCFILES    = UserInterface.cpp main.cpp
 LIBS        = -L$(HOME)/lib -lnet-- -lwsock32 -lmc--c -lopengl32 -lglu32 -lDevIL -lILU \
 -lsfml-system -lsfml-window -lsfml-graphics -lz
 

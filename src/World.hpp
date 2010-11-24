@@ -71,6 +71,9 @@ namespace mc__ {
     class World {
         
         public:
+            //Genesis
+            World();
+            
             //Armageddon
             ~World();
             
@@ -98,6 +101,13 @@ namespace mc__ {
             
             //Access this to see chunks in the world
             uint64Chunk0Map_t coordChunkMap;
+            
+            //World spawn point
+            int32_t spawn_X;
+            int8_t spawn_Y;
+            int32_t spawn_Z;
+            
+            //TODO: list of warp points?
 
         protected:
            //Will be deleted when World ends
