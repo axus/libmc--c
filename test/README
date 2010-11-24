@@ -31,16 +31,16 @@ Building with MinGW/MSYS:
 
 
 Using:
-    Copy terrain.png to $HOME/libmc--c/bin.
+    Copy "terrain.png" to $HOME/libmc--c/bin.
     Copy shared libraries to $HOME/libmc--c/bin:
         DevIL.dll
         ILU.dll
         ILUT.dll
-        libgcc
-        libstdc++
         sfml-graphics.dll
         sfml-system.dll
         sfml-window.dll
+        libgcc DLL
+        libstdc++ DLL
     
     cd $HOME/libmc--c/bin
     mc--c
@@ -49,11 +49,17 @@ Using:
     using libmc--c.
     
 Controls:
-    Zoom        Mouse-wheel scroll, PageUp, PageDown
-    Move        Left-click drag, arrow keys, WASD
-    Turn        Right-click drag, Home, End
+    North       Mouse-wheel up, Up-arrow, W
+    South       Mouse-wheel down, Down-arrow, S
+    West        Left-drag left, Left-arrow, A
+    East        Left-drag right, Right-arrow, D
+    Down        Left-drag down, Home
+    Up          Left-drag up, PageUp
+    Turn left   Right-click drag, End, Q
+    Turn right  Right-click drag, PageDown, E
     Respawn     Middle-click
     Tree color  R, G, B
+    Quit        Esc
 
 Thanks to the following people for testing:
     vLK
