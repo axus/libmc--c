@@ -38,7 +38,7 @@ endif
 all: $(BBIN) $(LIBBIN)
 
 # Build object files with chosen options
-$(BUILD)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/%.h
+$(BUILD)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/%.hpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -o $@ -c $<
 
 # Build library

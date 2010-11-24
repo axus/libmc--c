@@ -74,7 +74,7 @@ using std::ofstream;
 using std::ios;
 
 //libmc--c
-#include "Viewer.h"
+#include "Viewer.hpp"
 using mc__::Viewer;
 using mc__::face_ID;
 

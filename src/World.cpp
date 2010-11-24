@@ -19,7 +19,7 @@
     <http://www.gnu.org/licenses/>.
 */
 
-#include "World.h"
+#include "World.hpp"
 
 using std::vector;
 using mc__::World;

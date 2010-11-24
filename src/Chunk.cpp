@@ -23,8 +23,11 @@
 #include <cstdlib>  //NULL
 #include <cstring>   //memcpy, memset
 
+//Zlib
+#include <zlib.h>
+
 //libmc--
-#include "Chunk.h"
+#include "Chunk.hpp"
 using mc__::Chunk;
 using mc__::Block;
 
@@ -175,11 +178,10 @@ bool Chunk::zip()
 
     //Allocate more space for compressed than uncompressed, for header bytes
     zipped_length = compressBound(byte_length);
-    //byte_length + (byte_length>>3) + 12;
     zipped = new Bytef[ zipped_length ];
 
     //Use Zlib to compress the byte_array
-    int result = compress2( zipped, &zipped_length,
+    int result = compress2( zipped, (uLongf*)&zipped_length,
         (const Bytef*)byte_array, (uLong)byte_length, Z_BEST_SPEED);
     
     //Problem?
@@ -194,13 +196,14 @@ bool Chunk::zip()
     return true;
 }
 
-//Uncompress *compressed to packed byte_array, after setting byte_length
+//Uncompress *compressed to packed byte_array
+//  byte_length must be preset, and will be updated after unzip
 bool Chunk::unzip()
 {
     //Delete old byte array
     if (byte_array != NULL) { delete byte_array; }
 
-    //Allocate space for byte_array (byte_length must be pre-set!!)
+    //Allocate space for byte_array
     byte_array = new uint8_t[byte_length];
 
     //Use Zlib to uncompress the zipped data to byte_array

@@ -50,8 +50,8 @@ using std::map;
 #endif
 
 //libmc--c classes
-#include "mc--/World.h"
-#include "mc--/Viewer.h"
+#include "mc--/World.hpp"
+#include "mc--/Viewer.hpp"
 
 //
 // Global variables
