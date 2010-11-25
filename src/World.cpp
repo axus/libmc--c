@@ -25,6 +25,7 @@ using std::vector;
 using mc__::World;
 using mc__::Chunk;
 using mc__::Block;
+using mc__::chunkIterator;
 
 //Create empty world
 World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0)
@@ -34,6 +35,7 @@ World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0)
 //Destroy world
 World::~World()
 {
+    /*
     //Delete allocated chunks
     uint64Chunk0Map_t::iterator iter;
     Chunk* chunk0;
@@ -44,20 +46,45 @@ World::~World()
             delete chunk0;
         }
     }
-    
+    */
+    Chunk* chunk=NULL;
+    chunkIterator iter(*this);
+    for( ; !iter.end(); iter++ ) {
+        if (chunk != NULL) {
+            delete chunk;
+        }
+    }
 }
 
-//Copy uncompressed chunk data
-bool World::addChunk(uint8_t* data,
-    int32_t X, int8_t Y, int32_t Z,
-    uint8_t size_X, uint8_t size_Y, uint8_t size_Z)
+//Add compressed chunk to list/map
+//  Return false if chunk could not be added
+bool World::addChunkZip(int32_t X, int8_t Y, int32_t Z,
+    uint8_t size_X, uint8_t size_Y, uint8_t size_Z,
+    uint32_t ziplength, uint8_t *zipped, bool unzip)
 {
-    //Allocate chunk
-    Chunk *newChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
-    addChunk(newChunk);
-
-    return true;
+    bool result=false;
+    
+    Chunk* chunk = new Chunk(size_X, size_Y, size_Z, X, Y, Z);
+    if (chunk) {
+        chunk->setZipped(ziplength, zipped);
+        addChunk(chunk);
+        
+        //byte_array and block_array are still NULL!
+        if (unzip) {
+            result = chunk->unzip();
+            chunk->unpackBlocks();
+        } else {
+            result=true;
+        }
+        
+    }
+      
+    return result;
 }
+
+
+
+/*
 
 //Will be deleted when World ends
 bool World::addChunk( Chunk *chunk)
@@ -71,7 +98,6 @@ bool World::addChunk( Chunk *chunk)
     
     return true;
 }
-
 //Check key for coordinates
 uint64_t World::getKey(const int32_t X, const int8_t Y, const int32_t Z) const
 {
@@ -81,21 +107,93 @@ uint64_t World::getKey(const int32_t X, const int8_t Y, const int32_t Z) const
                  
     return key;
 }
+*/
+/*
+//Return absolute distance of X,Y,Z coordinates from (0,0,0):
+uint64_t World::originDistance(int32_t X, int8_t Y, int32_t Z) {
 
-//Return chunk at location
+    uint32_t Xsign  = (X>>31);
+    uint32_t Xabs   = (X ^ Xsign - Xsign);
+    uint32_t Zsign  = (Z>>31);
+    uint32_t Zabs   = (Z ^ Zsign - Zsign);
+    uint8_t Ysign   = (Y >> 7);
+    uint8_t Yabs    = (Y ^ Ysign - Ysign);
+    uint64_t distance = Xabs + Zabs + Y;
+
+    return distance;
+}
+*/
+
+
+//Return 64 bit key for X,Z coordinate
+uint64_t World::getKey(const int32_t X, const int32_t Z) const
+{
+    uint64_t key = (((((uint64_t)X) << 32)& 0xFFFFFFFF00000000) |
+                     (((uint64_t)Z) & 0x00000000FFFFFFFF));
+    return key;
+}
+
+//Add chunk to world
+bool World::addChunk( Chunk *chunk)
+{
+    //Can't add null chunks
+    if (chunk == NULL) { return false; }
+  
+    bool result=true;
+    const uint64_t key = getKey(chunk->X, chunk->Z);
+    
+    //Lookup stack of chunks by XZ
+    XZChunksMap_t::const_iterator iter_xz = coordChunksMap.find( key );
+    
+    //Create a new stack if needed and set iter_xz
+    if (iter_xz == coordChunksMap.end()) {
+        coordChunksMap.insert( XZChunksMap_t::value_type(key, new YChunkMap_t));
+        iter_xz = coordChunksMap.find(key);
+    }
+    
+    //Get stack of chunks at XZ
+    YChunkMap_t* Ychunks = iter_xz->second;
+    if (Ychunks == NULL) {
+        Ychunks = new YChunkMap_t;
+    }
+    
+    //Check for existing chunk, delete it if found
+    YChunkMap_t::const_iterator iter_y = Ychunks->find(chunk->Y);
+    if (iter_y != Ychunks->end()) {
+        //Delete the old chunk
+        Chunk* oldChunk = iter_y->second;
+        if (oldChunk != NULL) {
+            //Had to delete old chunk!
+            result = false;
+            delete oldChunk;
+        }
+    }
+    
+    //Assign new chunk
+    Ychunks->insert( YChunkMap_t::value_type( chunk->Y, chunk));
+    
+    return true;
+}
+
+//Return chunk pointer at X,Y,Z if it exists, NULL otherwise
 mc__::Chunk* World::getChunk(int32_t X, int8_t Y, int32_t Z)
 {
     mc__::Chunk* result;
+        
+    //Lookup stack of chunks by XZ
+    XZChunksMap_t::const_iterator iter_xz = coordChunksMap.find( getKey(X,Z));
     
-    //Lookup chunk by key
-    uint64_t key = ( (uint64_t)(X & 0x0FFFFFFF) << 40 )|
-                   ( (uint64_t)(Z & 0x0FFFFFFF) << 8 )|
-                   ( (uint64_t)(Y & 0xFF));
-    uint64Chunk0Map_t::const_iterator iter = coordChunkMap.find(key);
+    //Return NULL if XZ stack not found
+    if (iter_xz == coordChunksMap.end()) { return NULL; }
+    YChunkMap_t* yChunks = iter_xz->second;
+    if (yChunks == NULL) { return NULL; }
     
-    //Set result to chunk, if found, otherwise NULL
-    result = (iter != coordChunkMap.end())? iter->second : NULL;
+    //Look for chunk at Y coordinate
+    YChunkMap_t::const_iterator iter_y = yChunks->find( Y );
+    if (iter_y == yChunks->end()) { return NULL; }
+    result = iter_y->second;
     
+    //Return chunk at location    
     return result;
 }
 
@@ -249,3 +347,99 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     return true;
 }
 
+//
+//Minimal iterator object class for listing all world chunks
+//
+
+//        XZChunksMap_t::const_iterator iter_xz;
+//        YChunkMap_t::const_iterator iter_y;
+chunkIterator::chunkIterator( const World& w):
+    world(w), chunks(NULL), chunk(NULL)
+{
+    //Assign internal iterators to start of world coordinate map
+    iter_xz = world.coordChunksMap.begin();
+    
+    //Move iterator until a non-null chunk is found
+    while (chunks == NULL && iter_xz != world.coordChunksMap.end()) {
+        chunks = iter_xz->second;
+        if (chunks == NULL) {
+            iter_xz++;
+        } else {
+            //Search until non-null chunk found
+            iter_y = chunks->begin();
+            while (iter_y != chunks->end() && chunk == NULL) {
+                chunk = iter_y->second;
+                iter_y++;
+            }
+
+        }
+    }
+}
+
+//Increment this iterator
+chunkIterator& chunkIterator::operator++(int)
+{
+    //assume chunks and iter_y are valid at start        
+    chunk = NULL;
+    while (chunk == NULL && iter_xz != world.coordChunksMap.end()) {
+        //Look for non-null chunk
+        for (iter_y++; chunk == NULL && iter_y != chunks->end(); iter_y++) {
+            chunk = iter_y->second;
+        }
+        
+        //Move to next chunk list if needed
+        if (iter_y == chunks->end()) {
+          
+            //Done with this stack, go to the next one
+            iter_xz++;
+            chunks = NULL;
+            
+            //Repeat until chunks and iter_y found, or end
+            while (chunks == NULL && iter_xz != world.coordChunksMap.end()) {
+                chunks = iter_xz->second;
+                //Stil not found, keep looking
+                if (chunks == NULL) {
+                    iter_xz++;
+                } else {
+                    iter_y = chunks->begin();
+                }
+            }
+        }
+    }
+
+    return *this;
+}
+
+/*
+chunkIterator& chunkIterator::operator++(int)
+{
+    chunkIterator &me = *this;
+    me++;
+    
+    return me;
+}
+*/
+
+//Derefence the iterator to get a chunk
+Chunk* chunkIterator::operator*()
+{
+    //Return the currently pointed chunk
+    return chunk;
+}
+
+//Check if we're at the end of the world
+bool chunkIterator::end()
+{
+    return (iter_xz == world.coordChunksMap.end());
+}
+
+//Comparison operators
+bool mc__::operator==(chunkIterator& left, chunkIterator& right)
+{
+    return (left.iter_xz == right.iter_xz && left.iter_y == right.iter_y);
+}
+
+bool mc__::operator!=(chunkIterator& left, chunkIterator& right)
+{
+    return !(left == right);
+}

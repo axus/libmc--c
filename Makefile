@@ -5,7 +5,7 @@ SRCFILES    = Chunk.cpp Player.cpp World.cpp Viewer.cpp
 HEADERS     = Chunk.hpp Entity.hpp Player.hpp World.hpp Viewer.hpp
 LIBS        = -L$(HOME)/lib -lopengl32 -lglu32 -lDevIL -lILU -lz
 INCLUDES    = -I$(HOME)/include
-###DEBUG       = on
+DEBUG       = on
 MOREFLAGS   =
 
 #I suggest using SFML for OpenGL:  -lsfml-system -lsfml-window -lsfml-graphics

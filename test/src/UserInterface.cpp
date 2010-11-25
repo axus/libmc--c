@@ -185,8 +185,7 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                     if (chunk != NULL) {
                         viewer.writeChunkBin( chunk, "chunk.bin");
                     } else {
-                        cerr << "Chunk not found, key=0x" << hex
-                            << world.getKey(3,0,3) << dec << endl;
+                        cerr << "Chunk not found @ (3,0,3)" << endl;
                     }
                 }
                     break;

@@ -72,6 +72,7 @@ using std::setw;
 using std::setfill;
 using std::ofstream;
 using std::ios;
+using std::flush;
 
 //libmc--c
 #include "Viewer.hpp"
@@ -399,12 +400,43 @@ void Viewer::drawBlock( const mc__::Block& block, GLint x, GLint y, GLint z)
 //Draw the chunks in mc__::World
 void Viewer::drawChunks( const mc__::World& world)
 {
+    //Offset in block array of chunk
+    size_t index;
+    
+    //Keep track of block coordinates for each chunk in block
+    GLint off_x, off_y, off_z, x, y, z;
 
+    //My own ghetto iterator :)
+    mc__::chunkIterator iter(world);
+
+    for( ; !iter.end(); iter++ ) {
+
+        mc__::Chunk *chunk = *iter;
+        if (chunk == NULL) {
+            cerr << "NULL," << flush;
+            break;
+        }
+        mc__::Chunk& myChunk = *chunk;
+        index=0;
+
+        //When indexing block in chunk array,
+        //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
+
+        //Draw every block in chunk.  x,y,z determined by position in array.
+        for (off_x=0, x=myChunk.X; off_x <= myChunk.size_X; off_x++, x++) {
+        for (off_z=0, z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, z++) {
+        for (off_y=0, y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, y++) {
+            drawBlock( myChunk.block_array[index], x, y, z);
+            index++;
+            //cerr << index <<","<< flush;
+        }}}
+        //cerr << endl;
+    }
+/*
     //Iterator for moving through chunk map
     uint64Chunk0Map_t::const_iterator iter;
-    
     const uint64Chunk0Map_t& chunks = world.coordChunkMap;
-    
+
     //Offset in block array of chunk
     size_t index;
     
@@ -429,6 +461,7 @@ void Viewer::drawChunks( const mc__::World& world)
             index++;
         }}}
     }
+*/
 
 }
 

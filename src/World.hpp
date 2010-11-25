@@ -65,8 +65,15 @@ namespace mc__ {
     //Types
     typedef std::vector<Chunk> chunkVector;
     //typedef hash_map< uint64_t, Chunk*, hash_uint64 > uint64Chunk0Map_t;
-    typedef std::map< uint64_t, Chunk*> uint64Chunk0Map_t;
-
+    //typedef std::map< uint64_t, Chunk*> uint64Chunk0Map_t;
+    
+    //Coordinate to chunk mapping types
+    typedef std::map< int8_t, Chunk* > YChunkMap_t;
+    typedef std::map< uint64_t, YChunkMap_t* > XZChunksMap_t;
+    
+    //Output iterator for reading World chunks
+    class chunkIterator;
+    
     //World class ;)
     class World {
         
@@ -77,12 +84,16 @@ namespace mc__ {
             //Armageddon
             ~World();
             
-            //Add uncompressed chunk to list/map
-            bool addChunk(uint8_t* data,
-                int32_t X, int8_t Y, int32_t Z,
-                uint8_t size_X, uint8_t size_Y, uint8_t size_Z);
-                
+            //Add compressed chunk to list/map
+            bool addChunkZip(int32_t X, int8_t Y, int32_t Z,
+                uint8_t size_X, uint8_t size_Y, uint8_t size_Z,
+                uint32_t ziplength, uint8_t *zipped, bool unzip=true);
+            
+            //Return chunk at X,Y,Z
             mc__::Chunk* getChunk(int32_t X, int8_t Y, int32_t Z);
+            
+            //Iterate through all the chunks in the world
+            
 
             //Generate chunk 16x13x1 containing block ID 0 - 96
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);
@@ -97,10 +108,11 @@ namespace mc__ {
                 uint8_t leavesID=18);
             
             //Check key for coordinates
-            uint64_t getKey(const int32_t X, const int8_t Y, const int32_t Z) const;
+            uint64_t getKey(const int32_t X, const int32_t Z) const;
             
             //Access this to see chunks in the world
-            uint64Chunk0Map_t coordChunkMap;
+            //uint64Chunk0Map_t coordChunkMap;
+            XZChunksMap_t coordChunksMap;
             
             //World spawn point
             int32_t spawn_X;
@@ -113,6 +125,30 @@ namespace mc__ {
            //Will be deleted when World ends
             bool addChunk( Chunk *chunk);
     };
+    
+    //Minimal iterator object class for listing all world chunks
+    class chunkIterator {
+        public:
+            chunkIterator( const World& w);
+            //chunkIterator& operator++();
+            chunkIterator& operator++(int);
+            Chunk* operator* ();
+            bool end(); //End of world?
+            
+            friend bool operator==(chunkIterator&, chunkIterator&);
+            friend bool operator!=(chunkIterator&, chunkIterator&);
+        protected:
+            const World& world;
+            YChunkMap_t *chunks;
+            Chunk *chunk;
+            XZChunksMap_t::const_iterator iter_xz;
+            YChunkMap_t::const_iterator iter_y;
+    };
+
+    //Define those friend operators in mc__::
+    bool operator==(chunkIterator&, chunkIterator&);
+    bool operator!=(chunkIterator&, chunkIterator&);
+
 }
 
 #endif
