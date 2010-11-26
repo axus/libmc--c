@@ -35,20 +35,10 @@ World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0)
 //Destroy world
 World::~World()
 {
-    /*
-    //Delete allocated chunks
-    uint64Chunk0Map_t::iterator iter;
-    Chunk* chunk0;
-    for (iter = coordChunkMap.begin(); iter != coordChunkMap.end(); iter++)
-    {
-        chunk0 = iter->second;
-        if (chunk0 != NULL) {
-            delete chunk0;
-        }
-    }
-    */
     Chunk* chunk=NULL;
     chunkIterator iter(*this);
+    
+    //Delete all chunk memory
     for( ; !iter.end(); iter++ ) {
         if (chunk != NULL) {
             delete chunk;
@@ -78,36 +68,9 @@ bool World::addChunkZip(int32_t X, int8_t Y, int32_t Z,
         }
         
     }
-      
     return result;
 }
 
-
-
-/*
-
-//Will be deleted when World ends
-bool World::addChunk( Chunk *chunk)
-{
-    if (chunk == NULL) return false;
-
-    uint64_t key = ( (uint64_t)(chunk->X & 0x0FFFFFFF) << 40 )|
-                   ( (uint64_t)(chunk->Z & 0x0FFFFFFF) << 8 )|
-                   ( (uint64_t)(chunk->Y & 0xFF));
-    coordChunkMap[key] = chunk;
-    
-    return true;
-}
-//Check key for coordinates
-uint64_t World::getKey(const int32_t X, const int8_t Y, const int32_t Z) const
-{
-    uint64_t key = ( (uint64_t)(X & 0x0FFFFFFF) << 40 )|
-                 ( (uint64_t)(Z & 0x0FFFFFFF) << 8 )|
-                 ( (uint64_t)(Y & 0xFF));
-                 
-    return key;
-}
-*/
 /*
 //Return absolute distance of X,Y,Z coordinates from (0,0,0):
 uint64_t World::originDistance(int32_t X, int8_t Y, int32_t Z) {
@@ -123,7 +86,6 @@ uint64_t World::originDistance(int32_t X, int8_t Y, int32_t Z) {
     return distance;
 }
 */
-
 
 //Return 64 bit key for X,Z coordinate
 uint64_t World::getKey(const int32_t X, const int32_t Z) const
@@ -423,16 +385,6 @@ chunkIterator& chunkIterator::operator++(int)
 
     return *this;
 }
-
-/*
-chunkIterator& chunkIterator::operator++(int)
-{
-    chunkIterator &me = *this;
-    me++;
-    
-    return me;
-}
-*/
 
 //Derefence the iterator to get a chunk
 Chunk* chunkIterator::operator*()

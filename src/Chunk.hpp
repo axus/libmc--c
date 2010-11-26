@@ -29,6 +29,35 @@
     #include <stdint.h>
 #endif
 
+/*
+    //Block IDs and associated metadata
+    Decimal     Hex       Name              Data        Range
+    2           0x02      Grass             
+    5           0x05      Wood
+    6           0x06      Sapling           Growth      0-15
+    8           0x08      Water (moving)    Spread      0-7
+    9           0x09      Water
+    10          0x0A      Lava (moving)     Spread      0-3
+    11          0x0B      Lava
+    12          0x0C      Sand
+    18          0x12      Leaves
+    46          0x2E      TNT
+    50          0x32      Torch             Orientation 1-5
+    53          0x35      Wood Stairs       Orientation 0-9
+    59          0x3B      Crops             Growth      0-7
+    60          0x3C      Dirt              Irrigation  0-7
+    63          0x3F      SignPost          Orientation 0-15
+    65          0x41      Ladder            Orientation 2-5
+    66          0x42      Tracks            Orientation 0-9
+    67          0x43      Rock Stairs       Orientation 0-3
+    68          0x44      WallSign          Orientation 2-5
+    78          0x4E      Snow
+    79          0x4F      Ice
+    81          0x51      Cactus            Growth      0-15
+    83          0x53      Reed              Growth      0-15
+    91          0x5B      Jack-O-Lantern
+*/
+
 namespace mc__ {
 
     //Block in the game world
