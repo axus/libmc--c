@@ -78,16 +78,16 @@ Chunk::~Chunk()
 //Copy block_array to byte_array
 void  Chunk::packBlocks()
 {
-    size_t index;
+    uint32_t index;
     mc__::Block* block;
     bool half_byte=false;
 
     //Offsets to data in byte array
-    size_t off_meta=array_length;
+    uint32_t off_meta=array_length;
     
-    size_t off_light= array_length + (array_length/2);
+    uint32_t off_light= array_length + (array_length/2);
     
-    size_t off_sky= array_length<<1;
+    uint32_t off_sky= array_length<<1;
     
     //For each block...
     for ( index=0; index < array_length; index++)
@@ -115,14 +115,14 @@ void  Chunk::packBlocks()
 //Load byte_array to block_array
 void  Chunk::unpackBlocks()
 {
-    size_t index;
+    uint32_t index;
     mc__::Block* block;
     bool half_byte=false;
 
     //Offsets to data in byte array
-    size_t off_meta=array_length;
-    size_t off_light= array_length + (array_length/2);
-    size_t off_sky= array_length<<1;
+    uint32_t off_meta=array_length;
+    uint32_t off_light= array_length + (array_length/2);
+    uint32_t off_sky= array_length<<1;
     
     //For each block...
     for ( index=0; index < array_length; index++)
@@ -158,16 +158,23 @@ void Chunk::setCoord(int32_t x, int8_t y, int32_t z)
     Z = z;
 }
 
-//Copy compressed data to chunk
-void Chunk::setZipped(size_t size, uint8_t *data)
+//Allocate space for zipped data
+uint8_t* Chunk::allocZip( uint32_t size)
 {
-    //Erase old data if needed
-    if (zipped != NULL) {
-        delete zipped;
-    }
-  
+    if (zipped != NULL) { delete zipped; }
     zipped_length = size;
-    memcpy(zipped, data, size);
+    zipped = new uint8_t[zipped_length];
+    
+    return zipped;
+}
+
+//Copy compressed data to chunk
+void Chunk::copyZip(uint32_t size, uint8_t *data)
+{
+    //Allocate space and copy data
+    if (allocZip(size) != NULL) {
+        memcpy(zipped, data, size);
+    }
 }
 
 //Compress the packed byte_array to *compressed, set compressed_length

@@ -66,7 +66,7 @@ bool World::addChunkZip(int32_t X, int8_t Y, int32_t Z,
     
     Chunk* chunk = new Chunk(size_X, size_Y, size_Z, X, Y, Z);
     if (chunk) {
-        chunk->setZipped(ziplength, zipped);
+        chunk->copyZip(ziplength, zipped);
         addChunk(chunk);
         
         //byte_array and block_array are still NULL!
@@ -195,6 +195,20 @@ mc__::Chunk* World::getChunk(int32_t X, int8_t Y, int32_t Z)
     
     //Return chunk at location    
     return result;
+}
+
+//Return chunk pointer at X,Y,Z .  Erase old chunk if it exists
+mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
+                            uint8_t size_X, uint8_t size_Y, uint8_t size_Z)
+{
+    //Create the new chunk
+    mc__::Chunk* chunk = new Chunk(size_X, size_Y, size_Z, X, Y, Z);
+        
+    //Add the chunk pointer to world
+    addChunk( chunk );
+    
+    //Return chunk at location    
+    return chunk;
 }
 
 

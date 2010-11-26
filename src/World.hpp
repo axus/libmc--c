@@ -47,9 +47,9 @@
 
 //Hash function for 64 bits (X&0x3FFF)<<36|(Z&0x3FFF)<<8|Y
 struct hash_uint64 {
-  size_t operator()(const uint64_t in)  const {
+  uint32_t operator()(const uint64_t in)  const {
     uint64_t ret = (in >> 32L) ^ (in & 0xFFFFFFFF);
-    return (size_t) ret;
+    return (uint32_t) ret;
 }   //TODO: bucket_size and min_buckets for MSVC
 
 //TODO: Replace with unordered_map
@@ -61,11 +61,6 @@ struct hash_uint64 {
 
 //Define class inside mc__ namespace
 namespace mc__ {
-    
-    //Types
-    typedef std::vector<Chunk> chunkVector;
-    //typedef hash_map< uint64_t, Chunk*, hash_uint64 > uint64Chunk0Map_t;
-    //typedef std::map< uint64_t, Chunk*> uint64Chunk0Map_t;
     
     //Coordinate to chunk mapping types
     typedef std::map< int8_t, Chunk* > YChunkMap_t;
@@ -91,6 +86,10 @@ namespace mc__ {
             
             //Return chunk at X,Y,Z
             mc__::Chunk* getChunk(int32_t X, int8_t Y, int32_t Z);
+            
+            //Return new chunk at X,Y,Z, erasing old chunk
+            mc__::Chunk* newChunk(int32_t X, int8_t Y, int32_t Z,
+                uint8_t size_X, uint8_t size_Y, uint8_t size_Z);
             
             //Iterate through all the chunks in the world
             

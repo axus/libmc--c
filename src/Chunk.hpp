@@ -68,8 +68,11 @@ namespace mc__ {
             //Unpack byte_array to block_array
             void unpackBlocks();
 
+            //Allocate space for copying zipped data
+            uint8_t* allocZip( uint32_t length);
+
             //Copy compressed data to chunk
-            void setZipped( uint32_t length, uint8_t *data);
+            void copyZip( uint32_t length, uint8_t *data);
             
             //Compress the packed byte_array to *compressed
             bool zip();
