@@ -189,6 +189,10 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                     }
                 }
                     break;
+                case sf::Key::BackSlash:
+                    //Print chunk information to stdout
+                    world.printChunks();
+                    break;
                 default:
                     break;
             }

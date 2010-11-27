@@ -92,9 +92,6 @@ namespace mc__ {
                 uint8_t size_X, uint8_t size_Y, uint8_t size_Z,
                 bool unzipped=true);
             
-            //Iterate through all the chunks in the world
-            
-
             //Generate chunk 16x13x1 containing block ID 0 - 96
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);
             
@@ -109,6 +106,9 @@ namespace mc__ {
             
             //Check key for coordinates
             uint64_t getKey(const int32_t X, const int32_t Z) const;
+            
+            //Print list of chunks to stdout
+            void printChunks() const;
             
             //Access this to see chunks in the world
             XZChunksMap_t coordChunksMap;

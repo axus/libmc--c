@@ -7,7 +7,7 @@ LIBS        = -L$(HOME)/lib -lnet-- -lwsock32 -lmc--c -lopengl32 -lglu32 -lDevIL
 
 INCLUDES    = -I$(HOME)/include
 LOGFILES    = network.log
-DEBUG       = on
+###DEBUG       = on
 ###MOREFLAGS   = -pg
 
 #Where to install or uninstall
