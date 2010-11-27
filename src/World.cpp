@@ -35,13 +35,19 @@ World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0)
 //Destroy world
 World::~World()
 {
-    Chunk* chunk=NULL;
-    chunkIterator iter(*this);
-    
-    //Delete all chunk memory
-    for( ; !iter.end(); iter++ ) {
-        if (chunk != NULL) {
-            delete chunk;
+    //Delete all chunks and YchunkMaps
+    XZChunksMap_t::iterator iter_xz;
+    for (iter_xz = coordChunksMap.begin();
+        iter_xz != coordChunksMap.end(); iter_xz++)
+    {
+        YChunkMap_t* Ychunks = iter_xz->second;
+        if (Ychunks != NULL) {
+            YChunkMap_t::iterator iter_y;
+            for (iter_y = Ychunks->begin(); iter_y != Ychunks->end(); iter_y++)
+            {
+                Chunk* chunk=iter_y->second;
+                if (chunk != NULL) { delete chunk; }
+            }
         }
     }
 }
@@ -116,12 +122,14 @@ bool World::addChunk( Chunk *chunk)
     //Get stack of chunks at XZ
     YChunkMap_t* Ychunks = iter_xz->second;
     if (Ychunks == NULL) {
+        //This should never happen.
         Ychunks = new YChunkMap_t;
     }
     
     //Check for existing chunk, delete it if found
     YChunkMap_t::const_iterator iter_y = Ychunks->find(chunk->Y);
     if (iter_y != Ychunks->end()) {
+
         //Delete the old chunk
         Chunk* oldChunk = iter_y->second;
         if (oldChunk != NULL) {
@@ -132,7 +140,8 @@ bool World::addChunk( Chunk *chunk)
     }
     
     //Assign new chunk
-    Ychunks->insert( YChunkMap_t::value_type( chunk->Y, chunk));
+    //Ychunks->insert( YChunkMap_t::value_type( chunk->Y, chunk));
+    (*Ychunks)[chunk->Y] = chunk;
     
     return true;
 }

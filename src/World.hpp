@@ -110,7 +110,6 @@ namespace mc__ {
             uint64_t getKey(const int32_t X, const int32_t Z) const;
             
             //Access this to see chunks in the world
-            //uint64Chunk0Map_t coordChunkMap;
             XZChunksMap_t coordChunksMap;
             
             //World spawn point

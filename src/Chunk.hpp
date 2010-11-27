@@ -78,11 +78,11 @@ namespace mc__ {
         public:
             //Allocate space for chunk.  Actual size is size_x+1, size_y+1, size_z+1
             //  ID, metadata, and lighting are set to 0
-            Chunk(uint8_t size_x, int8_t size_y, int32_t size_z);
+            Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z);
             
             //Allocate space and set x,y,z
             //  ID, metadata, and lighting are set to 0
-            Chunk(uint8_t size_x, int8_t size_y, int32_t size_z,
+            Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z,
                     int32_t x, int8_t y, int32_t z);
             
             //Deallocate chunk space

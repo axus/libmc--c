@@ -32,7 +32,7 @@ using mc__::Chunk;
 using mc__::Block;
 
 //Allocate space for chunk
-Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z):
+Chunk::Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
             block_array(NULL), byte_array(NULL),
             zipped_length(0), zipped(NULL)
@@ -49,7 +49,7 @@ Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z):
 }
 
 //Allocate space and set x,y,z
-Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z,
+Chunk::Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z,
                 int32_t x, int8_t y, int32_t z):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
             X(x), Y(y), Z(z), block_array(NULL), byte_array(NULL),
@@ -57,9 +57,11 @@ Chunk::Chunk(uint8_t size_x, int8_t size_y, int32_t size_z,
 {
     //Calculate array lengths from sizes
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
+    
+    //Number of bytes = array_length * 2.5
     byte_length = (array_length<<1) + ((array_length+1)>>1);
 
-    //Assign array and clear to 0
+    //Assign arrays and clear to 0
     block_array = new Block[array_length];
     byte_array = new uint8_t[ byte_length ];
     memset(block_array, 0, array_length*sizeof(mc__::Block));
