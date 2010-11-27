@@ -76,14 +76,16 @@ namespace mc__ {
         //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
 
         public:
-            //Allocate space for chunk.  Actual size is size_x+1, size_y+1, size_z+1
+            //Allocate space for chunk.
+            //  Actual size is size_x+1, size_y+1, size_z+1
             //  ID, metadata, and lighting are set to 0
             Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z);
             
-            //Allocate space and set x,y,z
-            //  ID, metadata, and lighting are set to 0
+            //Calculate space and set x,y,z
+            //  Actual size is size_x+1, size_y+1, size_z+1
+            //  If allocate==true, ID, metadata, and lighting are set to 0
             Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z,
-                    int32_t x, int8_t y, int32_t z);
+                    int32_t x, int8_t y, int32_t z, bool allocate=true);
             
             //Deallocate chunk space
             ~Chunk();                               
@@ -99,6 +101,12 @@ namespace mc__ {
 
             //Allocate space for copying zipped data
             uint8_t* allocZip( uint32_t length);
+            
+            //Allocate space for mc__::Block[array_length]
+            Block* allocBlockArray();
+            
+            //Allocate space for byte_array[byte_length]
+            uint8_t* allocByteArray();
 
             //Copy compressed data to chunk
             void copyZip( uint32_t length, uint8_t *data);
@@ -108,29 +116,32 @@ namespace mc__ {
                         
             //Uncompress *compressed to packed byte_array
             bool unzip();
-                        
+
+
             //Dimension size - 1
             uint8_t size_X, size_Y, size_Z;
-            
+
             //World block coordinates
             int32_t X;
             int8_t Y;
             int32_t Z;
-            
-            //Precompute size_X * size_Y * size_Z, number of bytes in uncompressed chunk
+
+            //Precompute size_X * size_Y * size_Z,
+            //  number of bytes in uncompressed chunk
             uint32_t array_length, byte_length;
-        
-            //Point to storage for blocks in chunk (don't use!!!)
+
+            //Point to storage for blocks in chunk (NULL if data is zipped)
             Block *block_array;
-            
+
             //Uncompressed block data storage. Size=array_length*2.5
             //  uint8_t item_ID[array_length];
             //  uint4_t metadata[array_length];
             //  uint4_t block_light[array_length];
             //  uint4_t sky_light[array_length];
             uint8_t *byte_array;
-            
+
             //Also, keep compressed version
+            bool isUnzipped;
             uint32_t zipped_length;
             uint8_t *zipped;
     };

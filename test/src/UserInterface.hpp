@@ -43,7 +43,8 @@ namespace mc__ {
             const std::string texture_map_filename;
 
             //Constructor, initialize SFML and mc-- objects here
-            UserInterface(const std::string& title, mc__::World&);
+            UserInterface(const std::string& title, mc__::World&,
+                bool dbg=false);
             
             bool init();
             
@@ -63,6 +64,7 @@ namespace mc__ {
             //mc--
             mc__::Viewer viewer;
             mc__::World& world;
+            bool debugging;
             
             //Event loop    
             sf::Event lastEvent;

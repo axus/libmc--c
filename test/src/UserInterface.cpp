@@ -47,12 +47,12 @@ using mc__::Viewer;
 using mc__::UserInterface;
 
 //Constructor, initialize SFML and mc-- objects here
-UserInterface::UserInterface(const string& name, mc__::World& w):
+UserInterface::UserInterface(const string& name, mc__::World& w, bool dbg):
     texture_map_filename("terrain.png"),    //block textures
     Settings(32, 0, 0),           //32-bit color, 0 stencil, 0 anti-aliasing
     //800x600, 32-bit color
     App(sf::VideoMode(800, 600, 32), name, sf::Style::Close, Settings),
-    world(w)
+    world(w), debugging(dbg)
 {
 
     //Start with no mouse buttons pressed

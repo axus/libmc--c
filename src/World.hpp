@@ -89,7 +89,8 @@ namespace mc__ {
             
             //Return new chunk at X,Y,Z, erasing old chunk
             mc__::Chunk* newChunk(int32_t X, int8_t Y, int32_t Z,
-                uint8_t size_X, uint8_t size_Y, uint8_t size_Z);
+                uint8_t size_X, uint8_t size_Y, uint8_t size_Z,
+                bool unzipped=true);
             
             //Iterate through all the chunks in the world
             
@@ -118,6 +119,8 @@ namespace mc__ {
             int32_t spawn_Z;
             
             //TODO: list of warp points?
+            
+            bool debugging;
 
         protected:
            //Will be deleted when World ends
@@ -127,8 +130,7 @@ namespace mc__ {
     //Minimal iterator object class for listing all world chunks
     class chunkIterator {
         public:
-            chunkIterator( const World& w);
-            //chunkIterator& operator++();
+            chunkIterator( const World& w, bool dbg=false);
             chunkIterator& operator++(int);
             Chunk* operator* ();
             bool end(); //End of world?
@@ -141,6 +143,8 @@ namespace mc__ {
             Chunk *chunk;
             XZChunksMap_t::const_iterator iter_xz;
             YChunkMap_t::const_iterator iter_y;
+        public:
+            bool debugging;
     };
 
     //Define those friend operators in mc__::

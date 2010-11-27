@@ -106,6 +106,9 @@ namespace mc__ {
             //RGB settings for leaves, grass :)
             GLubyte leaf_color[4];
             GLubyte grass_color[4];
+            
+            //Debugging flag
+            bool debugging;
 
         protected:
             //Remember texture map filename

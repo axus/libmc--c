@@ -19,16 +19,24 @@
     <http://www.gnu.org/licenses/>.
 */
 
-#include "World.hpp"
+//STL
+#include <iostream>
+using std::cerr;
+using std::endl;
+using std::hex;
+using std::dec;
 
+//mc--
+#include "World.hpp"
 using std::vector;
 using mc__::World;
 using mc__::Chunk;
 using mc__::Block;
 using mc__::chunkIterator;
 
+
 //Create empty world
-World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0)
+World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0), debugging(false)
 {
 }
 
@@ -106,26 +114,27 @@ bool World::addChunk( Chunk *chunk)
 {
     //Can't add null chunks
     if (chunk == NULL) { return false; }
-  
+
     bool result=true;
     const uint64_t key = getKey(chunk->X, chunk->Z);
-    
+
     //Lookup stack of chunks by XZ
     XZChunksMap_t::const_iterator iter_xz = coordChunksMap.find( key );
-    
+
     //Create a new stack if needed and set iter_xz
     if (iter_xz == coordChunksMap.end()) {
         coordChunksMap.insert( XZChunksMap_t::value_type(key, new YChunkMap_t));
         iter_xz = coordChunksMap.find(key);
     }
-    
+
     //Get stack of chunks at XZ
     YChunkMap_t* Ychunks = iter_xz->second;
     if (Ychunks == NULL) {
         //This should never happen.
         Ychunks = new YChunkMap_t;
+        result = false;
     }
-    
+
     //Check for existing chunk, delete it if found
     YChunkMap_t::const_iterator iter_y = Ychunks->find(chunk->Y);
     if (iter_y != Ychunks->end()) {
@@ -134,16 +143,14 @@ bool World::addChunk( Chunk *chunk)
         Chunk* oldChunk = iter_y->second;
         if (oldChunk != NULL) {
             //Had to delete old chunk!
-            result = false;
             delete oldChunk;
         }
     }
     
     //Assign new chunk
-    //Ychunks->insert( YChunkMap_t::value_type( chunk->Y, chunk));
     (*Ychunks)[chunk->Y] = chunk;
     
-    return true;
+    return result;
 }
 
 //Return chunk pointer at X,Y,Z if it exists, NULL otherwise
@@ -170,10 +177,10 @@ mc__::Chunk* World::getChunk(int32_t X, int8_t Y, int32_t Z)
 
 //Return chunk pointer at X,Y,Z .  Erase old chunk if it exists
 mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
-                            uint8_t size_X, uint8_t size_Y, uint8_t size_Z)
+            uint8_t size_X, uint8_t size_Y, uint8_t size_Z, bool unzipped)
 {
     //Create the new chunk
-    mc__::Chunk* chunk = new Chunk(size_X, size_Y, size_Z, X, Y, Z);
+    mc__::Chunk* chunk = new Chunk(size_X, size_Y, size_Z, X, Y, Z, unzipped);
         
     //Add the chunk pointer to world
     addChunk( chunk );
@@ -217,9 +224,9 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     testChunk->packBlocks();
     testChunk->zip();
 
-    addChunk(testChunk );
+    bool result=addChunk(testChunk );
 
-    return true;
+    return result;
 }
 
 //Generate a flat chunk
@@ -255,9 +262,9 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
     flatChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
-    addChunk(flatChunk );
+    bool result=addChunk(flatChunk );
     
-    return true;
+    return result;
 }
 
 //Generate a leafy tree with base at (X,Y,Z), chunk origin will be different
@@ -327,9 +334,9 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     treeChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
-    addChunk(treeChunk );
+    bool result=addChunk(treeChunk );
     
-    return true;
+    return result;
 }
 
 //
@@ -338,8 +345,8 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
 
 //        XZChunksMap_t::const_iterator iter_xz;
 //        YChunkMap_t::const_iterator iter_y;
-chunkIterator::chunkIterator( const World& w):
-    world(w), chunks(NULL), chunk(NULL)
+chunkIterator::chunkIterator( const World& w, bool dbg):
+    world(w), chunks(NULL), chunk(NULL), debugging(dbg)
 {
     //Assign internal iterators to start of world coordinate map
     iter_xz = world.coordChunksMap.begin();
@@ -364,35 +371,52 @@ chunkIterator::chunkIterator( const World& w):
 //Increment this iterator
 chunkIterator& chunkIterator::operator++(int)
 {
-    //assume chunks and iter_y are valid at start        
-    chunk = NULL;
-    while (chunk == NULL && iter_xz != world.coordChunksMap.end()) {
-        //Look for non-null chunk
-        for (iter_y++; chunk == NULL && iter_y != chunks->end(); iter_y++) {
-            chunk = iter_y->second;
-        }
-        
-        //Move to next chunk list if needed
-        if (iter_y == chunks->end()) {
-          
-            //Done with this stack, go to the next one
+  
+/*
+    //Handle stupid situation
+    if (chunks == NULL) {
+        cerr << "ERROR: chunkIterator::operator++ chunks" << endl;
+        while (chunks == NULL && iter_xz != world.coordChunksMap.end()) {
             iter_xz++;
-            chunks = NULL;
-            
-            //Repeat until chunks and iter_y found, or end
-            while (chunks == NULL && iter_xz != world.coordChunksMap.end()) {
-                chunks = iter_xz->second;
-                //Stil not found, keep looking
-                if (chunks == NULL) {
-                    iter_xz++;
-                } else {
-                    iter_y = chunks->begin();
-                }
+            chunks = iter_xz->second;
+            if (chunks != NULL) {
+                cerr << "FOUND CHUNKS @ 0x" << hex
+                    << iter_xz->first << endl << dec;
+                iter_y = chunks->begin();
             }
         }
-    }
+    } else {
 
+        //Increment
+        iter_y++;
+    }
+*/
+    //If you did something stupid, it's gonna crash
+    iter_y++;
+
+    //Handle end of chunk list
+    if (iter_y == chunks->end()) {
+        iter_xz++;
+        if (iter_xz == world.coordChunksMap.end()) {
+            //cerr << "END OF THE WORLD, NO MORE CHUNKS" << endl;
+            return *this;
+        }
+        chunks = iter_xz->second;
+        iter_y = chunks->begin();
+        
+        //DEBUG
+        //cerr << "Next chunk stack @ XZ 0x"<< hex << iter_xz->first << endl << dec;
+    }
+    
+    //DEBUG
+    //cerr << "Chunk @ Y " << (int)(iter_y->first) << endl;
+    
+    //Assign chunk pointer
+    chunk = iter_y->second;
+    
+    //Return self
     return *this;
+
 }
 
 //Derefence the iterator to get a chunk

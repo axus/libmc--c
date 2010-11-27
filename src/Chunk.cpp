@@ -35,25 +35,23 @@ using mc__::Block;
 Chunk::Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
             block_array(NULL), byte_array(NULL),
-            zipped_length(0), zipped(NULL)
+            isUnzipped(true), zipped_length(0), zipped(NULL)
 {
     //Calculate array lengths from sizes
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
     byte_length = (array_length<<1) + ((array_length+1)>>1);
-    
-    //Assign array and clear to 0
-    block_array = new Block[array_length];
-    byte_array = new uint8_t[ byte_length ];
-    memset(block_array, 0, array_length*sizeof(mc__::Block));
-    memset(byte_array, 0, byte_length);
+
+    //Allocate space for uncompressed arrays
+    allocBlockArray();
+    allocByteArray();
 }
 
 //Allocate space and set x,y,z
 Chunk::Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z,
-                int32_t x, int8_t y, int32_t z):
+                int32_t x, int8_t y, int32_t z, bool allocate):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
             X(x), Y(y), Z(z), block_array(NULL), byte_array(NULL),
-            zipped_length(0), zipped(NULL)
+            isUnzipped(allocate), zipped_length(0), zipped(NULL)
 {
     //Calculate array lengths from sizes
     array_length = (size_X+1) * (size_Y+1) * (size_Z+1);
@@ -61,11 +59,10 @@ Chunk::Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z,
     //Number of bytes = array_length * 2.5
     byte_length = (array_length<<1) + ((array_length+1)>>1);
 
-    //Assign arrays and clear to 0
-    block_array = new Block[array_length];
-    byte_array = new uint8_t[ byte_length ];
-    memset(block_array, 0, array_length*sizeof(mc__::Block));
-    memset(byte_array, 0, byte_length);
+    if (isUnzipped) {
+        allocBlockArray();
+        allocByteArray();
+    }
 }
 
 //Deallocate chunk space
@@ -121,6 +118,11 @@ void  Chunk::unpackBlocks()
     mc__::Block* block;
     bool half_byte=false;
 
+    //Allocate block_array if needed
+    if (block_array == NULL) {
+        allocBlockArray();
+    }
+
     //Offsets to data in byte array
     uint32_t off_meta=array_length;
     uint32_t off_light= array_length + (array_length/2);
@@ -159,6 +161,24 @@ void Chunk::setCoord(int32_t x, int8_t y, int32_t z)
     Y = y;
     Z = z;
 }
+
+//Allocate space for mc__::Block[array_length]
+Block* Chunk::allocBlockArray()
+{
+    //Assign array and clear to 0
+    block_array = new Block[array_length];
+    memset(block_array, 0, array_length*sizeof(mc__::Block));
+    return block_array;
+}
+
+//Allocate space for byte_array[byte_length]
+uint8_t* Chunk::allocByteArray()
+{
+    byte_array = new uint8_t[ byte_length];
+    memset(byte_array, 0, byte_length);
+    return byte_array;
+}
+
 
 //Allocate space for zipped data
 uint8_t* Chunk::allocZip( uint32_t size)
@@ -228,6 +248,10 @@ bool Chunk::unzip()
         return false;
     }
     
+    //Now, copy the byte array to the block array
+    unpackBlocks();
+    
+    isUnzipped=true;
+    
     return true;
 }
-            

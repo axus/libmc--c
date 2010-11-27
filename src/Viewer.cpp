@@ -79,7 +79,7 @@ using std::flush;
 using mc__::Viewer;
 using mc__::face_ID;
 
-Viewer::Viewer(): camera_X(0), camera_Y(0), camera_Z(0)
+Viewer::Viewer(): camera_X(0), camera_Y(0), camera_Z(0), debugging(false)
 {
     //Dark green tree leaves
     leaf_color[0] = 0x00;    //Red
@@ -419,6 +419,11 @@ void Viewer::drawChunks( const mc__::World& world)
         }
         mc__::Chunk& myChunk = *chunk;
         index=0;
+
+        //If the chunk has not uncompressed it's data, do so now
+        if (! myChunk.isUnzipped) {
+            myChunk.unzip();
+        }
 
         //When indexing block in chunk array,
         //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
