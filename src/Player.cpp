@@ -30,6 +30,29 @@ Player::Player(const std::string& entity_name): Entity(), name(entity_name)
 {
 }
 
+bool Player::setPosLook( double x, double y, double z,
+    double h, float yaw_, float pitch_)
+{
+    //Absolute position (double)
+    abs_X = x;
+    abs_Y = y;
+    abs_Z = z;
+    
+    //Player eye location
+    eyes_Y = h;
+    
+    //Absolute position (integer)
+    X = (int64_t)x;
+    Y = (int64_t)y;
+    Z = (int64_t)z;
+
+    //Looking in this direction
+    yaw = yaw_;
+    pitch = pitch_;
+    
+    return true;
+}
+
 //Add item to inventory (return false if full)
 bool Player::addItem( const Item& item)
 {

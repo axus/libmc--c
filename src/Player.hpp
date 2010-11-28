@@ -48,6 +48,10 @@ namespace mc__ {
             //Constructor
             Player( const std::string& entity_name);
             
+            //Movement and looking
+            bool setPosLook( double x, double y, double z, double h,
+                float yaw_, float pitch_);
+            
             //Inventory functions
             bool addItem( const Item& item);
             bool moveItem( inv_type_t from_type, uint8_t from_slot,

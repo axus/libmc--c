@@ -33,19 +33,31 @@ namespace mc__ {
   
     class Entity {
         public:
-            Entity();
+            //Entity();
             
             //Unique entity ID
             uint32_t EID;
             
-            //Absolute position
-            uint64_t X, Y, Z;
+            //Absolute position (integer)
+            int64_t X, Y, Z;
+
+            //Absolute position (double)
+            double abs_X, abs_Y, abs_Z;
+            
+            //Looking in this direction
+            float yaw, pitch;
             
             //Velocity vector
             int16_t dX, dY, dZ;
             
-            //Direction looking in:
-            float lookYaw, lookPitch;
+            //viewpoint Y-value
+            double eyes_Y;
+            
+            //Health of entity
+            uint8_t hitpoints;
+            
+            //What's it doing
+            uint8_t animation;
     };
 }
 

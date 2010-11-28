@@ -158,9 +158,9 @@ void Viewer::reset()
 }
 
 //Move camera without rotating
-void Viewer::move( GLint offset_x, GLint offset_y, GLint offset_z)
+void Viewer::move( GLint block_x, GLint block_y, GLint block_z)
 {
-    glTranslatef( offset_x, offset_y, offset_z);
+    glTranslatef( block_x << 4, block_y << 4, block_z << 4);
 }
 
 //Rotate camera degrees/360 about vector (axis_x, axis_y, axis_z)
@@ -431,8 +431,14 @@ void Viewer::drawChunks( const World& world)
 
             //If the chunk has not uncompressed it's data, do so now
             if (! myChunk.isUnzipped) {
-                cerr << "Unzipping chunk @ " << (int)myChunk.X << ","
-                    << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
+                
+                //Debug output
+                if (debugging) {
+                    cout << "Unzipping chunk @ " << (int)myChunk.X << ","
+                        << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
+                }
+                
+                //Unzip the chunk
                 if (!myChunk.unzip()) {
                     cerr << "ERROR UNZIPPING" << endl;
                     continue;

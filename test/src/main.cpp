@@ -73,17 +73,18 @@ void genWorld(World& world)
         cout << "Error: genFlatGrass ";
         debugKey(world, -8,0,9);
     }
-    if (!world.genChunkTest(-8, 1, 24)) {
+    if (!world.genChunkTest(-8, 3, 24)) {
         cout << "Error: genChunkTest ";
-        debugKey(world, -8,1,24);
+        debugKey(world, -8,3,24);
     }
 
     //Move the world in these directions at start
     world.spawn_X = 0;
-    world.spawn_Y = -48;
-    world.spawn_Z = -320;
+    world.spawn_Y = 3;
+    world.spawn_Z = 16;
 
 }
+
 
 int main(int argc, char** argv)
 {

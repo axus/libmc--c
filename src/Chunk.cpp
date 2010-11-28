@@ -280,7 +280,6 @@ bool Chunk::unzip()
     
     //Now, copy the byte array to the block array
     unpackBlocks();
-    
     isUnzipped=true;
     
     return true;

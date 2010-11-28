@@ -66,7 +66,7 @@ UserInterface::UserInterface(const string& name, mc__::World& w, bool dbg):
     viewer.init(texture_map_filename);
     
     //Move viewer camera to starting position
-    viewer.move(world.spawn_X, world.spawn_Y, world.spawn_Z);
+    viewer.move(-world.spawn_X, -world.spawn_Y, -world.spawn_Z);
 
     //Draw the world once
     App.SetActive();
@@ -127,31 +127,31 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                     break;
                 //Move Up
                 case sf::Key::PageUp:
-                    viewer.move(0, -16, 0);
+                    viewer.move(0, -1, 0);
                     break;
                 //Move Down
                 case sf::Key::Home:        
-                    viewer.move(0, 16, 0);
+                    viewer.move(0, 1, 0);
                     break;
                 //Move left
                 case sf::Key::Left:
                 case sf::Key::A:
-                    viewer.move(16, 0, 0);
+                    viewer.move(1, 0, 0);
                     break;
                 //Move right
                 case sf::Key::Right:
                 case sf::Key::D:
-                    viewer.move(-16, 0, 0);
+                    viewer.move(-1, 0, 0);
                     break;
                 //Zoom in
                 case sf::Key::W:
                 case sf::Key::Up:
-                    viewer.move(0, 0, 16);
+                    viewer.move(0, 0, 1);
                     break;
                 //Zoom out
                 case sf::Key::Down:
                 case sf::Key::S:
-                    viewer.move(0, 0, -16);
+                    viewer.move(0, 0, -1);
                     break;                        
                 //Turn left
                 case sf::Key::Q:
@@ -204,8 +204,9 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         //Mousewheel scroll
         case sf::Event::MouseWheelMoved: {
             //Change camera position (in increments of 16).  Down zooms out.
-            int move_Z = (Event.MouseWheel.Delta << 4);
-            viewer.move(0, 0, move_Z);
+            //int move_Z = (Event.MouseWheel.Delta << 4);
+            //viewer.move(0, 0, move_Z);
+            viewer.move(0,0,Event.MouseWheel.Delta);
             break;
         }
         
@@ -253,7 +254,7 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                 int diff_X = (mouse_press_X[sf::Mouse::Left] - mouse_X)/16;
                 
                 if (diff_X != 0) {
-                    viewer.move((diff_X << 4), 0, 0);
+                    viewer.move(diff_X , 0, 0);
                     
                     //Save new mouse position
                     mouse_press_X[sf::Mouse::Left] = mouse_X;
@@ -262,7 +263,7 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                 //Move camera every 16 pixels on Y-axis
                 int diff_Y = (mouse_Y - mouse_press_Y[sf::Mouse::Left])/16;
                 if (diff_Y != 0) {
-                    viewer.move(0, diff_Y << 4,0);
+                    viewer.move(0, diff_Y ,0);
                     
                     //Save new mouse position
                     mouse_press_Y[sf::Mouse::Left] = mouse_Y;
