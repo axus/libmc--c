@@ -61,6 +61,7 @@
 #include <iostream>
 #include <iomanip>
 #include <fstream>
+#include <sstream>
 
 using std::cout;
 using std::cerr;
@@ -73,11 +74,13 @@ using std::setfill;
 using std::ofstream;
 using std::ios;
 using std::flush;
+using std::stringstream;
 
 //libmc--c
 #include "Viewer.hpp"
 using mc__::Viewer;
 using mc__::face_ID;
+using mc__::World;
 
 Viewer::Viewer(): camera_X(0), camera_Y(0), camera_Z(0), debugging(false)
 {
@@ -397,46 +400,58 @@ void Viewer::drawBlock( const mc__::Block& block, GLint x, GLint y, GLint z)
 
 }
 
+using mc__::XZChunksMap_t;
+using mc__::YChunkMap_t;
+
 //Draw the chunks in mc__::World
-void Viewer::drawChunks( const mc__::World& world)
+void Viewer::drawChunks( const World& world)
 {
-    //Offset in block array of chunk
-    size_t index;
+    //Reference to world chunks data structure
+    const XZChunksMap_t& coordChunksMap = world.coordChunksMap;
     
-    //Keep track of block coordinates for each chunk in block
+    //Variables to iterate through list of chunks
+    XZChunksMap_t::const_iterator iter_xz;
+    YChunkMap_t::const_iterator iter_y;
+    uint64_t key;
     GLint off_x, off_y, off_z;
-    GLint x, y, z;
+    GLint X, Y, Z;
+    
+    //For all chunk stacks (X,Z)
+    for (iter_xz = coordChunksMap.begin();
+        iter_xz != coordChunksMap.end(); iter_xz++)
+    {
+        key = iter_xz->first;
+        YChunkMap_t *chunks=iter_xz->second;
+        
+        //For all chunks in stack (Y)
+        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
+        {
+            Chunk *chunk = iter_y->second;
+            mc__::Chunk& myChunk = *chunk;
 
-    //My own ghetto iterator :)
-    mc__::chunkIterator iter(world);
+            //If the chunk has not uncompressed it's data, do so now
+            if (! myChunk.isUnzipped) {
+                cerr << "Unzipping chunk @ " << (int)myChunk.X << ","
+                    << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
+                if (!myChunk.unzip()) {
+                    cerr << "ERROR UNZIPPING" << endl;
+                    continue;
+                }
+            }
+            
+            //When indexing block in chunk array,
+            //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
+    
+            //Draw every block in chunk.  x,y,z determined by position in array.
+            size_t index=0;
+            for (off_x=0, X=myChunk.X; off_x <= myChunk.size_X; off_x++, X++) {
+            for (off_z=0, Z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, Z++) {
+            for (off_y=0, Y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, Y++) {
+                drawBlock( myChunk.block_array[index], X, Y, Z);
+                index++;
+            }}}
 
-    for( ; !iter.end(); iter++ ) {
-
-        mc__::Chunk *chunk = *iter;
-        if (chunk == NULL) {
-            cerr << "NULL," << flush;
-            break;
         }
-        mc__::Chunk& myChunk = *chunk;
-        index=0;
-
-        //If the chunk has not uncompressed it's data, do so now
-        if (! myChunk.isUnzipped) {
-            myChunk.unzip();
-        }
-
-        //When indexing block in chunk array,
-        //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
-
-        //Draw every block in chunk.  x,y,z determined by position in array.
-        for (off_x=0, x=myChunk.X; off_x <= myChunk.size_X; off_x++, x++) {
-        for (off_z=0, z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, z++) {
-        for (off_y=0, y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, y++) {
-            //cerr << index <<","<< flush;
-            drawBlock( myChunk.block_array[index], x, y, z);
-            index++;
-        }}}
-        //cerr << endl;
     }
 }
 
@@ -521,7 +536,7 @@ ILuint Viewer::loadImageFile( const string &imageFilename) {
 
 
 //OpenGL rendering of cubes.  No update to camera.
-bool Viewer::drawWorld(const mc__::World& world)
+bool Viewer::drawWorld(const World& world)
 {
     //Erase openGL world
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -717,7 +732,7 @@ Normal block = 0x00: cube, dark, opaque, solid
 }
 
 //Write binary data of uncompressed chunk
-bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename)
+bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename) const
 {
     //Validate pointer
     if (chunk == NULL) { return false; }
@@ -728,15 +743,111 @@ bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename)
     binFile.write( (char*)bytes, chunk->byte_length);
     binFile.close();
     cerr << "Wrote " << chunk->byte_length << " bytes to " << filename << endl;
-    
+
     //Zipped file... without that pesky zip header :)
-    ofstream zipFile("chunkzip.bin", ios::out | ios::binary);
+    string filename_zip( filename + "_zip");
+    ofstream zipFile( filename_zip.c_str(), ios::out | ios::binary);
     zipFile.write( (char*)chunk->zipped, chunk->zipped_length);
     zipFile.close();
     cerr << "Wrote " << chunk->zipped_length
-        << " bytes to chunkzip.bin" << endl;
+        << " bytes to " << filename_zip << endl;
     
     return true;
+}
+
+//Write binary data of all chunks to files
+bool Viewer::saveChunks(const mc__::World& world) const
+{
+    XZChunksMap_t::const_iterator iter_xz;
+    YChunkMap_t::const_iterator iter_y;
+    
+    uint64_t key;
+    int32_t X, Z;
+    int8_t Y;
+    stringstream filename;
+    
+    //Reference world chunk data structure
+    const XZChunksMap_t& coordChunksMap = world.coordChunksMap;
+    
+    //For all chunk stacks (X,Z)
+    for (iter_xz = coordChunksMap.begin();
+        iter_xz != coordChunksMap.end(); iter_xz++)
+    {
+        key = iter_xz->first;
+        X = (key >> 32);
+        Z = (key & 0xFFFFFFFF);
+        YChunkMap_t *chunks=iter_xz->second;
+
+        //For all chunks in stack (Y)
+        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
+        {
+            Y = iter_y->first;
+            Chunk *chunk = iter_y->second;
+            
+            //Filename from X,Y,Z
+            filename.str("");
+            filename << "chunk_"
+                << (int)X << "_" << (int)Y << "_" << (int)Z << ".bin";
+            
+            //Copy binary chunk data to file
+            if (chunk != NULL) {
+                //Pack and unpack...
+                chunk->packBlocks();
+                chunk->unpackBlocks();
+                
+                writeChunkBin( chunk, filename.str());
+            } else {
+                cerr << "Chunk not found @ "
+                    << (int)X << "," << (int)Y << "," << (int)Z << endl;
+
+            }
+        }
+    }
+    
+    //TODO: return false if unable to write chunks
+    return true;
+}
+
+//List all the chunks to stdout
+void Viewer::printChunks(const mc__::World& world) const
+{
+    XZChunksMap_t::const_iterator iter_xz;
+    YChunkMap_t::const_iterator iter_y;
+    
+    uint64_t key;
+    int32_t X, Z;
+    int8_t Y;
+    
+    //Reference world chunk data structure
+    const XZChunksMap_t& coordChunksMap = world.coordChunksMap;
+    
+    //For all chunk stacks (X,Z)
+    for (iter_xz = coordChunksMap.begin();
+        iter_xz != coordChunksMap.end(); iter_xz++)
+    {
+        key = iter_xz->first;
+        X = (key >> 32);
+        Z = (key & 0xFFFFFFFF);
+        YChunkMap_t *chunks=iter_xz->second;
+        
+        //For all chunks in stack (Y)
+        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
+        {
+            Y = iter_y->first;
+            Chunk *chunk = iter_y->second;
+            cout << "Chunk @ "
+                << (int)X << "," << (int)Y << "," << (int)Z
+                << " [" << chunk->X << "," << (int)chunk->Y << "," << chunk->Z
+                << "] " << (int)chunk->size_X << "," << (int)chunk->size_Y
+                << "," << (int)chunk->size_Z << endl;
+            cout << "\t" << chunk->zipped_length << " bytes zipped";
+            if (chunk->isUnzipped) {
+                cout << ", " << chunk->array_length << " blocks, "
+                << chunk->byte_length << " bytes unzipped";
+            }
+            cout << "." << endl;
+        }
+    }
 }
 
 

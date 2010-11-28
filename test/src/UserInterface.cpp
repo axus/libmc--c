@@ -178,6 +178,7 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                 //Debugging output
                 case sf::Key::Tilde:
                 {
+                    /*
                     //Get the tree at 3,0,3
                     mc__::Chunk *chunk = world.getChunk(3,0,3);
                     
@@ -187,11 +188,13 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                     } else {
                         cerr << "Chunk not found @ (3,0,3)" << endl;
                     }
+                    */
+                    viewer.saveChunks(world);
                 }
                     break;
                 case sf::Key::BackSlash:
                     //Print chunk information to stdout
-                    world.printChunks();
+                    viewer.printChunks(world);
                     break;
                 default:
                     break;
@@ -219,7 +222,10 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             switch( Event.MouseButton.Button ) {
                 case sf::Mouse::Middle:
                     viewer.reset();
-                    viewer.move(world.spawn_X, world.spawn_Y, world.spawn_Z);
+                    viewer.move(-world.spawn_X, -world.spawn_Y, -world.spawn_Z);
+                    cerr << "Moved to spawn @ " << (int)world.spawn_X << ","
+                        << (int)world.spawn_Y << ","
+                        << (int)world.spawn_Z << endl;
                     break;
                 default:
                     break;

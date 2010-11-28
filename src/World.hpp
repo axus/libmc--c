@@ -107,9 +107,6 @@ namespace mc__ {
             //Check key for coordinates
             uint64_t getKey(const int32_t X, const int32_t Z) const;
             
-            //Print list of chunks to stdout
-            void printChunks() const;
-            
             //Access this to see chunks in the world
             XZChunksMap_t coordChunksMap;
             

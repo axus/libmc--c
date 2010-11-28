@@ -340,39 +340,6 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     return result;
 }
 
-//List all the chunks to stdout
-void World::printChunks() const
-{
-    XZChunksMap_t::const_iterator iter_xz;
-    YChunkMap_t::const_iterator iter_y;
-    
-    uint64_t key;
-    int32_t X, Z;
-    int8_t Y;
-    
-    //For all chunk stacks (X,Z)
-    for (iter_xz = coordChunksMap.begin();
-        iter_xz != coordChunksMap.end(); iter_xz++)
-    {
-        key = iter_xz->first;
-        X = (key >> 32);
-        Z = (key & 0xFFFFFFFF);
-        YChunkMap_t *chunks=iter_xz->second;
-        
-        //For all chunks in stack (Y)
-        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
-        {
-            Y = iter_y->first;
-            Chunk *chunk = iter_y->second;
-            cout << "Chunk @ "
-                << (int)X << "," << (int)Y << "," << (int)Z
-                << " [" << chunk->X << "," << (int)chunk->Y << "," << chunk->Z
-                << "] " << (int)chunk->size_X << "," << (int)chunk->size_Y
-                << "," << (int)chunk->size_Z << endl;
-        }
-    }
-}
-
 //
 //Minimal iterator object class for listing all world chunks
 //

@@ -47,31 +47,31 @@ void genWorld(World& world)
     //
     
      //512 block floor at (-8,-2,-8)
-    if (!world.genFlatGrass(-8, -2, -8)) {
+    if (!world.genFlatGrass(-8, 0, -8)) {
         cout << "Error: genFlatGrass ";
-        debugKey(world, -8,-2,-8);
+        debugKey(world, -8,0,-8);
     }
 
     //208 block wall at (-8, 0, -8)
-    if (!world.genChunkTest(-8, 0, -8)) {
+    if (!world.genChunkTest(-8,2, -8)) {
         cout << "Error: genChunkTest ";
-        debugKey(world, -8,0,-8);
+        debugKey(world, -8,2,-8);
     }
     
     //Grow some trees
-    if (!world.genTree(5, 0, 5)) {
+    if (!world.genTree(5, 2, 5)) {
         cout << "Error: genTree ";
-        debugKey(world, 3, 0, 3);
+        debugKey(world, 3, 2, 3);
     }
-    if (!world.genTree(-2, 0, 7, 3, 10, 3)) {
+    if (!world.genTree(-2, 2, 7, 3, 10, 3)) {
         cout << "Error: genTree ";
-        debugKey(world, -3, 0, 6);
+        debugKey(world, -3, 2, 6);
     }
     
     //Create chunks behind the spawn
-    if (!world.genFlatGrass(-8, -2, 9)) {
+    if (!world.genFlatGrass(-8, 0, 9)) {
         cout << "Error: genFlatGrass ";
-        debugKey(world, -8,-2,9);
+        debugKey(world, -8,0,9);
     }
     if (!world.genChunkTest(-8, 1, 24)) {
         cout << "Error: genChunkTest ";
@@ -80,7 +80,7 @@ void genWorld(World& world)
 
     //Move the world in these directions at start
     world.spawn_X = 0;
-    world.spawn_Y = -16;
+    world.spawn_Y = -48;
     world.spawn_Z = -320;
 
 }

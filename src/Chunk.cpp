@@ -72,21 +72,34 @@ Chunk::~Chunk()
         delete byte_array;
         byte_array = NULL;
     }
+    if (block_array != NULL) {
+        delete block_array;
+        block_array = NULL;
+    }
+    if (zipped != NULL) {
+        delete zipped;
+        zipped = NULL;
+    }
 }
 
 //Copy block_array to byte_array
 void  Chunk::packBlocks()
 {
+    //re-allocate byte array
+    allocByteArray();
+  
+    //Vars
     uint32_t index;
     mc__::Block* block;
     bool half_byte=false;
 
     //Offsets to data in byte array
     uint32_t off_meta=array_length;
-    
     uint32_t off_light= array_length + (array_length/2);
-    
     uint32_t off_sky= array_length<<1;
+    
+    //Handle chunks where X,Y,Z are all odd
+    bool odd_size = ((array_length & 0x1) == 0x1); 
     
     //For each block...
     for ( index=0; index < array_length; index++)
@@ -95,17 +108,22 @@ void  Chunk::packBlocks()
         block = block_array + index;
         byte_array[index] = block->blockID;
         
-        //Pack the metadata, light, and sky, according to half-byte
+        //Pack the metadata and sky (don't care if odd number of blocks)
         if (!half_byte) {
-            byte_array[off_meta] = (block->metadata << 4);
-            byte_array[off_light] |= (block->lighting >> 4); off_light++;
+            byte_array[off_meta] |= (block->metadata << 4);
             byte_array[off_sky] = (block->lighting << 4);
         } else {
             byte_array[off_meta] |= (block->metadata & 0x0F); off_meta++;
-            byte_array[off_light] = (block->lighting & 0xF0);
             byte_array[off_sky] |= (block->lighting & 0x0F); off_sky++;
         }
         
+        //Pack block light (depends on odd number of blocks)
+        if (half_byte ^ odd_size) {
+            byte_array[off_light] |= (block->lighting >> 4); off_light++;
+        } else {
+            byte_array[off_light] |= (block->lighting & 0xF0);
+        }
+                
         //Toggle half-byte status, go to next block
         half_byte = !half_byte;
     }
@@ -118,10 +136,11 @@ void  Chunk::unpackBlocks()
     mc__::Block* block;
     bool half_byte=false;
 
-    //Allocate block_array if needed
-    if (block_array == NULL) {
-        allocBlockArray();
-    }
+    //Handle chunks where X,Y,Z are all odd
+    bool odd_size = ((array_length & 0x1) == 0x1); 
+
+    //Reallocate block_array if needed
+    allocBlockArray();
 
     //Offsets to data in byte array
     uint32_t off_meta=array_length;
@@ -134,18 +153,24 @@ void  Chunk::unpackBlocks()
         //Assign blockID from start of byte array
         block = block_array + index;
         block->blockID = byte_array[index];
-        
+
         //Unpack the metadata, light, and sky, according to half-byte
         if (!half_byte) {
             block->metadata = (byte_array[off_meta] >> 4);
-            block->lighting = (byte_array[off_light] << 4) |
-                              (byte_array[off_sky] >> 4);
-                              off_light++;
+            block->lighting = (byte_array[off_sky] >> 4);
         } else {
             block->metadata = (byte_array[off_meta] & 0x0F);
-            block->lighting = (byte_array[off_light] & 0xF0) |
-                              (byte_array[off_sky] & 0x0F);
-                              off_meta++; off_sky++;
+            block->lighting = (byte_array[off_sky] & 0x0F);
+            off_meta++;
+            off_sky++;
+        }
+
+        //Unpack block light depending on odd_size and half-byte
+        if (half_byte ^ odd_size) {
+            block->lighting |= ((byte_array[off_light] & 0x0F) << 4);
+            off_light++;
+        } else {
+            block->lighting |= (byte_array[off_light] & 0xF0);
         }
         
         //Toggle half-byte status, go to next block
@@ -165,6 +190,9 @@ void Chunk::setCoord(int32_t x, int8_t y, int32_t z)
 //Allocate space for mc__::Block[array_length]
 Block* Chunk::allocBlockArray()
 {
+    //No leaks
+    if (block_array == NULL) { delete block_array; }
+    
     //Assign array and clear to 0
     block_array = new Block[array_length];
     memset(block_array, 0, array_length*sizeof(mc__::Block));
@@ -174,6 +202,9 @@ Block* Chunk::allocBlockArray()
 //Allocate space for byte_array[byte_length]
 uint8_t* Chunk::allocByteArray()
 {
+    //No leaks
+    if (byte_array == NULL) { delete byte_array; }
+
     byte_array = new uint8_t[ byte_length];
     memset(byte_array, 0, byte_length);
     return byte_array;
@@ -202,17 +233,19 @@ void Chunk::copyZip(uint32_t size, uint8_t *data)
 //Compress the packed byte_array to *compressed, set compressed_length
 bool Chunk::zip()
 {
-    //Delete old zip
-    if (zipped != NULL) { delete zipped; }
 
-    //Allocate more space for compressed than uncompressed, for header bytes
+    //Calculate max zipped bytes    
     zipped_length = compressBound(byte_length);
-    zipped = new Bytef[ zipped_length ];
+
+    //Re-allocate zipped bytes
+    /*if (zipped != NULL) { delete zipped; }
+    zipped = new Bytef[ zipped_length ];*/
+    allocZip(zipped_length);
 
     //Use Zlib to compress the byte_array
     int result = compress2( zipped, (uLongf*)&zipped_length,
         (const Bytef*)byte_array, (uLong)byte_length, Z_BEST_SPEED);
-    
+
     //Problem?
     if (result != Z_OK)
     {
@@ -229,11 +262,8 @@ bool Chunk::zip()
 //  byte_length must be preset, and will be updated after unzip
 bool Chunk::unzip()
 {
-    //Delete old byte array
-    if (byte_array != NULL) { delete byte_array; }
-
-    //Allocate space for byte_array
-    byte_array = new uint8_t[byte_length];
+    //Re-allocate byte array
+    allocByteArray();
 
     //Use Zlib to uncompress the zipped data to byte_array
     int result = uncompress( byte_array, (uLongf*)&byte_length,
