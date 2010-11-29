@@ -1,8 +1,8 @@
 # Minecraft client library functions
 
 BIN         = libmc--c.a
-SRCFILES    = Chunk.cpp Player.cpp World.cpp Viewer.cpp
-HEADERS     = Chunk.hpp Entity.hpp Player.hpp World.hpp Viewer.hpp
+SRCFILES    = Events.cpp Chunk.cpp Player.cpp World.cpp Viewer.cpp
+HEADERS     = Events.hpp Chunk.hpp Entity.hpp Player.hpp World.hpp Viewer.hpp
 LIBS        = -L$(HOME)/lib -lopengl32 -lglu32 -lDevIL -lILU -lz
 INCLUDES    = -I$(HOME)/include
 DEBUG       = on
