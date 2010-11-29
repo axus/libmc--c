@@ -83,7 +83,9 @@ namespace mc__ {
                 ACTION_CHAT,
                 ACTION_MOVE,
                 ACTION_EQUIP,
+                ACTION_POS,
                 ACTION_LOOK,
+                ACTION_POSLOOK,
                 ACTION_RESPAWN,
                 ACTION_DIG,
                 ACTION_PLACE,
@@ -91,51 +93,33 @@ namespace mc__ {
                 ACTION_PICKUP,
                 ACTION_QUIT,
                 EVENT_MAX
-                
             };
-            
-            //enum caller_t { CALLER_VIEWER, CALLER_WORLD, CALLER_MAX };
             
             //Generic data for event callback
             typedef struct {
                 type_t type;
-                void *data;
+                const void *data;
             } Event_t;
             
-            //Function pointers
-            typedef uint8_t(*CB)(type_t t, void* d);
+            //Data types for callback data
+            typedef struct {
+                float yaw;
+                float pitch;
+                uint8_t animation;  //0=ground
+            } dataLook;
             
-            //Constructor
-            //Events();
+            //Function pointers
+            typedef uint8_t(*CB)(type_t t, const void* d);
             
             //Add event
-            void put(type_t t, void *d);
+            void put(type_t t, const void *d);
             
-            //Take first event
+            //Get next unhandled event
             bool get(Event_t& result);
             
         protected:
             std::list<Event_t> myQueue;
-            
-/*
-        public:
-            //Process all event callbacks
-            void run();
-            //Callback setter
-            void setViewerCB(type_t t, CB cb, void* d);
-            //Unsetter
-            void unsetViewerCB(type_t t);
-        protected:
-            //References
-            mc__::World& world;
-            mc__::Viewer& viewer;
 
-            //Map event type to callback pointer and data
-            CB viewerCallbacks[ sizeof(uint8_t)];
-            void* viewerCBdata[ sizeof(uint8_t)];
-            //Default callback that does nothing
-            static uint8_t nullCB(type_t t, void* d);
-*/
     };
 }
 #endif
