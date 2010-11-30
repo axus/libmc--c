@@ -690,7 +690,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 54, 26, 26, 25, 25, 26, 27, 0x00);    //Chest (*)
     setBlockInfo( 55, 84, 100,85, 101,84, 100,0x2F);    //Wire (*)
     setBlockInfo( 56, 50, 50, 50, 50, 50, 50, 0x00);    //DiamondOre
-    setBlockInfo( 57, 40, 40, 56, 24, 40, 40, 0x00);    //GoldBlock
+    setBlockInfo( 57, 40, 40, 56, 24, 40, 40, 0x00);    //DiamondBlock
     setBlockInfo( 58, 60, 60, 43, 43, 59, 59, 0x00);    //Workbench
     setBlockInfo( 59, 90, 91, 92, 93, 94, 95, 0xF7);    //Crops (*)
     setBlockInfo( 60, 2,  2,  2,  86, 2,  2,  0x00);    //Soil

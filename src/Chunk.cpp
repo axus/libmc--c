@@ -31,6 +31,92 @@
 using mc__::Chunk;
 using mc__::Block;
 
+//Static initializer
+const bool mc__::Chunk::isOpaque[] = {
+    false,  //Air
+    true,   //Stone
+    true,   //Grass
+    true,   //Dirt
+    true, //Cobble
+    true, //Wood
+    false, //Sapling
+    true, //Bedrock
+    false, //Water(*)
+    true, //WaterStill
+    true, //Lava(*)
+    true, //LavaStill
+    true, //Sand
+    true, //Gravel
+    true, //GoldOre
+    true, //IronOre
+    true, //CoalOre
+    true, //Log
+    false,//Leaves
+    true, //Sponge
+    false,//Glass
+    true, true, true, true, true, true, true, true, //Cloth
+    true, true, true, true, true, true, true, true, //Cloth
+    false, //Flower
+    false, //Rose
+    false, //BrownShroom
+    false, //RedShroom
+    true, //GoldBlock
+    true, //IronBlock
+    true, //DoubleStep
+    false,//Step
+    true, //Brick
+    true, //TNT
+    true, //Bookshelf
+    true, //Mossy
+    true, //Obsidian
+    false,//Torch
+    false,//Fire
+    false,//Spawner
+    false,//WoodStairs
+    true, //Chest (*)
+    false,//Wire (*)
+    true, //DiamondOre
+    true, //DiamondBlock
+    true, //Workbench
+    false,//Crops (*)
+    true, //Soil
+    true, //Furnace
+    true, //LitFurnace
+    false,//SignPost (*)
+    false,//WoodDoor (*)
+    false,//Ladder (*)
+    false,//Track (*)
+    false,//CobbleStairs
+    false,//WallSign (*)
+    false,//Lever
+    false,//StonePlate
+    false,//IronDoor (*)
+    false,//WoodPlate
+    true, //RedstoneOre
+    true, //RedstoneOreLit(*)
+    false,//RedstoneTorch
+    false,//RedstoneTorchLit
+    false,//StoneButton
+    false,//SnowPlate
+    true, //Ice
+    true, //Snow
+    false,//Cactus
+    true, //Clay
+    false,//Reed (*)
+    true, //Jukebox
+    false,//Fence (*)
+    true, //Pumpkin
+    true, //Netherstone
+    true, //SlowSand
+    true, //Lightstone
+    false,//Portal (??)
+    true, //PumpkinLit
+    true,   //92
+    true,   //93
+    true,   //94
+    true    //95
+};
+
 //Allocate space for chunk
 Chunk::Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z):
             size_X(size_x), size_Y(size_y), size_Z(size_z),
