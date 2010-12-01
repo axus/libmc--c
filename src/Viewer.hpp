@@ -89,6 +89,7 @@ namespace mc__ {
             void drawItem( uint8_t blockID, GLint x, GLint y, GLint z);
             void drawBlock(const mc__::Block& block, GLint x, GLint y, GLint z);
             void drawChunks( const mc__::World& world);
+            //void drawMapChunks( const mc__::World& world);
             bool drawWorld(const mc__::World& world);
 
             //Camera functions

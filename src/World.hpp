@@ -24,40 +24,10 @@
 
 //STL list
 #include <vector>
-
-/*
-//Hash_map... faster than map?
-#ifdef __GNUC__
-    #if __GNUC__ <= 2
-        #include <hash_map>
-        using std::hash_map;
-    #else
-        #include <ext/hash_map>
-        using __gnu_cxx::hash_map;
-    #endif
-#elif defined (_MSC_VER)
-    #if _MSC_VER < 1500
-        #include "stl_hash.h"
-        using std::hash_map;
-    #else
-        #include <hash_map>
-        using stdext::hash_map
-    #endif
-#endif
-
-//Hash function for 64 bits (X&0x3FFF)<<36|(Z&0x3FFF)<<8|Y
-struct hash_uint64 {
-  uint32_t operator()(const uint64_t in)  const {
-    uint64_t ret = (in >> 32L) ^ (in & 0xFFFFFFFF);
-    return (uint32_t) ret;
-}   //TODO: bucket_size and min_buckets for MSVC
-
-//TODO: Replace with unordered_map
-*/
-#include <map>
+#include <map>      //TODO: replace with unordered_map
 
 //mc__ classes
-#include "Chunk.hpp"
+#include "MapChunk.hpp" //includes "Chunk.hpp"
 
 //Define class inside mc__ namespace
 namespace mc__ {
@@ -65,6 +35,7 @@ namespace mc__ {
     //Coordinate to chunk mapping types
     typedef std::map< int8_t, Chunk* > YChunkMap_t;
     typedef std::map< uint64_t, YChunkMap_t* > XZChunksMap_t;
+    typedef std::map< uint64_t, MapChunk* > XZMapChunk_t;
     
     //Output iterator for reading World chunks
     class chunkIterator;
@@ -109,6 +80,7 @@ namespace mc__ {
             
             //Access this to see chunks in the world
             XZChunksMap_t coordChunksMap;
+            XZMapChunk_t coordMapChunks;    //X|Z -> MapChunk*
             
             //World spawn point
             int32_t spawn_X;
