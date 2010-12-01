@@ -44,15 +44,17 @@ using std::ios;
 
 using mc__::World;
 using mc__::Viewer;
+using mc__::Player;
 using mc__::UserInterface;
 
 //Constructor, initialize SFML and mc-- objects here
-UserInterface::UserInterface(const string& name, mc__::World& w, bool dbg):
+UserInterface::UserInterface(
+        const string& name, World& w, Player& p, Events& ev, bool dbg):
     texture_map_filename("terrain.png"),    //block textures
-    Settings(32, 0, 0),           //32-bit color, 0 stencil, 0 anti-aliasing
+    Settings(32, 8, 0),           //32-bit color, 0 stencil, 0 anti-aliasing
     //800x600, 32-bit color
     App(sf::VideoMode(800, 600, 32), name, sf::Style::Close, Settings),
-    world(w), debugging(dbg)
+    world(w), player(p), events(ev), debugging(dbg), mouselooking(true)
 {
 
     //Start with no mouse buttons pressed
@@ -64,9 +66,12 @@ UserInterface::UserInterface(const string& name, mc__::World& w, bool dbg):
 
     //Load terrain.png
     viewer.init(texture_map_filename);
-    
-    //Move viewer camera to starting position
-    viewer.move(-world.spawn_X, -world.spawn_Y, -world.spawn_Z);
+
+    //Reset camera
+    resetCamera();
+
+    //Hide the mouse cursor
+    App.ShowMouseCursor(false);
 
     //Draw the world once
     App.SetActive();
@@ -74,15 +79,25 @@ UserInterface::UserInterface(const string& name, mc__::World& w, bool dbg):
     App.Display();
 }
 
+//Close UI
+UserInterface::~UserInterface()
+{
+    App.ShowMouseCursor(true);
+}
+
+//Handle game and SFML events, draw game
 bool UserInterface::run()
 {
     bool Running=true;
     bool something_happened;
 
+    //Handle events set by game
+    Running = actions();
+
     //Set window
     App.SetActive();
 
-    //Check events  
+    //Check SFML events  
     something_happened=false;
     while (App.GetEvent(lastEvent))
     {
@@ -106,6 +121,66 @@ bool UserInterface::run()
     return Running;
 }
 
+//Handle mc__::Events
+bool UserInterface::actions()
+{
+    bool running=true;
+    
+    bool chunk_received=false;
+    
+    //Process all events
+    Events::Event_t event;
+    while ( events.get(event) ) {
+        switch( event.type ) {
+            case Events::GAME_CHAT_MESSAGE:
+                //TODO: draw chat message to screen
+                break;
+            case Events::GAME_PLAYER_POSLOOK:
+                //Update view for current player position/direction
+                resetCamera();
+                break;
+            case Events::GAME_MAPCHUNK:
+                chunk_received=true;
+                break;
+            default:
+                break;
+        }
+    }
+    
+    //Create some acknowledgement if chunk received?
+    if (chunk_received) {
+      
+      /*
+        //Allocate event data, remember to delete it after receiving it
+        Events::dataLook *data = new Events::dataLook;
+        
+        data->yaw = player.yaw;
+        data->pitch = player.pitch;
+        data->animation = player.animation;
+
+        events.put(Events::ACTION_LOOK, NULL);
+      */
+    }
+  
+    return running;
+}
+
+//Reset camera to player
+void UserInterface::resetCamera()
+{
+    //Reset camera
+    viewer.cam_X = (int)16*player.abs_X;
+    viewer.cam_Y = (int)16*player.eyes_Y;
+    viewer.cam_Z = (int)16*player.abs_Z;
+    viewer.cam_yaw = player.yaw;
+    viewer.cam_pitch = 0;
+    
+    cout << "Moved camera to player @ " << (int)player.abs_X << ","
+        << (int)player.abs_Y << "," << (int)player.abs_Z << "("
+        << (int)player.eyes_Y << ")" << endl;
+
+}
+
 //Process user input
 bool UserInterface::handleSfEvent( const sf::Event& Event )
 {
@@ -127,41 +202,45 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                     break;
                 //Move Up
                 case sf::Key::PageUp:
-                    viewer.move(0, -1, 0);
+                case sf::Key::Space:
+                    viewer.move(0, 16, 0);
                     break;
                 //Move Down
-                case sf::Key::Home:        
-                    viewer.move(0, 1, 0);
+                case sf::Key::Home:
+                case sf::Key::X:
+                    viewer.move(0, -16, 0);
                     break;
                 //Move left
                 case sf::Key::Left:
                 case sf::Key::A:
-                    viewer.move(1, 0, 0);
+                    viewer.move(-16, 0, 0);
                     break;
                 //Move right
                 case sf::Key::Right:
                 case sf::Key::D:
-                    viewer.move(-1, 0, 0);
+                    viewer.move(16, 0, 0);
                     break;
                 //Zoom in
                 case sf::Key::W:
                 case sf::Key::Up:
-                    viewer.move(0, 0, 1);
+                    viewer.move(0, 0, 16);
                     break;
                 //Zoom out
                 case sf::Key::Down:
                 case sf::Key::S:
-                    viewer.move(0, 0, -1);
+                    viewer.move(0, 0, -16);
                     break;                        
                 //Turn left
                 case sf::Key::Q:
                 case sf::Key::End:
-                    viewer.turn(-15, 0, 1, 0);
+                    //viewer.turn(-15, 0, 1, 0);
+                    viewer.cam_yaw -= 15.0f;
                     break;
                 //Turn right
                 case sf::Key::E:
                 case sf::Key::PageDown:
-                    viewer.turn(15, 0, 1, 0);
+                    //viewer.turn(15, 0, 1, 0);
+                    viewer.cam_yaw += 15.0f;
                     break;
                 //Change red color in tree leaves
                 case sf::Key::R:
@@ -175,22 +254,12 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                 case sf::Key::B:
                     viewer.leaf_color[2] += 16;
                     break;
+                case sf::Key::Back:
+                    resetCamera();
+                    break;
                 //Debugging output
                 case sf::Key::Tilde:
-                {
-                    /*
-                    //Get the tree at 3,0,3
-                    mc__::Chunk *chunk = world.getChunk(3,0,3);
-                    
-                    //Copy binary chunk data to file
-                    if (chunk != NULL) {
-                        viewer.writeChunkBin( chunk, "chunk.bin");
-                    } else {
-                        cerr << "Chunk not found @ (3,0,3)" << endl;
-                    }
-                    */
                     viewer.saveChunks(world);
-                }
                     break;
                 case sf::Key::BackSlash:
                     //Print chunk information to stdout
@@ -203,10 +272,8 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             
         //Mousewheel scroll
         case sf::Event::MouseWheelMoved: {
-            //Change camera position (in increments of 16).  Down zooms out.
-            //int move_Z = (Event.MouseWheel.Delta << 4);
-            //viewer.move(0, 0, move_Z);
-            viewer.move(0,0,Event.MouseWheel.Delta);
+            //Change camera position (in increments of 16).
+            viewer.move(0,0,Event.MouseWheel.Delta << 4);   //Zoom forward
             break;
         }
         
@@ -222,12 +289,11 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             //Reset camera if middle mouse button pressed
             switch( Event.MouseButton.Button ) {
                 case sf::Mouse::Middle:
-                    viewer.reset();
-                    viewer.move(-world.spawn_X, -world.spawn_Y, -world.spawn_Z);
-                    cerr << "Moved to spawn @ " << (int)world.spawn_X << ","
-                        << (int)world.spawn_Y << ","
-                        << (int)world.spawn_Z << endl;
+                    resetCamera();
                     break;
+                case sf::Mouse::Right:
+                    //Toggle mouselook
+                    mouselooking=!mouselooking;
                 default:
                     break;
             }
@@ -246,12 +312,14 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             //Get latest position from event
             mouse_X = Event.MouseMove.X;
             mouse_Y = Event.MouseMove.Y;
+            int diff_X;
+            int diff_Y;
 
             //Translate camera if moved while holding left button
             if (mouse_press[sf::Mouse::Left]) {
 
-                //Move camera every 16 pixels on X-axis
-                int diff_X = (mouse_press_X[sf::Mouse::Left] - mouse_X)/16;
+                //Step camera to side for mouse-X motion
+                diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
                 
                 if (diff_X != 0) {
                     viewer.move(diff_X , 0, 0);
@@ -260,38 +328,35 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                     mouse_press_X[sf::Mouse::Left] = mouse_X;
                 }
 
-                //Move camera every 16 pixels on Y-axis
-                int diff_Y = (mouse_Y - mouse_press_Y[sf::Mouse::Left])/16;
+                //Step camera up for mouse-Y motion
+                diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
                 if (diff_Y != 0) {
                     viewer.move(0, diff_Y ,0);
                     
                     //Save new mouse position
                     mouse_press_Y[sf::Mouse::Left] = mouse_Y;
                 }
-                
-                /*//Move camera 1 pixel at a time on X-axis
-                viewer.move(mouse_press_X[sf::Mouse::Left] - mouse_X, 0, 0);
-                mouse_press_X[sf::Mouse::Left] = mouse_X;
-                
-                //Move camera one pixel at a time on Y-axis
-                viewer.move(0, mouse_Y - mouse_press_Y[sf::Mouse::Left], 0);
-                mouse_press_Y[sf::Mouse::Left] = mouse_Y;
-                */
-            }
 
-            //Rotate camera if mouse moved while holding right button
-            if (mouse_press[sf::Mouse::Right]) {
-              
+            }
+            else if (mouselooking)
+            {    //Turn camera if left mouse buttons is not held
+
                 //Use change in X position to rotate about Y-axis
-                viewer.turn(mouse_press_X[sf::Mouse::Right] - mouse_X, 0, 1, 0);
+                diff_X = mouse_X - mouse_press_X[sf::Mouse::Right];
+                if (diff_X != 0) {
+                    viewer.cam_yaw += float(diff_X)/2.0;
+                    //Update last mouse position
+                    mouse_press_X[sf::Mouse::Right] = mouse_X;
+                }
 
-                //Don't rotate about X-axis
-                //viewer.turn(mouse_Y - mouse_press_Y[sf::Mouse::Right], 1, 0, 0);
-                
-                //Update mouse press position for right mouse button
-                mouse_press_X[sf::Mouse::Right] = mouse_X;
-                mouse_press_Y[sf::Mouse::Right] = mouse_Y;
+                //Rotate about axis perpendicular to forward vector
+                diff_Y = mouse_Y - mouse_press_Y[sf::Mouse::Right];
+                if (diff_Y != 0) {
+                    viewer.cam_pitch += float(diff_Y)/2.0;
+                    mouse_press_Y[sf::Mouse::Right] = mouse_Y;
+                }
             }
+
             break;
         //Unhandled events
         default:

@@ -25,10 +25,13 @@ using std::cout;
 using std::hex;
 using std::dec;
 using std::endl;
+using std::string;
 
 //mc--
 #include "UserInterface.hpp"
 using mc__::World;
+using mc__::Player;
+using mc__::Events;
 
 //
 // Functions
@@ -100,14 +103,30 @@ int main(int argc, char** argv)
         default:
             break;
     }
+    
+    string player_name("axus");
 
     //Game world
     World world;
+
+    //Game player
+    Player player( player_name);
+    
+    //Game events
+    Events events;
+
+    //Generate a test world
     genWorld(world);
 
-    //Create user interface to world
-    mc__::UserInterface ui("libmc--c example", world);
+    //Move player to spawn
+    player.abs_X = world.spawn_X;
+    player.abs_Y = world.spawn_Y;
+    player.eyes_Y = player.abs_Y + 1;
+    player.abs_Z = world.spawn_Z;
     
+    //Create user interface to world
+    mc__::UserInterface ui("libmc--c example", world, player, events);
+        
     //Run until user exits
     while (ui.run() && (!run_limit || (frames < max_frames) )) {
         //Sleep some to decrease CPU usage in between UI updates

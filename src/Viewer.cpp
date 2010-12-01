@@ -57,6 +57,9 @@
     
 */
 
+//C
+#include <cmath>    //fmod
+
 //More STL
 #include <iostream>
 #include <iomanip>
@@ -82,7 +85,10 @@ using mc__::Viewer;
 using mc__::face_ID;
 using mc__::World;
 
-Viewer::Viewer(): camera_X(0), camera_Y(0), camera_Z(0), debugging(false)
+const float Viewer::PI = std::atan(1.0)*4;
+
+Viewer::Viewer():
+    cam_X(0), cam_Y(0), cam_Z(0), cam_yaw(0), cam_pitch(0), debugging(false)
 {
     //Dark green tree leaves
     leaf_color[0] = 0x00;    //Red
@@ -158,9 +164,18 @@ void Viewer::reset()
 }
 
 //Move camera without rotating
-void Viewer::move( GLint block_x, GLint block_y, GLint block_z)
+void Viewer::move( GLfloat side, GLfloat up, GLfloat forward)
 {
-    glTranslatef( block_x << 4, block_y << 4, block_z << 4);
+    //Move up or down
+    cam_Y += up;
+    
+    //Movement along line of site, depends on yaw
+    //GLfloat yaw_mod = fmod( cam_yaw, 360.0f);
+    
+    float radians = cam_yaw*PI/180.0;
+    cam_X += int(side*cos( radians ) + forward*sin(radians));
+    cam_Z += int(side*sin( radians ) - forward*cos(radians));
+    
 }
 
 //Rotate camera degrees/360 about vector (axis_x, axis_y, axis_z)
@@ -546,7 +561,18 @@ bool Viewer::drawWorld(const World& world)
 {
     //Erase openGL world
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+
+    //Reset camera
+    glLoadIdentity();
+    glRotatef( cam_yaw, 0.0f, 1.0f, 0.0f);
     
+    //Change roll/pitch to look up/down
+    //glRotatef( cam_pitch, 1.0f, 0.0f, 0.0f);
+    //glRotatef( cam_roll, 0.0f, 0.0f, 1.0f);
+    
+    //Bring the world to the camera, not the camera to the world
+    glTranslatef( -cam_X, -cam_Y, -cam_Z );
+
     //Start putting quads in memory
     glBegin(GL_QUADS);
 

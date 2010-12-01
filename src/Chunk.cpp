@@ -33,84 +33,84 @@ using mc__::Block;
 
 //Static initializer
 const bool mc__::Chunk::isOpaque[] = {
-    false,  //Air
-    true,   //Stone
-    true,   //Grass
-    true,   //Dirt
-    true, //Cobble
-    true, //Wood
-    false, //Sapling
-    true, //Bedrock
-    false, //Water(*)
-    true, //WaterStill
-    true, //Lava(*)
-    true, //LavaStill
-    true, //Sand
-    true, //Gravel
-    true, //GoldOre
-    true, //IronOre
-    true, //CoalOre
-    true, //Log
-    false,//Leaves
-    true, //Sponge
-    false,//Glass
+    false,  // 0 Air
+    true,   // 1 Stone
+    true,   // 2 Grass
+    true,   // 3 Dirt
+    true,   // 4 Cobble
+    true,   // 5 Wood
+    false,  // 6 Sapling
+    true,   // 7 Bedrock
+    false,  // 8 Water(*)
+    true,   // 9 WaterStill
+    true,   //10 Lava(*)
+    true,   //11 LavaStill
+    true,   //12 Sand
+    true,   //13 Gravel
+    true,   //14 GoldOre
+    true,   //15 IronOre
+    true,   //16 CoalOre
+    true,   //17 Log
+    false,  //18 Leaves
+    true,   //19 Sponge
+    false,  //20 Glass
     true, true, true, true, true, true, true, true, //Cloth
     true, true, true, true, true, true, true, true, //Cloth
-    false, //Flower
-    false, //Rose
-    false, //BrownShroom
-    false, //RedShroom
-    true, //GoldBlock
-    true, //IronBlock
-    true, //DoubleStep
-    false,//Step
-    true, //Brick
-    true, //TNT
-    true, //Bookshelf
-    true, //Mossy
-    true, //Obsidian
-    false,//Torch
-    false,//Fire
-    false,//Spawner
-    false,//WoodStairs
-    true, //Chest (*)
-    false,//Wire (*)
-    true, //DiamondOre
-    true, //DiamondBlock
-    true, //Workbench
-    false,//Crops (*)
-    true, //Soil
-    true, //Furnace
-    true, //LitFurnace
-    false,//SignPost (*)
-    false,//WoodDoor (*)
-    false,//Ladder (*)
-    false,//Track (*)
-    false,//CobbleStairs
-    false,//WallSign (*)
-    false,//Lever
-    false,//StonePlate
-    false,//IronDoor (*)
-    false,//WoodPlate
-    true, //RedstoneOre
-    true, //RedstoneOreLit(*)
-    false,//RedstoneTorch
-    false,//RedstoneTorchLit
-    false,//StoneButton
-    false,//SnowPlate
-    true, //Ice
-    true, //Snow
-    false,//Cactus
-    true, //Clay
-    false,//Reed (*)
-    true, //Jukebox
-    false,//Fence (*)
-    true, //Pumpkin
-    true, //Netherstone
-    true, //SlowSand
-    true, //Lightstone
-    false,//Portal (??)
-    true, //PumpkinLit
+    false,  //37 Flower
+    false,  //38 Rose
+    false,  //39 BrownShroom
+    false,  //40 RedShroom
+    true,   //41 GoldBlock
+    true,   //42 IronBlock
+    true,   //43 DoubleStep
+    false,  //44 Step
+    true,   //45 Brick
+    true,   //46 TNT
+    true,   //47 Bookshelf
+    true,   //48 Mossy
+    true,   //49 Obsidian
+    false,  //50 Torch
+    false,  //51 Fire
+    false,  //52 Spawner
+    false,  //53 WoodStairs
+    true,   //54 Chest (*)
+    false,  //55 Wire (*)
+    true,   //56 DiamondOre
+    true,   //57 DiamondBlock
+    true,   //58 Workbench
+    false,  //59 Crops (*)
+    true,   //60 Soil
+    true,   //61 Furnace
+    true,   //62 LitFurnace
+    false,  //63 SignPost (*)
+    false,  //64 WoodDoor (*)
+    false,  //65 Ladder (*)
+    false,  //66 Track (*)
+    false,  //67 CobbleStairs
+    false,  //68 WallSign (*)
+    false,  //69 Lever
+    false,  //70 StonePlate
+    false,  //71 IronDoor (*)
+    false,  //72 WoodPlate
+    true,   //73 RedstoneOre
+    true,   //74 RedstoneOreLit(*)
+    false,  //75 RedstoneTorch
+    false,  //76 RedstoneTorchLit
+    false,  //77 StoneButton
+    false,  //78 SnowPlate
+    true,   //79 Ice
+    true,   //80 Snow
+    false,  //81 Cactus
+    true,   //82 Clay
+    false,  //83 Reed (*)
+    true,   //84 Jukebox
+    false,  //85 Fence (*)
+    true,   //86 Pumpkin
+    true,   //87 Netherstone
+    true,   //88 91 SlowSand
+    true,   //89 Lightstone
+    false,  //90 Portal (??)
+    true,   //91 PumpkinLit
     true,   //92
     true,   //93
     true,   //94

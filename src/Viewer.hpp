@@ -74,10 +74,9 @@ namespace mc__ {
             //Map block ID to block information
             BlockInfo blockInfo[256];
             
-            //Initial camera position
-            GLint camera_X;
-            GLint camera_Y;
-            GLint camera_Z;
+            //Current camera position
+            GLfloat cam_X, cam_Y, cam_Z;
+            GLfloat cam_yaw, cam_pitch;
 
             bool init(const std::string &texture_map_file);
 
@@ -96,7 +95,7 @@ namespace mc__ {
             void lookAt( GLint from_x, GLint from_y, GLint from_z, 
                          GLint at_x, GLint at_y, GLint at_z,
                          GLint up_x=0, GLint up_y=1, GLint up_z=0);
-            void move( GLint offset_x, GLint offset_y, GLint offset_z);
+            void move( GLfloat side, GLfloat up, GLfloat forward);
             void turn( GLint degrees, GLint axus_x=0, GLint axus_y=1,
                 GLint axus_z=0);
             void viewport( GLint x, GLint y, GLsizei width, GLsizei height);
@@ -136,6 +135,9 @@ namespace mc__ {
 
             //Debugging functions
             void outputRGBAData();
+            
+            //Float pi
+            static const float PI;
     };
 }
 

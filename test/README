@@ -41,25 +41,27 @@ Using:
         sfml-window.dll
         libgcc DLL
         libstdc++ DLL
+        zlib1.dll
     
     cd $HOME/libmc--c/bin
     mc--c
     
-    This test program will preview how each block will look with this skin,
-    using libmc--c.
+    This test program will create a very small world, using terrain.png
+    to draw the blocks.
     
 Controls:
-    North       Mouse-wheel up, Up-arrow, W
-    South       Mouse-wheel down, Down-arrow, S
-    West        Left-drag left, Left-arrow, A
-    East        Left-drag right, Right-arrow, D
-    Down        Left-drag down, Home
-    Up          Left-drag up, PageUp
-    Turn left   Right-click drag, End, Q
-    Turn right  Right-click drag, PageDown, E
-    Respawn     Middle-click
-    Tree color  R, G, B
-    Quit        Esc
+    Forward             Mouse-scroll up, Up-arrow, W
+    Back                Mouse-scroll down, Down-arrow, S
+    Side-left           Left-drag left, Left-arrow, A
+    Side-right          Left-drag right, Right-arrow, D
+    Sink                Left-drag down, X, Home
+    Rise                Left-drag up, Space, PageUp
+    Toggle Mouselook    Right-click
+    Turn left           Mouselook left, End, Q
+    Turn right          Mouselook right, PageDown, E
+    Return camera       Middle-click
+    Tree color          R, G, B
+    Quit                Esc
 
 Thanks to the following people for testing:
     vLK

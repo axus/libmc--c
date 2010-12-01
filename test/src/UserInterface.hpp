@@ -32,7 +32,8 @@
 //libmc--c classes
 #include <mc--/World.hpp>
 #include <mc--/Viewer.hpp>
-
+#include <mc--/Player.hpp>
+#include <mc--/Events.hpp>
 
 namespace mc__ {
 
@@ -44,13 +45,20 @@ namespace mc__ {
 
             //Constructor, initialize SFML and mc-- objects here
             UserInterface(const std::string& title, mc__::World&,
-                bool dbg=false);
+                mc__::Player& player, mc__::Events& ev, bool dbg=false);
+            ~UserInterface();
             
             bool init();
             
             //Get input events and draw the game to App window
             bool run();
             
+            //Handle events from game
+            bool actions();
+            
+            //Move camera to player position
+            void resetCamera();
+
         protected:
         
             //Process user input
@@ -64,10 +72,15 @@ namespace mc__ {
             //mc--
             mc__::Viewer viewer;
             mc__::World& world;
+            mc__::Player& player;
+            mc__::Events& events;
             bool debugging;
             
             //Event loop    
             sf::Event lastEvent;
+            
+            //Currently mouse-looking
+            bool mouselooking;
             
             //Current mouse pointer position
             int mouse_X, mouse_Y;
