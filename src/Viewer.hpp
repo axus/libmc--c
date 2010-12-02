@@ -83,9 +83,12 @@ namespace mc__ {
             ILuint loadImageFile( const std::string &imageFilename);
 
             //Single block drawing functions
-            void drawCube( uint8_t blockID, GLint x, GLint y, GLint z);
+            void drawBlock(const mc__::Block& block,
+                GLint x, GLint y, GLint z, uint8_t visflags=0);
+
+            //Specific block drawing functions
+            void drawCube( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t visflags=0);
             void drawItem( uint8_t blockID, GLint x, GLint y, GLint z);
-            void drawBlock(const mc__::Block& block, GLint x, GLint y, GLint z);
             
             //Draw minichunks only
             void drawChunks( const mc__::World& world);

@@ -259,7 +259,8 @@ void Viewer::setBlockColor(uint8_t blockID, face_ID face)
 }
 
 //Use OpenGL to draw a solid cube with appropriate textures for blockID
-void Viewer::drawCube( uint8_t blockID, GLint x, GLint y, GLint z)
+void Viewer::drawCube( uint8_t blockID,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
     
     //Face coordinates (in pixels)
@@ -303,76 +304,88 @@ void Viewer::drawCube( uint8_t blockID, GLint x, GLint y, GLint z)
 //TODO: compile lists for each blockID!
 
     //A
-    tx_0 = blockInfo[blockID].tx[WEST];
-    tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-    ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
-    ty_1 = blockInfo[blockID].ty[WEST];
-    setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
-    
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    if (!(vflags & 0x80)) {
+        tx_0 = blockInfo[blockID].tx[WEST];
+        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
+        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
+        ty_1 = blockInfo[blockID].ty[WEST];
+        setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
 
     //B
-    tx_0 = blockInfo[blockID].tx[EAST];
-    tx_1 = blockInfo[blockID].tx[EAST] + tmr;
-    ty_0 = blockInfo[blockID].ty[EAST] + tmr;
-    ty_1 = blockInfo[blockID].ty[EAST];
-    setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
-    
-    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
+    if (!(vflags & 0x40)) {
+        tx_0 = blockInfo[blockID].tx[EAST];
+        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
+        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
+        ty_1 = blockInfo[blockID].ty[EAST];
+        setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
+    }
     
     //C
-    tx_0 = blockInfo[blockID].tx[DOWN];
-    tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-    ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-    ty_1 = blockInfo[blockID].ty[DOWN];
-    setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
-    
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    }
     
     //D
-    tx_0 = blockInfo[blockID].tx[UP];
-    tx_1 = blockInfo[blockID].tx[UP] + tmr;
-    ty_0 = blockInfo[blockID].ty[UP] + tmr;
-    ty_1 = blockInfo[blockID].ty[UP];
-    setBlockColor(blockID, UP);  //Set leaf/grass color if needed
-
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    if (!(vflags & 0x10)) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = blockInfo[blockID].tx[UP] + tmr;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+        setBlockColor(blockID, UP);  //Set leaf/grass color if needed
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
     
     //E
-    tx_0 = blockInfo[blockID].tx[NORTH];
-    tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
-    ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
-    ty_1 = blockInfo[blockID].ty[NORTH];
-    setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
-    
-    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
-    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
-    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
-    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    if (!(vflags & 0x08)) {
+        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[NORTH];
+        setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    }
     
     //F
-    tx_0 = blockInfo[blockID].tx[SOUTH];
-    tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-    ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
-    ty_1 = blockInfo[blockID].ty[SOUTH];
-    setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
-    
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    if (!(vflags & 0x04)) {
+        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[SOUTH];
+        setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    }
     
     //Return color to normal
     setBlockColor( 0, (face_ID)0);
@@ -416,11 +429,12 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 }
 
 //Draw a placed mc__::Block in openGL
-void Viewer::drawBlock( const mc__::Block& block, GLint x, GLint y, GLint z)
+void Viewer::drawBlock( const mc__::Block& block,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
 
-    //Don't draw air blocks
-    if (block.blockID == 0) {
+    //Don't draw invisible blocks
+    if (block.blockID == 0 || (vflags & 0x2)) {
         return;
     }
 
@@ -432,7 +446,7 @@ void Viewer::drawBlock( const mc__::Block& block, GLint x, GLint y, GLint z)
 
     switch ( (blockInfo[block.blockID].properties & 0xF0)>>4 ) {
         case 0x0:
-            drawCube(block.blockID, x, y, z);
+            drawCube(block.blockID, x, y, z, vflags);
             break;
         case 0xF:
             drawItem(block.blockID, x, y, z);
@@ -515,8 +529,8 @@ void Viewer::drawMapChunks( const World& world)
     //Variables to iterate through list of chunks
     XZMapChunk_t::const_iterator iter_xz;
 
-    //GLint off_x, off_y, off_z;
     GLint X, Y, Z;
+    uint8_t vflags;
     
     //For all megachunks
     for (iter_xz = coordMapChunks.begin();
@@ -550,7 +564,8 @@ void Viewer::drawMapChunks( const World& world)
             X = myChunk.X + (index >> 11);
             Y = myChunk.Y + (index & 0x7F);
             Z = myChunk.Z + ((index >> 7) & 0xF);
-            drawBlock( myChunk.block_array[index], X, Y, Z);
+            vflags = myChunk.visflags[index];
+            drawBlock( myChunk.block_array[index], X, Y, Z, vflags);
         }
 
     }
