@@ -110,7 +110,7 @@ uint64_t World::getKey(const int32_t X, const int32_t Z) const
     return key;
 }
 
-//Add chunk to world
+//Add chunk to mini-chunk list.  Still needs to be added to map!
 bool World::addChunk( Chunk *chunk)
 {
     //Can't add null chunks
@@ -190,15 +190,132 @@ mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
     return chunk;
 }
 
+//Unzip/copy one mini-chunk to appropriate map chunk
+bool World::addMapChunk( Chunk* chunk)
+{
+    //Validate pointer
+    if (chunk == NULL) {
+        return false;
+    }
+    bool result;
+    
+    //Get X/Z of MapChunk from chunk
+    int32_t X = chunk->X & 0xFFFFFFF0;
+    int32_t Z = chunk->Z & 0xFFFFFFF0;
+    uint64_t key = getKey(X, Z);
+    
+    MapChunk *mapchunk;
+
+    //Look for existing MapChunk
+    XZMapChunk_t::const_iterator iter = coordMapChunks.find(key);    
+    if (iter == coordMapChunks.end()) {
+      
+        //Create a new MapChunk in coordMapChunks if needed
+        mapchunk = new MapChunk(X, Z);
+        coordMapChunks[key] = mapchunk;
+        
+        MapChunk* neighbor;
+        //Check neighbor A (-X)
+        iter = coordMapChunks.find( getKey(X-16, Z) );
+        if (iter != coordMapChunks.end()) {
+            //Double-link neighbors
+            neighbor = iter->second;
+            mapchunk->neighbors[0] = neighbor;
+            neighbor->neighbors[1] = mapchunk;
+        }
+
+        //Check neighbor B (+X)
+        iter = coordMapChunks.find( getKey(X+16, Z) );
+        if (iter != coordMapChunks.end()) {
+            //Double-link neighbors
+            neighbor = iter->second;
+            mapchunk->neighbors[1] = neighbor;
+            neighbor->neighbors[0] = mapchunk;
+        }
+
+        //Check neighbor E (-Z)
+        iter = coordMapChunks.find( getKey(X, Z-16) );
+        if (iter != coordMapChunks.end()) {
+            //Double-link neighbors
+            neighbor = iter->second;
+            mapchunk->neighbors[2] = neighbor;
+            neighbor->neighbors[3] = mapchunk;
+        }
+
+        //Check neighbor F (+Z)
+        iter = coordMapChunks.find( getKey(X, Z+16) );
+        if (iter != coordMapChunks.end()) {
+            //Double-link neighbors
+            neighbor = iter->second;
+            mapchunk->neighbors[3] = neighbor;
+            neighbor->neighbors[2] = mapchunk;
+        }
+
+    } else {
+        //MapChunk already exists
+        mapchunk = iter->second;
+    }
+    
+    //Finally, add it
+    result = mapchunk->addChunk(chunk);
+    
+    return result;
+}
+
+
+//Unzip all mini-chunks into MapChunks
+bool World::updateMapChunks(bool cleanup)
+{
+
+    //Variables to iterate through list of chunks
+    XZChunksMap_t::iterator iter_xz;
+    YChunkMap_t::iterator iter_y;
+    uint64_t key;
+    
+    //For all chunk stacks (X,Z)
+    for (iter_xz = coordChunksMap.begin();
+        iter_xz != coordChunksMap.end(); iter_xz++)
+    {
+        key = iter_xz->first;
+        YChunkMap_t*& chunks=iter_xz->second;
+        
+        //For all chunks in stack (Y)
+        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
+        {
+            //Get the next chunk pointer
+            Chunk*& chunk = iter_y->second;
+            
+            //Add chunk to map (uncompresses if needed)
+            if (addMapChunk(chunk)) {
+                ;
+            } else {
+                cerr << "Error adding chunk to map @ key=0x" << hex << key
+                    << " Y=" << dec << (int)(iter_y->first) << endl;
+            }
+            
+            //Delete the mini-chunk
+            if (cleanup) { delete chunk; chunk = NULL;}
+        }
+        //Delete the stack of mini-chunks
+        if (cleanup) { delete chunks; chunks = NULL;}
+    }
+    //Clear the mini-chunk list
+    if (cleanup) { coordChunksMap.clear(); }
+    
+    return true;
+}
 
 //Generate chunk representing block ID 0 - 95
 bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     
     const uint8_t size_X=16, size_Y=11, size_Z=1;
 
+    //Align to MapChunk grid
+    int32_t chunkX = X & 0xFFFFFFF0;
+
     //Allocate chunk
     Chunk *testChunk =
-        new Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
+        new Chunk(size_X-1, size_Y-1, size_Z-1, chunkX, Y, Z);
     
     //Allocate array of blocks
     Block *&firstBlockArray = testChunk->block_array;
@@ -225,18 +342,22 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     testChunk->packBlocks();
     testChunk->zip();
 
-    bool result=addChunk(testChunk );
+    bool result=addMapChunk(testChunk );
 
     return result;
 }
 
-//Generate a flat chunk
+//Generate a flat chunk and insert to MapChunks
 bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
     
     const uint8_t size_X=16, size_Y=2, size_Z=16;
+    
+    //Align grass to MapChunk grid
+    int32_t chunkX = X & 0xFFFFFFF0;
+    int32_t chunkZ = Z & 0xFFFFFFF0;
 
-    //Allocate chunk
-    Chunk *flatChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
+    //Allocate mini-chunk
+    Chunk *flatChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, chunkX, Y, chunkZ);
     
     //Allocate array of blocks
     Block *&firstBlockArray = flatChunk->block_array;
@@ -263,7 +384,7 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
     flatChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
-    bool result=addChunk(flatChunk );
+    bool result=addMapChunk(flatChunk );
     
     return result;
 }
@@ -280,7 +401,15 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     
     //Calculate chunk origin
     int32_t origin_X = X - size_X/2;
-    int32_t origin_Z = Z - size_Z/2;    
+    int32_t origin_Z = Z - size_Z/2;
+    
+    //Move origin if tree is on chunk boundary
+    if ((origin_X & 0xFFFFFFF0) != (X & 0xFFFFFFF0)) {
+        origin_X = X;
+    }
+    if ((origin_Z & 0xFFFFFFF0) != (Z & 0xFFFFFFF0)) {
+        origin_Z = Z;
+    }
 
     //Allocate chunk
     Chunk *treeChunk = new Chunk(size_X-1, size_Y-1, size_Z-1,
@@ -335,7 +464,7 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     treeChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
-    bool result=addChunk(treeChunk );
+    bool result=addMapChunk(treeChunk );
     
     return result;
 }
@@ -399,18 +528,11 @@ chunkIterator& chunkIterator::operator++(int)
     if (iter_y == chunks->end()) {
         iter_xz++;
         if (iter_xz == world.coordChunksMap.end()) {
-            //cerr << "END OF THE WORLD, NO MORE CHUNKS" << endl;
             return *this;
         }
         chunks = iter_xz->second;
         iter_y = chunks->begin();
-        
-        //DEBUG
-        //cerr << "Next chunk stack @ XZ 0x"<< hex << iter_xz->first << endl << dec;
     }
-    
-    //DEBUG
-    //cerr << "Chunk @ Y " << (int)(iter_y->first) << endl;
     
     //Assign chunk pointer
     chunk = iter_y->second;

@@ -82,18 +82,21 @@ namespace mc__ {
             //Load texture map
             ILuint loadImageFile( const std::string &imageFilename);
 
-            //Drawing functions
+            //Single block drawing functions
             void drawCube( uint8_t blockID, GLint x, GLint y, GLint z);
             void drawItem( uint8_t blockID, GLint x, GLint y, GLint z);
             void drawBlock(const mc__::Block& block, GLint x, GLint y, GLint z);
+            
+            //Draw minichunks only
             void drawChunks( const mc__::World& world);
-            //void drawMapChunks( const mc__::World& world);
+            
+            //Draw 16x128x16 chunks only
+            void drawMapChunks( const mc__::World& world);
+            
+            //Draw everything
             bool drawWorld(const mc__::World& world);
 
             //Camera functions
-            void lookAt( GLint from_x, GLint from_y, GLint from_z, 
-                         GLint at_x, GLint at_y, GLint at_z,
-                         GLint up_x=0, GLint up_y=1, GLint up_z=0);
             void move( GLfloat side, GLfloat up, GLfloat forward);
             void turn( GLint degrees);  //Change current yaw by "degrees"
             void tilt( GLint degrees);  //Change current pitch by "degrees"

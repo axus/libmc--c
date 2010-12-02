@@ -63,6 +63,12 @@ namespace mc__ {
                 uint8_t size_X, uint8_t size_Y, uint8_t size_Z,
                 bool unzipped=true);
             
+            //Unzip all new chunks into MapChunks
+            bool updateMapChunks(bool cleanup=true);
+
+            //Add one mini-chunk to the map
+            bool addMapChunk( mc__::Chunk *chunk);
+            
             //Generate chunk 16x13x1 containing block ID 0 - 96
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);
             

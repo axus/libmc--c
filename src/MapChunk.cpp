@@ -19,20 +19,23 @@
     <http://www.gnu.org/licenses/>.
 */
 
-//C
-#include <cstring>  //memset
-
 //mc--
 #include "MapChunk.hpp"
 using mc__::MapChunk;
 using mc__::Chunk;
 using mc__::Block;
 
+//C
+#include <cstring>  //memset
+
 //STL
 #include <iostream>
+#include <iomanip>
 using std::set;
 using std::cerr;
 using std::endl;
+using std::hex;
+using std::dec;
 
 //Constructor
 MapChunk::MapChunk( int32_t X, int32_t Z):
@@ -44,8 +47,8 @@ MapChunk::MapChunk( int32_t X, int32_t Z):
     neighbors[2] = NULL;
     neighbors[3] = NULL;
     
-    //Default everything visible and blocked
-    memset( visflags, 0xFD, mapChunkBlockMax);
+    //Default everything invisible and unblocked
+    memset( visflags, 0x2, mapChunkBlockMax);
 }
 
 //Add chunk, update visibility
@@ -61,18 +64,33 @@ bool MapChunk::addChunk( Chunk *chunk)
         return false;
     }
     
+    //If chunk is still zipped...
+    if (! chunk->isUnzipped) {
+
+        //Unzip the chunk
+        if (!chunk->unzip()) {
+            return false;
+        }
+    }
+
+    
     //References to chunk data structures
-    uint8_t in_x = chunk->X & 0x0F;
-    uint8_t in_y = chunk->Y & 0x7F;
-    uint8_t in_z = chunk->Z & 0x0F;
+    uint8_t in_x = (chunk->X & 0x0F);
+    uint8_t in_y = (chunk->Y & 0x7F);
+    uint8_t in_z = (chunk->Z & 0x0F);
     uint8_t max_x = chunk->size_X + in_x;
     uint8_t max_y = chunk->size_Y + in_y;
     uint8_t max_z = chunk->size_Z + in_z;
     
+    if ((max_x > 15) || (max_y > 127) || (max_z > 15)) {
+        cerr << "ERROR! chunk too big for megachunk: "
+            << (int)max_x << "," << (int)max_y << "," << (int)max_z << endl;
+    }
+    
     //Track adjacency to neighbor MapChunk
     bool adjA=false, adjB=false, adjE=false, adjF=false;
     
-    uint8_t x_, y_, z_;             //internal chunk offsets
+    uint16_t x_, y_, z_;             //internal chunk offsets
     uint16_t index;                 //internal chunk index
     uint16_t c_index=0;                //external chunk index
     
@@ -85,10 +103,7 @@ bool MapChunk::addChunk( Chunk *chunk)
         if (x_ == 0) { adjA=true; adjB=false; }
         else if (x_ < 15) { adjA=false; }
         else { adjB=true; }
-        
-        //Start index at X,0,0
-        index = (x_ << 11);
-    
+            
     //For X,Z...
     for(z_ = in_z; z_ <= max_z; z_++) {
         //Check Z neighbor adjacency
@@ -96,12 +111,9 @@ bool MapChunk::addChunk( Chunk *chunk)
         else if (z_ < 15) { adjE=false; }
         else { adjF=true; }
         
-        //Continue index at X,Z,0
-        index |= (z_ << 7);
-    
     //For X,Y,Z
-    for(y_ = in_y, index|= in_y; y_ <= max_y; y_++, index++, c_index++) {
-        //index = (X<<11)|(Z<<7)|y
+    for(y_ = in_y; y_ <= max_y; y_++, c_index++) {
+        index = (x_<<11)|(z_<<7)|y_;
         
         //Copy the block
         Block& block=chunk->block_array[c_index];
@@ -127,6 +139,8 @@ bool MapChunk::addChunk( Chunk *chunk)
     set<uint16_t>::const_iterator iter;
     for (iter = changes.begin(); iter != changes.end(); iter++) {
         index = *iter;
+
+        //cerr << "0x" << hex << (int)visflags[index];
         
         //Is it visible?
         if ( (visflags[index]&0x2) != 0x2 && (visflags[index] & 0xFC) != 0xFC ) {
@@ -136,6 +150,7 @@ bool MapChunk::addChunk( Chunk *chunk)
             visibleIndices.erase(index);
         }
     }
+    //cerr << endl;
     
     return true;
 }
@@ -146,128 +161,263 @@ bool MapChunk::updateVisFlags(uint8_t x_, uint8_t y_, uint8_t z_, bool opaque,
     set<uint16_t>& changes)
 {
     //Local index
-    uint16_t index = ((x_<<11)|(z_<<7)|y_);
+    uint16_t index = (( (uint16_t)x_<<11)|( (uint16_t)z_<<7)| y_);
     
     //Adjacent block indices
-    uint16_t indexA = index - (1<<11);
-    uint16_t indexB = index + (1<<11);
-    uint16_t indexC = index - 1;
-    uint16_t indexD = index + 1;
-    uint16_t indexE = index - (1<<7);
-    uint16_t indexF = index + (1<<7);
+    uint16_t indexA = index - (1<<11);  //X-1
+    uint16_t indexB = index + (1<<11);  //X+1
+    uint16_t indexC = index - 1;        //Y-1
+    uint16_t indexD = index + 1;        //Y+1
+    uint16_t indexE = index - (1<<7);   //Z-1
+    uint16_t indexF = index + (1<<7);   //Z+1
     uint16_t n_index;
 
+    uint8_t& my_flags = visflags[index];
+    changes.insert(index);
+    
+    //Adjacent flags
+    uint8_t* A_flags;
+    uint8_t* B_flags;
+    uint8_t* C_flags;
+    uint8_t* D_flags;
+    uint8_t* E_flags;
+    uint8_t* F_flags;
+
+    //Get flags pointers to adjacent block visflags
+    if (!adjA) {
+        A_flags = visflags + indexA;
+        changes.insert(indexA);
+    } else if ( neighbors[0] != NULL) {
+        n_index = (y_|(z_<<7)|(0xF<<11));
+        A_flags = neighbors[0]->visflags + n_index;
+    } else {
+        A_flags = NULL;
+    }
+    if (A_flags == NULL || (*A_flags & 1)) {
+        my_flags |= 0x80;   //blocked!
+    } else {
+        my_flags &= ~0x80;   //unblocked!
+    }
+
+    if (!adjB) {
+        B_flags = visflags + indexB;
+        changes.insert(indexB);
+    } else if ( neighbors[1] != NULL) {
+        n_index = (y_|(z_<<7));
+        B_flags = neighbors[1]->visflags + n_index;
+    } else {
+        B_flags = NULL;
+    }
+    if (B_flags == NULL || (*B_flags & 1)) {
+        my_flags |= 0x40;   //blocked!
+    } else {
+        my_flags &= ~0x40;   //unblocked!
+    }
+
+
+    if (y_ > 0) {
+        C_flags = visflags + indexC;
+        changes.insert(indexC);
+    } else {
+        C_flags = NULL;
+    }
+    if (C_flags == NULL || (*C_flags & 1)) {
+        my_flags |= 0x20;   //blocked!
+    } else {
+        my_flags &= ~0x20;   //unblocked!
+    }
+
+    if (y_ < 127) {
+        D_flags = visflags + indexD;
+        changes.insert(indexD);
+    } else {
+        D_flags = NULL;
+    }
+    if (D_flags == NULL || (*D_flags & 1)) {
+        my_flags |= 0x10;   //blocked!
+    } else {
+        my_flags &= ~0x10;   //unblocked!
+    }
+
+    if (!adjE) {
+        E_flags = visflags + indexE;
+        changes.insert(indexE);
+    } else if ( neighbors[2] != NULL) {
+        n_index = (y_|(0xF<<7)|(x_<<11));
+        E_flags = neighbors[2]->visflags + n_index;
+    } else {
+        E_flags = NULL;
+    }
+    if (E_flags == NULL || (*E_flags & 1)) {
+        my_flags |= 0x08;   //blocked!
+    } else {
+        my_flags &= ~0x08;   //unblocked!
+    }
+
+    if (!adjF) {
+        F_flags = visflags + indexF;
+        changes.insert(indexF);
+    } else if ( neighbors[3] != NULL) {
+        n_index = (y_|(x_<<11));
+        F_flags = neighbors[3]->visflags + n_index;
+    } else {
+        F_flags = NULL;
+    }
+    if (F_flags == NULL || (*F_flags & 1)) {
+        my_flags |= 0x04;   //blocked!
+    } else {
+        my_flags &= ~0x04;   //unblocked!
+    }
+
+    //Set neighbor flags
+    if (opaque) {
+        my_flags |= 1;
+        if (A_flags) { *A_flags |= 0x40; }
+        if (B_flags) { *B_flags |= 0x80; }
+        if (C_flags) { *C_flags |= 0x10; }
+        if (D_flags) { *D_flags |= 0x20; }
+        if (E_flags) { *E_flags |= 0x04; }
+        if (F_flags) { *F_flags |= 0x08; }
+    } else {
+        my_flags &= ~1;
+        if (A_flags) { *A_flags &= ~0x40; }
+        if (B_flags) { *B_flags &= ~0x80; }
+        if (C_flags) { *C_flags &= ~0x10; }
+        if (D_flags) { *D_flags &= ~0x20; }
+        if (E_flags) { *E_flags &= ~0x04; }
+        if (F_flags) { *F_flags &= ~0x08; }
+    }
+    
+/*
     //Update visibility based on opaque/not-opaque
     if (opaque) {
         //This block
-        visflags[index] |= 1;
-        changes.insert(index);
+        my_flags |= 1;
       
         //Set X-1
-        if (!adjA || neighbors[0] == NULL) {
-            visflags[indexA] |= 0x80;
+        if (!adjA) {
+            //blocking adj B-side
+            visflags[indexA] |= 0x40;
             changes.insert(indexA);
-        } else {
+            
+
+        } else if ( neighbors[0] != NULL) {
             //Change neighboring y,z block
             n_index = (y_|(z_<<7)|(0xF<<11));
             uint8_t& n_flags = neighbors[0]->visflags[n_index];
-            n_flags |= 0x80;
+            n_flags |= 0x40;            //blocking neighbor B-side
+            if (n_flags & 1) { my_flags |= 0x80; }
+            
             //Is it visible?
-            if ((n_flags&0x2)!=0x2 && (n_flags & 0xFC) != 0xFC) {
-                neighbors[0]->visibleIndices.insert(n_index);
+            if ((n_flags & 0xFC) == 0xFC) {
+                neighbors[0]->visibleIndices.erase(n_index);
             }
+        } else {
+            my_flags |= 0x80;    //A-side blocked
         }
         
         //Set X+1
-        if (!adjB || neighbors[1] == NULL) {
-            visflags[indexB] |= 0x40;
+        if (!adjB) {
+            visflags[indexB] |= 0x80;   //blocking A-side
             changes.insert(indexB);
-        } else {
+        } else if (neighbors[1] != NULL) {
             //Change neighboring y,z block
             n_index = (y_|(z_<<7) );
             uint8_t& n_flags = neighbors[1]->visflags[n_index];
-            n_flags |= 0x40;
+            n_flags |= 0x80;    //blocking neighbor A-side
+            
             //Is it visible?
-            if ((n_flags&0x2)!=0x2 && (n_flags & 0xFC) != 0xFC) {
-                neighbors[1]->visibleIndices.insert(n_index);
+            if ((n_flags & 0xFC) == 0xFC) {
+                neighbors[1]->visibleIndices.erase(n_index);
             }
+        } else {
+            my_flags |= 0x40;    //B-side blocked
         }
         
         //Set Y-1
         if (y_ > 0) {
-            visflags[indexC] |= 0x20;
+            visflags[indexC] |= 0x10;   //blocking their D-side
+            if ( visflags[indexC] & 1) { my_flags |= 0x20; }
             changes.insert(indexC);
         }
         
         //Set Y+1
         if (y_ < 127) {
-            visflags[indexD] |= 0x10;
+            visflags[indexD] |= 0x20;   //blocking their C-side
+            if ( visflags[indexD] & 1) { my_flags |= 0x10; }
             changes.insert(indexD);
         }
 
         //Set Z-1
-        if (!adjE || neighbors[2] == NULL) {
-            visflags[indexE] |= 0x08;
+        if (!adjE) {
+            visflags[indexE] |= 0x04;   //blocking F-side
             changes.insert(indexE);
-        } else {
+        } else if (neighbors[2] != NULL) {
             //Change neighboring y,z block
             n_index = (y_|(0xF<<7)|(x_<<11));
             uint8_t& n_flags = neighbors[2]->visflags[n_index];
-            n_flags |= 0x08;
+            
+            n_flags |= 0x04;    //Blocking neighbor F-side
             //Is it visible?
-            if ((n_flags&0x2)!=0x2 && (n_flags & 0xFC) != 0xFC) {
-                neighbors[2]->visibleIndices.insert(n_index);
+            if ((n_flags & 0xFC) == 0xFC) {
+                neighbors[2]->visibleIndices.erase(n_index);
             }
+        } else {
+            my_flags |= 0x08;    //E-side blocked
         }
         
         //Set Z+1
-        if (!adjF || neighbors[3] == NULL) {
-            visflags[indexF] |= 0x04;
+        if (!adjF) {
+            visflags[indexF] |= 0x08;   //blocking E-side
             changes.insert(indexF);
-        } else {
+        } else if (neighbors[3] != NULL){
             //Change neighboring y,z block
             n_index = (y_|(x_<<11));
             uint8_t& n_flags = neighbors[3]->visflags[n_index];
-            n_flags |= 0x04;
+            n_flags |= 0x08;    //blocking neighbor-E-side
+            
             //Is it visible?
-            if ((n_flags&0x2)!=0x2 && (n_flags & 0xFC) != 0xFC) {
-                neighbors[3]->visibleIndices.insert(n_index);
+            if ((n_flags & 0xFC) == 0xFC) {
+                neighbors[3]->visibleIndices.erase(n_index);
             }
+        } else {
+            my_flags |= 0x04;    //F-side blocked
         }
         
 
     } else {
-        //This block
+        //This block is not opaque
         visflags[index] &= ~1;
-        changes.insert(index);
 
         //Set X-1
-        if (!adjA || neighbors[0] == NULL) {
+        if (!adjA) {
             visflags[indexA] &= ~0x80;
             changes.insert(indexA);
-        } else {
+        } else if (neighbors[0] != NULL){
             //Change neighboring y,z block
             n_index = (y_|(z_<<7)|(0xF<<11));
             uint8_t& n_flags = neighbors[0]->visflags[n_index];
             n_flags &= ~0x80;
-            //Is it invisible?
-            if ((n_flags & 0x2) ||(n_flags & 0xFC) == 0xFC) {
-                neighbors[0]->visibleIndices.erase(n_index);
+            
+            //Is it visible?
+            if ( !(n_flags & 0x2) ) {
+                neighbors[0]->visibleIndices.insert(n_index);
             }
         }
         
         //Set X+1
-        if (!adjB || neighbors[1] == NULL) {
+        if (!adjB) {
             visflags[indexB] &= ~0x40;
             changes.insert(indexB);
-        } else {
+        } else if (neighbors[1] != NULL){
             //Change neighboring y,z block
             n_index = (y_|(z_<<7) );
             uint8_t& n_flags = neighbors[1]->visflags[n_index];
             n_flags &= ~0x40;
-            //Is it invisible?
-            if ((n_flags & 0x2) ||(n_flags & 0xFC) == 0xFC) {
-                neighbors[1]->visibleIndices.erase(n_index);
+            
+            //Is it visible?
+            if ( !(n_flags & 0x2) ) {
+                neighbors[1]->visibleIndices.insert(n_index);
             }
         }
         
@@ -284,36 +434,38 @@ bool MapChunk::updateVisFlags(uint8_t x_, uint8_t y_, uint8_t z_, bool opaque,
         }
 
         //Set Z-1
-        if (!adjE || neighbors[2] == NULL) {
-            visflags[indexE] &= ~0x08;
+        if (!adjE) {
+            visflags[indexE] &= ~0x04;  //Free their F-side
             changes.insert(indexE);
-        } else {
+        } else if (neighbors[2] != NULL){
             //Change neighboring y,z block
             n_index = (y_|(0xF<<7)|(x_<<11));
             uint8_t& n_flags = neighbors[2]->visflags[n_index];
-            n_flags &= ~0x08;
-            //Is it invisible?
-            if ((n_flags & 0x2) ||(n_flags & 0xFC) == 0xFC) {
-                neighbors[2]->visibleIndices.erase(n_index);
+            n_flags &= ~0x04;       //Free their F-side
+            
+            //Is it visible?
+            if ( !(n_flags & 0x2) ) {
+                neighbors[2]->visibleIndices.insert(n_index);
             }
         }
         
         //Set Z+1
-        if (!adjF || neighbors[3] == NULL) {
-            visflags[indexF] &= ~0x04;
+        if (!adjF) {
+            visflags[indexF] &= ~0x08;  //Free their E-side
             changes.insert(indexF);
-        } else {
+        } else if (neighbors[3] != NULL){
             //Change neighboring y,z block
             n_index = (y_|(x_<<11));
             uint8_t& n_flags = neighbors[3]->visflags[n_index];
-            n_flags &= ~0x04;
-            //Is it invisible?
-            if ((n_flags & 0x2) ||(n_flags & 0xFC) == 0xFC) {
-                neighbors[3]->visibleIndices.erase(n_index);
+            n_flags &= ~0x08;   //Free their E-side
+            
+            //Is it visible?
+            if ( !(n_flags & 0x2) ) {
+                neighbors[3]->visibleIndices.insert(n_index);
             }
         }
-        
     }
+        */
     
     return true;
 }

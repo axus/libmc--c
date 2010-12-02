@@ -43,46 +43,49 @@ void debugKey(const World& world, int32_t X, int8_t Y, int32_t Z)
     << world.getKey(X, Z) << endl << dec;
 }
 
+//
+//Create game chunk(s)
+//
 void genWorld(World& world)
 {
-    //
-    //Create game chunk(s)
-    //
     
-     //512 block floor at (-8,-2,-8)
-    if (!world.genFlatGrass(-8, 0, -8)) {
+    if (!world.genFlatGrass(0, 0, 0)) {
         cout << "Error: genFlatGrass ";
-        debugKey(world, -8,0,-8);
+        debugKey(world, 0,0,0);
     }
 
-    //208 block wall at (-8, 0, -8)
-    if (!world.genChunkTest(-8,2, -8)) {
+    if (!world.genChunkTest(0, 2, 0)) {
         cout << "Error: genChunkTest ";
-        debugKey(world, -8,2,-8);
+        debugKey(world, 0,2,0);
     }
     
     //Grow some trees
-    if (!world.genTree(5, 2, 5)) {
+    if (!world.genTree(11, 2, 5)) {
         cout << "Error: genTree ";
-        debugKey(world, 3, 2, 3);
+        debugKey(world, 9, 2, 3);
     }
-    if (!world.genTree(-2, 2, 7, 3, 10, 3)) {
+    if (!world.genTree(4, 2, 7, 3, 10, 3)) {
         cout << "Error: genTree ";
-        debugKey(world, -3, 2, 6);
+        debugKey(world, 3, 2, 6);
     }
     
     //Create chunks behind the spawn
-    if (!world.genFlatGrass(-8, 0, 9)) {
+    if (!world.genFlatGrass(0, 0, 16)) {
         cout << "Error: genFlatGrass ";
-        debugKey(world, -8,0,9);
+        debugKey(world, 0,0,16);
     }
-    if (!world.genChunkTest(-8, 3, 24)) {
+    if (!world.genChunkTest(0, 3, 31)) {
         cout << "Error: genChunkTest ";
-        debugKey(world, -8,3,24);
+        debugKey(world, 0,3,31);
     }
 
+    mc__::Block block1 = {58, 0, 0};   //Workbench
+    mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 8, 2, 8);
+    chunk1->block_array[0] = block1;
+    world.addMapChunk(chunk1);
+
     //Move the world in these directions at start
-    world.spawn_X = 0;
+    world.spawn_X = 8;
     world.spawn_Y = 3;
     world.spawn_Z = 16;
 
@@ -121,14 +124,6 @@ int main(int argc, char** argv)
     //Set player initial position and viewpoint
     player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
         world.spawn_Y + 1, 0, 0);
-/*
-    player.abs_X = world.spawn_X;
-    player.abs_Y = world.spawn_Y;
-    player.abs_Z = world.spawn_Z;
-    
-    //Set player viewpoint
-    player.eyes_Y = player.abs_Y + 1;
-*/
 
     //Create user interface to world
     mc__::UserInterface ui("libmc--c example", world, player, events);

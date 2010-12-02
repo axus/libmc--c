@@ -57,6 +57,13 @@
     
 */
 
+//libmc--c
+#include "Viewer.hpp"
+using mc__::Viewer;
+using mc__::face_ID;
+using mc__::World;
+using mc__::MapChunk;
+
 //C
 #include <cmath>    //fmod
 
@@ -65,11 +72,11 @@
 #include <iomanip>
 #include <fstream>
 #include <sstream>
+#include <set>
 
 using std::cout;
 using std::cerr;
 using std::endl;
-using std::string;
 using std::hex;
 using std::dec;
 using std::setw;
@@ -77,13 +84,10 @@ using std::setfill;
 using std::ofstream;
 using std::ios;
 using std::flush;
-using std::stringstream;
 
-//libmc--c
-#include "Viewer.hpp"
-using mc__::Viewer;
-using mc__::face_ID;
-using mc__::World;
+using std::string;
+using std::stringstream;
+using std::set;
 
 const float Viewer::PI = std::atan(1.0)*4;
 
@@ -151,14 +155,6 @@ bool Viewer::init(const std::string &filename)
 //Camera functions
 //
 
-//Look at a point from another point.  (up_x, up_y, up_z) is a vector point "up"
-void Viewer::lookAt( GLint from_x, GLint from_y, GLint from_z, 
-             GLint at_x, GLint at_y, GLint at_z,
-             GLint up_x, GLint up_y, GLint up_z)
-{
-    gluLookAt( from_x, from_y, from_z, at_x, at_y, at_z, up_x, up_y, up_z);
-}
-
 //Reset camera angle
 void Viewer::reset(GLfloat x, GLfloat y, GLfloat z, GLfloat yaw, GLfloat pitch)
 {
@@ -208,7 +204,17 @@ void Viewer::tilt( GLint degrees)
     cam_pitch += degrees;
 }
 
-//Resize viewport
+/*
+//Look at a point from another point.  (up_x, up_y, up_z) is a vector point "up"
+void Viewer::lookAt( GLint from_x, GLint from_y, GLint from_z, 
+             GLint at_x, GLint at_y, GLint at_z,
+             GLint up_x, GLint up_y, GLint up_z)
+{
+    gluLookAt( from_x, from_y, from_z, at_x, at_y, at_z, up_x, up_y, up_z);
+}
+*/
+
+//Resize GL viewport
 void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
 {
     //Save matrix mode
@@ -442,7 +448,7 @@ void Viewer::drawBlock( const mc__::Block& block, GLint x, GLint y, GLint z)
 using mc__::XZChunksMap_t;
 using mc__::YChunkMap_t;
 
-//Draw the chunks in mc__::World
+//Draw the minichunks in mc__::World
 void Viewer::drawChunks( const World& world)
 {
     //Reference to world chunks data structure
@@ -451,7 +457,7 @@ void Viewer::drawChunks( const World& world)
     //Variables to iterate through list of chunks
     XZChunksMap_t::const_iterator iter_xz;
     YChunkMap_t::const_iterator iter_y;
-    uint64_t key;
+    //uint64_t key;
     GLint off_x, off_y, off_z;
     GLint X, Y, Z;
     
@@ -459,7 +465,7 @@ void Viewer::drawChunks( const World& world)
     for (iter_xz = coordChunksMap.begin();
         iter_xz != coordChunksMap.end(); iter_xz++)
     {
-        key = iter_xz->first;
+        //key = iter_xz->first;
         YChunkMap_t *chunks=iter_xz->second;
         
         //For all chunks in stack (Y)
@@ -500,7 +506,55 @@ void Viewer::drawChunks( const World& world)
     }
 }
 
+//Draw the megachunks in mc__::World
+void Viewer::drawMapChunks( const World& world)
+{
+    //Reference to world MapChunks data structure
+    const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
+    
+    //Variables to iterate through list of chunks
+    XZMapChunk_t::const_iterator iter_xz;
 
+    //GLint off_x, off_y, off_z;
+    GLint X, Y, Z;
+    
+    //For all megachunks
+    for (iter_xz = coordMapChunks.begin();
+        iter_xz != coordMapChunks.end(); iter_xz++)
+    {
+        MapChunk *mapchunk = iter_xz->second;
+        MapChunk& myChunk = *mapchunk;
+
+        //If the chunk has not uncompressed it's data, do so now
+        if (! myChunk.isUnzipped) {        
+            //Debug output
+            if (debugging) {
+                cout << "Unzipping chunk @ " << (int)myChunk.X << ","
+                    << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
+            }
+            //Unzip the chunk
+            if (!myChunk.unzip()) {
+                cerr << "ERROR UNZIPPING" << endl;
+                continue;
+            }
+        }
+
+        //Draw the visible chunks
+        set<uint16_t>& visibleIndices = myChunk.visibleIndices;
+        set<uint16_t>::const_iterator iter;
+        for (iter = visibleIndices.begin(); iter != visibleIndices.end(); iter++)
+        {
+            //When indexing block in chunk array,
+            //index = y + (z << 7) + (x << 11)
+            uint16_t index = *iter;
+            X = myChunk.X + (index >> 11);
+            Y = myChunk.Y + (index & 0x7F);
+            Z = myChunk.Z + ((index >> 7) & 0xF);
+            drawBlock( myChunk.block_array[index], X, Y, Z);
+        }
+
+    }
+}
 
 //OpenGL Set up buffer, perspective, blah blah blah
 void Viewer::startOpenGL() {
@@ -599,11 +653,14 @@ bool Viewer::drawWorld(const World& world)
     //Start putting quads in memory
     glBegin(GL_QUADS);
 
-    //Draw the loaded chunks
-    drawChunks(world);
+    //Draw the loaded mini-chunks
+    //drawChunks(world);
     
-    mc__::Block block1 = {58, 0, 0};   //Workbench
-    drawBlock( block1, 0, 0, 2);
+    //Draw the mega-chunks
+    drawMapChunks(world);
+    
+//    mc__::Block block1 = {58, 0, 0};   //Workbench
+//    drawBlock( block1, 0, 0, 2);
 
     //Finish putting quads in memory, and draw
     glEnd();
@@ -810,55 +867,47 @@ bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename) const
     return true;
 }
 
-//Write binary data of all chunks to files
+//Write binary data of map chunks to files
 bool Viewer::saveChunks(const mc__::World& world) const
 {
-    XZChunksMap_t::const_iterator iter_xz;
-    YChunkMap_t::const_iterator iter_y;
-    
-    uint64_t key;
     int32_t X, Z;
     int8_t Y;
     stringstream filename;
+  
+     //DEBUG!!!
+    //MapChunk *mc = coordMapChunks[ getKey(chunkX, chunkZ)];
     
-    //Reference world chunk data structure
-    const XZChunksMap_t& coordChunksMap = world.coordChunksMap;
+    //Reference map chunks data structure
+    const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
+    XZMapChunk_t::const_iterator iter_xz;
     
-    //For all chunk stacks (X,Z)
-    for (iter_xz = coordChunksMap.begin();
-        iter_xz != coordChunksMap.end(); iter_xz++)
+    //For all megachunks (X,Z)
+    for (iter_xz = coordMapChunks.begin();
+        iter_xz != coordMapChunks.end(); iter_xz++)
     {
-        key = iter_xz->first;
-        X = (key >> 32);
-        Z = (key & 0xFFFFFFFF);
-        YChunkMap_t *chunks=iter_xz->second;
-
-        //For all chunks in stack (Y)
-        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
-        {
-            Y = iter_y->first;
-            Chunk *chunk = iter_y->second;
+        Chunk *chunk = iter_xz->second;
+        X = chunk->X;
+        Y = chunk->Y;
+        Z = chunk->Z;
+        
+        //Filename from X,Y,Z
+        filename.str("");
+        filename << "chunk_"
+            << (int)X << "_" << (int)Y << "_" << (int)Z << ".bin";
+        
+        //Copy binary chunk data to file
+        if (chunk != NULL) {
+            //Pack and unpack...
+            chunk->packBlocks();
+            chunk->unpackBlocks();
             
-            //Filename from X,Y,Z
-            filename.str("");
-            filename << "chunk_"
-                << (int)X << "_" << (int)Y << "_" << (int)Z << ".bin";
-            
-            //Copy binary chunk data to file
-            if (chunk != NULL) {
-                //Pack and unpack...
-                chunk->packBlocks();
-                chunk->unpackBlocks();
-                
-                writeChunkBin( chunk, filename.str());
-            } else {
-                cerr << "Chunk not found @ "
-                    << (int)X << "," << (int)Y << "," << (int)Z << endl;
-
-            }
+            writeChunkBin( chunk, filename.str());
+        } else {
+            cerr << "Chunk not found @ "
+                << (int)X << "," << (int)Y << "," << (int)Z << endl;
         }
     }
-    
+
     //TODO: return false if unable to write chunks
     return true;
 }
