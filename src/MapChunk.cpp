@@ -318,4 +318,3 @@ bool MapChunk::updateVisFlags(uint8_t x_, uint8_t y_, uint8_t z_, bool opaque,
     return true;
 }
 
-            

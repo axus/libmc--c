@@ -49,19 +49,27 @@ Using:
     This test program will create a very small world, using terrain.png
     to draw the blocks.
     
-Controls:
-    Forward             Mouse-scroll up, Up-arrow, W
-    Back                Mouse-scroll down, Down-arrow, S
-    Side-left           Left-drag left, Left-arrow, A
-    Side-right          Left-drag right, Right-arrow, D
-    Sink                Left-drag down, X, Home
-    Rise                Left-drag up, Space, PageUp
+Keyboard Controls:
+    Forward             Up-arrow, W
+    Back                Down-arrow, S
+    Side-left           Left-arrow, A
+    Side-right          Right-arrow, D
+    Sink                X, Home
+    Rise                Space, PageUp
     Toggle Mouselook    Right-click
-    Turn left           Mouselook left, End, Q
-    Turn right          Mouselook right, PageDown, E
+    Turn left           End, Q
+    Turn right          PageDown, E
     Return camera       Middle-click
     Tree color          R, G, B
     Quit                Esc
 
-Thanks to the following people for testing:
+Mouse controls:
+    Toggle Mouselook    Right-click
+    Look around         Move mouse (mouselook)
+    Forward/Back        Mousewheel
+    Drag camera         Left-drag
+    Return camera       Middle-click
+    
+
+Thanks to the following people who tested:
     vLK

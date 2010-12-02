@@ -54,13 +54,20 @@ UserInterface::UserInterface(
     Settings(32, 8, 0),           //32-bit color, 0 stencil, 0 anti-aliasing
     //800x600, 32-bit color
     App(sf::VideoMode(800, 600, 32), name, sf::Style::Close, Settings),
-    world(w), player(p), events(ev), debugging(dbg), mouselooking(true)
+    world(w), player(p), events(ev), debugging(dbg),
+    mouselooking(true), mouse_X(0), mouse_Y(0), center_X(800/2), center_Y(600/2)
 {
 
-    //Start with no mouse buttons pressed
+    //Start with no mouse buttons pressed and click position centered
     mouse_press[sf::Mouse::Left]=false;
+    mouse_press_X[sf::Mouse::Left]=0;
+    mouse_press_Y[sf::Mouse::Left]=0;
     mouse_press[sf::Mouse::Right]=false;
+    mouse_press_X[sf::Mouse::Right]=0;
+    mouse_press_Y[sf::Mouse::Right]=0;
     mouse_press[sf::Mouse::Middle]=false;
+    mouse_press_X[sf::Mouse::Middle]=0;
+    mouse_press_Y[sf::Mouse::Middle]=0;
     mouse_press[sf::Mouse::XButton1]=false;
     mouse_press[sf::Mouse::XButton2]=false;
 
@@ -72,6 +79,7 @@ UserInterface::UserInterface(
 
     //Hide the mouse cursor
     App.ShowMouseCursor(false);
+    App.SetCursorPosition( center_X, center_Y);
 
     //Draw the world once
     App.SetActive();
@@ -168,12 +176,8 @@ bool UserInterface::actions()
 //Reset camera to player
 void UserInterface::resetCamera()
 {
-    //Reset camera
-    viewer.cam_X = (int)16*player.abs_X;
-    viewer.cam_Y = (int)16*player.eyes_Y;
-    viewer.cam_Z = (int)16*player.abs_Z;
-    viewer.cam_yaw = player.yaw;
-    viewer.cam_pitch = 0;
+    viewer.reset(16*player.abs_X, 16*player.eyes_Y, 16*player.abs_Z,
+        player.yaw, player.pitch);
     
     cout << "Moved camera to player @ " << (int)player.abs_X << ","
         << (int)player.abs_Y << "," << (int)player.abs_Z << "("
@@ -233,14 +237,14 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                 //Turn left
                 case sf::Key::Q:
                 case sf::Key::End:
-                    //viewer.turn(-15, 0, 1, 0);
-                    viewer.cam_yaw -= 15.0f;
+                    viewer.turn(-15 );
+                    //viewer.cam_yaw -= 15.0f;
                     break;
                 //Turn right
                 case sf::Key::E:
                 case sf::Key::PageDown:
-                    //viewer.turn(15, 0, 1, 0);
-                    viewer.cam_yaw += 15.0f;
+                    viewer.turn(15);
+                    //viewer.cam_yaw += 15.0f;
                     break;
                 //Change red color in tree leaves
                 case sf::Key::R:
@@ -309,9 +313,9 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         //Mouse move
         case sf::Event::MouseMoved:
 
-            //Get latest position from event
-            mouse_X = Event.MouseMove.X;
-            mouse_Y = Event.MouseMove.Y;
+            //Update virtual mouse pointer
+            mouse_X += (Event.MouseMove.X - center_X);
+            mouse_Y += (Event.MouseMove.Y - center_Y);
             int diff_X;
             int diff_Y;
 
@@ -339,23 +343,23 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
 
             }
             else if (mouselooking)
-            {    //Turn camera if left mouse buttons is not held
+            {    //Don't mouselook if left mouse button is held
 
                 //Use change in X position to rotate about Y-axis
                 diff_X = mouse_X - mouse_press_X[sf::Mouse::Right];
-                if (diff_X != 0) {
-                    viewer.cam_yaw += float(diff_X)/2.0;
-                    //Update last mouse position
-                    mouse_press_X[sf::Mouse::Right] = mouse_X;
-                }
+                viewer.turn( diff_X/2.0 );
 
-                //Rotate about axis perpendicular to forward vector
+                //Use change in Y position to rotate about side-axis
                 diff_Y = mouse_Y - mouse_press_Y[sf::Mouse::Right];
-                if (diff_Y != 0) {
-                    viewer.cam_pitch += float(diff_Y)/2.0;
-                    mouse_press_Y[sf::Mouse::Right] = mouse_Y;
-                }
+                viewer.tilt( diff_Y/2.0 );
             }
+            
+            //Remember last mouse position for mouselooking
+            mouse_press_X[sf::Mouse::Right] = mouse_X;
+            mouse_press_Y[sf::Mouse::Right] = mouse_Y;
+            
+            //Trap real mouse pointer
+            App.SetCursorPosition( center_X, center_Y);
 
             break;
         //Unhandled events

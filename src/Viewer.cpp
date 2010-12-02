@@ -88,7 +88,8 @@ using mc__::World;
 const float Viewer::PI = std::atan(1.0)*4;
 
 Viewer::Viewer():
-    cam_X(0), cam_Y(0), cam_Z(0), cam_yaw(0), cam_pitch(0), debugging(false)
+    cam_X(0), cam_Y(0), cam_Z(0), cam_yaw(0), cam_pitch(0),
+    cam_vecX(0), cam_vecY(0), cam_vecZ(0), debugging(false)
 {
     //Dark green tree leaves
     leaf_color[0] = 0x00;    //Red
@@ -158,9 +159,23 @@ void Viewer::lookAt( GLint from_x, GLint from_y, GLint from_z,
     gluLookAt( from_x, from_y, from_z, at_x, at_y, at_z, up_x, up_y, up_z);
 }
 
-void Viewer::reset()
+//Reset camera angle
+void Viewer::reset(GLfloat x, GLfloat y, GLfloat z, GLfloat yaw, GLfloat pitch)
 {
-    glLoadIdentity();
+    //Update camera position
+    cam_X = x;
+    cam_Y = y;
+    cam_Z = z;
+    
+    //Update camera angles
+    cam_yaw = yaw;
+    cam_pitch = pitch;
+
+    //Update camera vector
+    float radians = cam_yaw*PI/180.0;
+    cam_vecX = sin(radians);
+    cam_vecZ = cos(radians);
+
 }
 
 //Move camera without rotating
@@ -169,19 +184,28 @@ void Viewer::move( GLfloat side, GLfloat up, GLfloat forward)
     //Move up or down
     cam_Y += up;
     
-    //Movement along line of site, depends on yaw
-    //GLfloat yaw_mod = fmod( cam_yaw, 360.0f);
-    
-    float radians = cam_yaw*PI/180.0;
-    cam_X += int(side*cos( radians ) + forward*sin(radians));
-    cam_Z += int(side*sin( radians ) - forward*cos(radians));
+    //Movement along line of site, depends on camera vector (yaw)
+    cam_X += int(side*cam_vecZ + forward*cam_vecX);
+    cam_Z += int(side*cam_vecX - forward*cam_vecZ);
     
 }
 
-//Rotate camera degrees/360 about vector (axis_x, axis_y, axis_z)
-void Viewer::turn( GLint degrees, GLint axus_x, GLint axus_y, GLint axus_z)
+//Rotate camera degrees/360 about Y-axus
+void Viewer::turn( GLint degrees)
 {
-    glRotatef( degrees, axus_x, axus_y, axus_z);
+    //Update yaw
+    cam_yaw += degrees;
+    
+    //Update camera vector
+    float radians = cam_yaw*PI/180.0;
+    cam_vecX = sin(radians);
+    cam_vecZ = cos(radians);
+}
+
+//Adjust head view up/down
+void Viewer::tilt( GLint degrees)
+{
+    cam_pitch += degrees;
 }
 
 //Resize viewport
@@ -567,8 +591,7 @@ bool Viewer::drawWorld(const World& world)
     glRotatef( cam_yaw, 0.0f, 1.0f, 0.0f);
     
     //Change roll/pitch to look up/down
-    //glRotatef( cam_pitch, 1.0f, 0.0f, 0.0f);
-    //glRotatef( cam_roll, 0.0f, 0.0f, 1.0f);
+    glRotatef( cam_pitch, cam_vecZ, 0.0f, cam_vecX);
     
     //Bring the world to the camera, not the camera to the world
     glTranslatef( -cam_X, -cam_Y, -cam_Z );

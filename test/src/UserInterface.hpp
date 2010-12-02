@@ -82,13 +82,16 @@ namespace mc__ {
             //Currently mouse-looking
             bool mouselooking;
             
-            //Current mouse pointer position
+            //Current mouse pointer position (virtual)
             int mouse_X, mouse_Y;
+            
+            //Center coordinates in window
+            int center_X, center_Y;
         
             //Current mouse button states
             bool mouse_press[sf::Mouse::ButtonCount];
 
-            //Remember locations buttons were clicked at
+            //Remember previous mouse pointer locations
             int mouse_press_X[sf::Mouse::ButtonCount];
             int mouse_press_Y[sf::Mouse::ButtonCount];
     };

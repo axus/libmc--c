@@ -76,7 +76,6 @@ namespace mc__ {
             
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
-            GLfloat cam_yaw, cam_pitch;
 
             bool init(const std::string &texture_map_file);
 
@@ -96,24 +95,27 @@ namespace mc__ {
                          GLint at_x, GLint at_y, GLint at_z,
                          GLint up_x=0, GLint up_y=1, GLint up_z=0);
             void move( GLfloat side, GLfloat up, GLfloat forward);
-            void turn( GLint degrees, GLint axus_x=0, GLint axus_y=1,
-                GLint axus_z=0);
+            void turn( GLint degrees);  //Change current yaw by "degrees"
+            void tilt( GLint degrees);  //Change current pitch by "degrees"
             void viewport( GLint x, GLint y, GLsizei width, GLsizei height);
-            void reset();
+            void reset(GLfloat x, GLfloat y, GLfloat z,
+                GLfloat yaw, GLfloat pitch);
             
             //Export functions
-            bool writeChunkBin(mc__::Chunk *chunk, const std::string& filename) const;
+            bool writeChunkBin(mc__::Chunk *chunk,
+                const std::string& filename) const;
             void printChunks(const mc__::World& world) const;
             bool saveChunks(const mc__::World& world) const;
             
             //RGB settings for leaves, grass :)
             GLubyte leaf_color[4];
             GLubyte grass_color[4];
-            
-            //Debugging flag
-            bool debugging;
 
         protected:
+            
+            //Current camera angle
+            GLfloat cam_yaw, cam_pitch, cam_vecX, cam_vecY, cam_vecZ;
+            
             //Remember texture map filename
             std::string texture_map_file;
 
@@ -135,7 +137,11 @@ namespace mc__ {
 
             //Debugging functions
             void outputRGBAData();
-            
+
+        public:                    
+            //Debugging flag
+            bool debugging;
+
             //Float pi
             static const float PI;
     };

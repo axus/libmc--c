@@ -118,12 +118,18 @@ int main(int argc, char** argv)
     //Generate a test world
     genWorld(world);
 
-    //Move player to spawn
+    //Set player initial position and viewpoint
+    player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
+        world.spawn_Y + 1, 0, 0);
+/*
     player.abs_X = world.spawn_X;
     player.abs_Y = world.spawn_Y;
-    player.eyes_Y = player.abs_Y + 1;
     player.abs_Z = world.spawn_Z;
     
+    //Set player viewpoint
+    player.eyes_Y = player.abs_Y + 1;
+*/
+
     //Create user interface to world
     mc__::UserInterface ui("libmc--c example", world, player, events);
         
