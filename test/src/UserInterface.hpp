@@ -40,6 +40,10 @@ namespace mc__ {
     class UserInterface {
         public:
         
+            //Types of movement
+            enum movetype { MOVE_FORWARD, MOVE_BACK, MOVE_LEFT, MOVE_RIGHT,
+                MOVE_UP, MOVE_DOWN, TURN_LEFT, TURN_RIGHT, MOVE_COUNT };
+            
             //Texture file
             const std::string texture_map_filename;
 
@@ -58,11 +62,17 @@ namespace mc__ {
             
             //Move camera to player position
             void resetCamera();
+            
+            //Mouse sensitivity
+            float mouseSensitivity;
 
         protected:
         
             //Process user input
             bool handleSfEvent( const sf::Event& Event );
+            
+            //Process keys typed
+            bool handleKeys();
 
             //SFML
             //sf::Clock& clock;
@@ -94,5 +104,12 @@ namespace mc__ {
             //Remember previous mouse pointer locations
             int mouse_press_X[sf::Mouse::ButtonCount];
             int mouse_press_Y[sf::Mouse::ButtonCount];
+            
+            //Remember keyboard key state
+            bool key_held[sf::Key::Count];
+            
+            //Remember order keys were typed in
+            sf::Key::Code key_buffer[1024];
+            size_t keys_typed;
     };
 }

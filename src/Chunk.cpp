@@ -1,6 +1,6 @@
 /*
   mc__::Chunk
-  Chunk of Minecraft blocks.  Also, Block and Item definitions.
+  Chunk of voxel blocks.  Also, Block and Item definitions.
   
   Copyright 2010 axus
 

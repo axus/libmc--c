@@ -92,6 +92,22 @@ namespace mc__ {
                 ACTION_ANIMATION,
                 ACTION_PICKUP,
                 ACTION_QUIT,
+                
+                //Input actions
+                KEY_BACK,
+                KEY_FORWARD,
+                KEY_LEFT,
+                KEY_RIGHT,
+                KEY_DOWN,
+                KEY_UP,
+                KEY_RESET,
+                KEY_RED,
+                KEY_GREEN,
+                KEY_BLUE,
+                KEY_SAVE,
+                KEY_QUIT,
+                
+                //Max event ID
                 EVENT_MAX
             };
             

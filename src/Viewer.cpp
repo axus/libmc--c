@@ -187,7 +187,7 @@ void Viewer::move( GLfloat side, GLfloat up, GLfloat forward)
 }
 
 //Rotate camera degrees/360 about Y-axus
-void Viewer::turn( GLint degrees)
+void Viewer::turn( GLfloat degrees)
 {
     //Update yaw
     cam_yaw += degrees;
@@ -199,7 +199,7 @@ void Viewer::turn( GLint degrees)
 }
 
 //Adjust head view up/down
-void Viewer::tilt( GLint degrees)
+void Viewer::tilt( GLfloat degrees)
 {
     cam_pitch += degrees;
 }

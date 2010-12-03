@@ -1,6 +1,6 @@
 /*
   mc__::World
-    Store chunks comprising Minecraft game world
+    Store chunks comprising a voxel game world
   
   Copyright 2010 axus
 

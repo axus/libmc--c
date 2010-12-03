@@ -101,8 +101,8 @@ namespace mc__ {
 
             //Camera functions
             void move( GLfloat side, GLfloat up, GLfloat forward);
-            void turn( GLint degrees);  //Change current yaw by "degrees"
-            void tilt( GLint degrees);  //Change current pitch by "degrees"
+            void turn( GLfloat degrees);  //Change current yaw by "degrees"
+            void tilt( GLfloat degrees);  //Change current pitch by "degrees"
             void viewport( GLint x, GLint y, GLsizei width, GLsizei height);
             void reset(GLfloat x, GLfloat y, GLfloat z,
                 GLfloat yaw, GLfloat pitch);

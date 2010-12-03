@@ -1,6 +1,6 @@
 /*
   mc__::Player
-    Represent minecraft player (or named entity) and their inventory
+    Represent 3D game player (or named entity) and their inventory
   
   Copyright 2010 axus
 

@@ -33,6 +33,9 @@ using mc__::World;
 using mc__::Player;
 using mc__::Events;
 
+//SFML
+#include <SFML/System/Clock.hpp>
+
 //
 // Functions
 //
@@ -129,10 +132,15 @@ int main(int argc, char** argv)
     mc__::UserInterface ui("libmc--c example", world, player, events);
         
     //Run until user exits
+    sf::Clock clock;
     while (ui.run() && (!run_limit || (frames < max_frames) )) {
+
         //Sleep some to decrease CPU usage in between UI updates
-        sf::Sleep(0.01f);
+        sf::Sleep(0.015f - clock.GetElapsedTime() );
         frames++;
+        
+        //Reset clock before running UI and game logic
+        clock.Reset();
     }
     
     //Sleep 5 seconds if run to max frames

@@ -1,6 +1,6 @@
 /*
   mc__::Entity
-    Represent minecraft mobile entity
+    Represent mobile entity in a 3D game
   
   Copyright 2010 axus
 

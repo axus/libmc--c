@@ -51,25 +51,30 @@ using mc__::UserInterface;
 UserInterface::UserInterface(
         const string& name, World& w, Player& p, Events& ev, bool dbg):
     texture_map_filename("terrain.png"),    //block textures
-    Settings(32, 8, 0),           //32-bit color, 0 stencil, 0 anti-aliasing
+    mouseSensitivity(2.5),
+    Settings(32, 0, 0),           //32-bit color, 0 stencil, 0 anti-aliasing
     //800x600, 32-bit color
     App(sf::VideoMode(800, 600, 32), name, sf::Style::Close, Settings),
     world(w), player(p), events(ev), debugging(dbg),
-    mouselooking(true), mouse_X(0), mouse_Y(0), center_X(800/2), center_Y(600/2)
+    mouselooking(true), mouse_X(0), mouse_Y(0), center_X(800/2),
+    center_Y(600/2), keys_typed(0)
 {
 
+    //Enable vsync
+    App.UseVerticalSync(true);
+
     //Start with no mouse buttons pressed and click position centered
-    mouse_press[sf::Mouse::Left]=false;
-    mouse_press_X[sf::Mouse::Left]=0;
-    mouse_press_Y[sf::Mouse::Left]=0;
-    mouse_press[sf::Mouse::Right]=false;
-    mouse_press_X[sf::Mouse::Right]=0;
-    mouse_press_Y[sf::Mouse::Right]=0;
-    mouse_press[sf::Mouse::Middle]=false;
-    mouse_press_X[sf::Mouse::Middle]=0;
-    mouse_press_Y[sf::Mouse::Middle]=0;
-    mouse_press[sf::Mouse::XButton1]=false;
-    mouse_press[sf::Mouse::XButton2]=false;
+    int i;
+    for (i = sf::Mouse::Left; i < sf::Mouse::ButtonCount; i++) {
+        mouse_press[i]=false;
+        mouse_press_X[i]=0;
+        mouse_press_Y[i]=0;
+    }
+    
+    //Start with no keys held
+    for (i = 0; i < sf::Key::Count; i++) {
+        key_held[i]=false;
+    }
 
     //Load terrain.png
     viewer.init(texture_map_filename);
@@ -97,7 +102,6 @@ UserInterface::~UserInterface()
 bool UserInterface::run()
 {
     bool Running=true;
-    bool something_happened;
 
     //Handle events set by game
     Running = actions();
@@ -106,25 +110,22 @@ bool UserInterface::run()
     App.SetActive();
 
     //Check SFML events  
-    something_happened=false;
     while (App.GetEvent(lastEvent))
     {
         if (!handleSfEvent(lastEvent)) {
             //Stop running when Esc is pressed
             Running = false;
         }
-        something_happened=true;
     }
+    
+    //Handle keyboard state
+    if (!handleKeys()) { Running = false; }
 
-    //Redraw if something happened?
-    if (something_happened) {
-      
-        //Redraw the world       
-        viewer.drawWorld(world);
-        
-        //Update the window
-        App.Display();
-    }
+    //Redraw the world       
+    viewer.drawWorld(world);
+    
+    //Update the window
+    App.Display();
 
     return Running;
 }
@@ -190,6 +191,8 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
 {
     bool result=true;
     
+    //Input state variables?
+    
     switch( Event.Type) {
       
         //Window resize
@@ -199,79 +202,19 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         
         //Key pressed
         case sf::Event::KeyPressed:
-            switch ( Event.Key.Code) {
-                //Quit
-                case sf::Key::Escape:
-                    result = false;
-                    break;
-                //Move Up
-                case sf::Key::PageUp:
-                case sf::Key::Space:
-                    viewer.move(0, 16, 0);
-                    break;
-                //Move Down
-                case sf::Key::Home:
-                case sf::Key::X:
-                    viewer.move(0, -16, 0);
-                    break;
-                //Move left
-                case sf::Key::Left:
-                case sf::Key::A:
-                    viewer.move(-16, 0, 0);
-                    break;
-                //Move right
-                case sf::Key::Right:
-                case sf::Key::D:
-                    viewer.move(16, 0, 0);
-                    break;
-                //Zoom in
-                case sf::Key::W:
-                case sf::Key::Up:
-                    viewer.move(0, 0, 16);
-                    break;
-                //Zoom out
-                case sf::Key::Down:
-                case sf::Key::S:
-                    viewer.move(0, 0, -16);
-                    break;                        
-                //Turn left
-                case sf::Key::Q:
-                case sf::Key::End:
-                    viewer.turn(-15 );
-                    //viewer.cam_yaw -= 15.0f;
-                    break;
-                //Turn right
-                case sf::Key::E:
-                case sf::Key::PageDown:
-                    viewer.turn(15);
-                    //viewer.cam_yaw += 15.0f;
-                    break;
-                //Change red color in tree leaves
-                case sf::Key::R:
-                    viewer.leaf_color[0] += 16;
-                    break;
-                //Change green color in tree leaves
-                case sf::Key::G:
-                    viewer.leaf_color[1] += 16;
-                    break;
-                //Change blue color in tree leaves
-                case sf::Key::B:
-                    viewer.leaf_color[2] += 16;
-                    break;
-                case sf::Key::Back:
-                    resetCamera();
-                    break;
-                //Debugging output
-                case sf::Key::Tilde:
-                    viewer.saveChunks(world);
-                    break;
-                case sf::Key::BackSlash:
-                    //Print chunk information to stdout
-                    viewer.printChunks(world);
-                    break;
-                default:
-                    break;
+        
+            //If key was pressed for the first time
+            if (key_held[Event.Key.Code] == false) {
+                
+                //Add to keypress buffer
+                key_buffer[keys_typed++] = Event.Key.Code;
             }
+            key_held[Event.Key.Code] = true;
+            break;
+            
+        //Key released
+        case sf::Event::KeyReleased:
+            key_held[Event.Key.Code] = false;
             break;
             
         //Mousewheel scroll
@@ -347,11 +290,11 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
 
                 //Use change in X position to rotate about Y-axis
                 diff_X = mouse_X - mouse_press_X[sf::Mouse::Right];
-                viewer.turn( diff_X/2.0 );
+                viewer.turn( diff_X/mouseSensitivity );  //mouse sensitivity
 
                 //Use change in Y position to rotate about side-axis
                 diff_Y = mouse_Y - mouse_press_Y[sf::Mouse::Right];
-                viewer.tilt( diff_Y/2.0 );
+                viewer.tilt( diff_Y/mouseSensitivity );  //mouse sensitivity
             }
             
             //Remember last mouse position for mouselooking
@@ -365,6 +308,169 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         //Unhandled events
         default:
             break;
+    }
+    
+    return result;
+}
+
+//After reading in all events, handle keypresses separately
+bool UserInterface::handleKeys()
+{
+    bool result=true;
+    size_t index;
+    
+    //Init movement
+    bool movement[MOVE_COUNT];
+    for (index = 0; index < MOVE_COUNT; index++)
+    {
+        movement[index] = false;
+    }
+    
+    //Handle single keypresses in order
+    if (keys_typed >= 1024) { keys_typed = 1024; }
+    for( index = 0; index < keys_typed; index++) {
+      
+        //Game in "PLAYING" state... Do something else for text input
+        switch ( key_buffer[index]) {
+            //Quit
+            case sf::Key::Escape:
+                result = false;
+                break;
+            //Move Up
+            case sf::Key::PageUp:
+            case sf::Key::Space:
+                movement[MOVE_UP] = true;
+                break;
+            //Move Down
+            case sf::Key::Home:
+            case sf::Key::X:
+                movement[MOVE_DOWN] = true;
+                break;
+            //Move left
+            case sf::Key::Left:
+            case sf::Key::A:
+                movement[MOVE_LEFT] = true;
+                break;
+            //Move right
+            case sf::Key::Right:
+            case sf::Key::D:
+                movement[MOVE_RIGHT] = true;
+                break;
+            //Zoom in
+            case sf::Key::W:
+            case sf::Key::Up:
+                movement[MOVE_FORWARD] = true;
+                break;
+            //Zoom out
+            case sf::Key::Down:
+            case sf::Key::S:
+                movement[MOVE_BACK] = true;
+                break;                        
+            //Turn left
+            case sf::Key::Q:
+            case sf::Key::End:
+                movement[TURN_LEFT] = true;
+                break;
+            //Turn right
+            case sf::Key::E:
+            case sf::Key::PageDown:
+                movement[TURN_RIGHT] = true;
+                break;
+            case sf::Key::Back:
+                resetCamera();
+                break;
+            //Debugging output
+            case sf::Key::Tilde:
+                viewer.saveChunks(world);
+                break;
+            case sf::Key::BackSlash:
+                //Print chunk information to stdout
+                viewer.printChunks(world);
+                break;
+            default:
+                break;
+        }
+    }
+    keys_typed=0;   //Reset key buffer
+    
+    //Game actions in response to held keys
+    //Moving up
+    if (key_held[sf::Key::PageUp] || key_held[sf::Key::Space]) {
+        movement[MOVE_UP] = true;
+    }
+
+    //Moving down
+    if (key_held[sf::Key::Home] || key_held[sf::Key::X]) {
+        movement[MOVE_DOWN] = true;
+    }
+    
+    //Moving left
+    if (key_held[sf::Key::Left] || key_held[sf::Key::A]) {
+        movement[MOVE_LEFT] = true;
+    }
+
+    //Moving right
+    if (key_held[sf::Key::Right] || key_held[sf::Key::D]) {
+        movement[MOVE_RIGHT] = true;
+    }
+
+    //Moving forward
+    if (key_held[sf::Key::W] || key_held[sf::Key::Up]) {
+        movement[MOVE_FORWARD] = true;
+    }
+    
+    //Moving back
+    if (key_held[sf::Key::S] || key_held[sf::Key::Down]) {
+        movement[MOVE_BACK] = true;
+    }
+
+    //Turning left
+    if (key_held[sf::Key::Q] || key_held[sf::Key::End]) {
+        movement[TURN_LEFT] = true;
+    }
+    
+    //Turning right
+    if (key_held[sf::Key::E] || key_held[sf::Key::PageDown]) {
+        movement[TURN_RIGHT] = true;
+    }
+    
+    //Change red color in tree leaves
+    if (key_held[sf::Key::R]) {
+        viewer.leaf_color[0] += 2;
+    }
+    //Change green color in tree leaves
+    if (key_held[sf::Key::G]) {
+        viewer.leaf_color[1] += 2;
+    }
+    //Change blue color in tree leaves
+    if (key_held[sf::Key::B]) {
+        viewer.leaf_color[2] += 2;
+    }
+
+    //Finally, move the viewer based on movement options
+    if (movement[MOVE_BACK]) {
+        viewer.move(0, 0, -4);
+    }
+    if (movement[MOVE_FORWARD]) {
+        viewer.move(0, 0, 4);
+    }
+    if (movement[MOVE_LEFT]) {
+        viewer.move(-4, 0, 0);
+    }
+    if (movement[MOVE_RIGHT]) {
+        viewer.move(4, 0, 0);
+    }
+    if (movement[MOVE_UP]) {
+        viewer.move(0, 4, 0);
+    }
+    if (movement[MOVE_DOWN]) {
+        viewer.move(0, -4, 0);
+    }
+    if (movement[TURN_LEFT]) {
+        viewer.turn(-5);
+    }
+    if (movement[TURN_RIGHT]) {
+        viewer.turn(5);
     }
     
     return result;
