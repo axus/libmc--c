@@ -47,17 +47,20 @@ using mc__::Viewer;
 using mc__::Player;
 using mc__::UserInterface;
 
-//Constructor, initialize SFML and mc-- objects here
+//Constructor
 UserInterface::UserInterface(
         const string& name, World& w, Player& p, Events& ev, bool dbg):
+
+    //initialize objects here
     texture_map_filename("terrain.png"),    //block textures
-    mouseSensitivity(2.5),
-    Settings(32, 0, 0),           //32-bit color, 0 stencil, 0 anti-aliasing
-    //800x600, 32-bit color
-    App(sf::VideoMode(800, 600, 32), name, sf::Style::Close, Settings),
+    mouseSensitivity(2.5),                  //Mouselook factor
+    Settings(32, 0, 0),                     //0 stencil, 0 anti-aliasing
+    App(sf::VideoMode(800, 600, 32),        //800x600, 32-bit color window
+        name, sf::Style::Close, Settings),
     world(w), player(p), events(ev), debugging(dbg),
-    mouselooking(true), mouse_X(0), mouse_Y(0), center_X(800/2),
-    center_Y(600/2), keys_typed(0)
+    mouselooking(true), mouse_X(0), mouse_Y(0), //Mouse at center
+    center_X(800/2), center_Y(600/2),       //Center in middle of window
+    keys_typed(0)                           //Empty keypress buffer
 {
 
     //Enable vsync
