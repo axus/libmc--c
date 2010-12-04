@@ -58,9 +58,6 @@
     
 */
 
-//Library version info
-uint32_t getVersion() { return MC__VIEWER_VERSION; }
-
 //libmc--c
 #include "Viewer.hpp"
 using mc__::Viewer;
@@ -95,8 +92,12 @@ using std::set;
 
 const float Viewer::PI = std::atan(1.0)*4;
 
+//Library version info
+unsigned long mc__::getVersion() { return MC__VIEWER_VERSION; }
+
 Viewer::Viewer():
-    cam_X(0), cam_Y(0), cam_Z(0), cam_yaw(0), cam_pitch(0),
+    cam_X(0), cam_Y(0), cam_Z(0), drawDistance(4096.f),
+    cam_yaw(0), cam_pitch(0),
     cam_vecX(0), cam_vecY(0), cam_vecZ(0), debugging(false)
 {
     //Dark green tree leaves
@@ -224,14 +225,20 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     //Save matrix mode
     glPushAttrib(GL_TRANSFORM_BIT);
   
-    GLfloat aspectRatio = (GLfloat)width / (GLfloat)height;
+    aspectRatio = (GLfloat)width / (GLfloat)height;
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, aspectRatio, 1.f, 1024.f);
+    gluPerspective(60, aspectRatio, 1.f, drawDistance);
     
     //Reload matrix mode
     glPushAttrib(GL_TRANSFORM_BIT);
+}
+
+//Resize far draw distance
+void Viewer::setDrawDistance( GLdouble d)
+{
+    gluPerspective(60, aspectRatio, 1.f, d);
 }
 
 //Set glColor if needed by block type and face
@@ -304,8 +311,6 @@ void Viewer::drawCube( uint8_t blockID,
     // (tx_0, ty_1)      (tx_1, ty_1)
     //
     // (tx_0, ty_0)      (tx_1, ty_0)
-
-//TODO: compile lists for each blockID!
 
     //A
     if (!(vflags & 0x80)) {
@@ -524,42 +529,67 @@ void Viewer::drawChunks( const World& world)
     }
 }
 
-//Draw the megachunks in mc__::World
-void Viewer::drawMapChunks( const World& world)
+//Render single map chunk from GL list, compiling if needed
+void Viewer::drawMapChunk(MapChunk* mapchunk)
 {
-    //Reference to world MapChunks data structure
-    const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
-    
-    //Variables to iterate through list of chunks
-    XZMapChunk_t::const_iterator iter_xz;
+    MapChunk& myChunk = *mapchunk;
 
-    GLint X, Y, Z;
-    uint8_t vflags;
-    
-    //For all megachunks
-    for (iter_xz = coordMapChunks.begin();
-        iter_xz != coordMapChunks.end(); iter_xz++)
-    {
-        MapChunk *mapchunk = iter_xz->second;
-        MapChunk& myChunk = *mapchunk;
+    //Don't draw invisible mapchunks
+    if (myChunk.flags & MapChunk::INVISIBLE) {
+        return;
+    }
 
-        //If the chunk has not uncompressed it's data, do so now
-        if (! myChunk.isUnzipped) {        
-            //Debug output
-            if (debugging) {
-                cout << "Unzipping chunk @ " << (int)myChunk.X << ","
-                    << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
-            }
-            //Unzip the chunk
-            if (!myChunk.unzip()) {
-                cerr << "ERROR UNZIPPING" << endl;
-                continue;
-            }
+    //If the chunk has not uncompressed it's data, do so now
+    if (! myChunk.isUnzipped) {        
+        //Debug output
+        if (debugging) {
+            cout << "Unzipping chunk @ " << (int)myChunk.X << ","
+                << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
         }
+        //Unzip the chunk
+        if (!myChunk.unzip()) {
+            cerr << "ERROR UNZIPPING" << endl;
+            return;
+        }
+        
+        //Requires new glList
+        myChunk.flags |= MapChunk::UPDATED;
+    }
 
-        //Draw the visible chunks
+    //Get gl_list associated with map chunk
+    GLuint gl_list=0;
+    mapChunkUintMap_t::const_iterator iter = glListMap.find(mapchunk);
+    if (iter != glListMap.end()) {
+        gl_list = iter->second;
+
+        //Draw the precompiled list
+        glCallList(gl_list);
+
+    } else {
+        glEnd();    //Halt the drawing in progress
+        
+        gl_list = glGenLists(1);
+        glListMap[mapchunk] = gl_list;
+        myChunk.flags |= MapChunk::UPDATED;
+        glBegin(GL_QUADS);  //Proceed.
+    }
+    
+    
+    //Compile and draw GL list if needed
+    if (myChunk.flags & MapChunk::UPDATED) {
+
+        //chunk vars
+        GLint X, Y, Z;
+        uint8_t vflags;
         set<uint16_t>& visibleIndices = myChunk.visibleIndices;
         set<uint16_t>::const_iterator iter;
+
+        glEnd();    //Halt the drawing in progress
+
+        //Start the GL_COMPILING! Don't execute.
+        glNewList(gl_list, GL_COMPILE);
+
+        //Draw the visible chunks
         for (iter = visibleIndices.begin(); iter != visibleIndices.end(); iter++)
         {
             //When indexing block in chunk array,
@@ -571,7 +601,32 @@ void Viewer::drawMapChunks( const World& world)
             vflags = myChunk.visflags[index];
             drawBlock( myChunk.block_array[index], X, Y, Z, vflags);
         }
+        
+        //End the list
+        glEndList();
+        glBegin(GL_QUADS);  //Proceed.
 
+        //Finished drawing chunk, no longer "updated"
+        myChunk.flags &= ~(MapChunk::UPDATED);
+    }
+    
+}
+
+//Draw the megachunks in mc__::World
+void Viewer::drawMapChunks( const World& world)
+{
+    //Reference to world MapChunks data structure
+    const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
+    
+    //Variables to iterate through list of chunks
+    XZMapChunk_t::const_iterator iter_xz;
+
+    //For all megachunks
+    for (iter_xz = coordMapChunks.begin();
+        iter_xz != coordMapChunks.end(); iter_xz++)
+    {
+        MapChunk *mapchunk = iter_xz->second;
+        drawMapChunk(mapchunk);
     }
 }
 
@@ -677,9 +732,10 @@ bool Viewer::drawWorld(const World& world)
     
     //Draw the mega-chunks
     drawMapChunks(world);
-    
-//    mc__::Block block1 = {58, 0, 0};   //Workbench
-//    drawBlock( block1, 0, 0, 2);
+
+    //Debug :)    
+    mc__::Block block1 = {58, 0, 0};   //Workbench
+    drawBlock( block1, 0, 0, 2);
 
     //Finish putting quads in memory, and draw
     glEnd();

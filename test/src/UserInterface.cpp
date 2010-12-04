@@ -58,7 +58,7 @@ UserInterface::UserInterface(
     App(sf::VideoMode(800, 600, 32),        //800x600, 32-bit color window
         name, sf::Style::Close, Settings),
     world(w), player(p), events(ev), debugging(dbg),
-    mouselooking(true), mouse_X(0), mouse_Y(0), //Mouse at center
+    mouselooking(false), //Start with mouselook off
     center_X(800/2), center_Y(600/2),       //Center in middle of window
     keys_typed(0)                           //Empty keypress buffer
 {
@@ -85,9 +85,12 @@ UserInterface::UserInterface(
     //Reset camera
     resetCamera();
 
-    //Hide the mouse cursor
-    App.ShowMouseCursor(false);
+    //Reset cursor to center
     App.SetCursorPosition( center_X, center_Y);
+    last_X = center_X; last_Y = center_Y;
+    
+    //Turn off key repeat
+    App.EnableKeyRepeat(false);
 
     //Draw the world once
     App.SetActive();
@@ -235,15 +238,22 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             mouse_press_X[Event.MouseButton.Button] = mouse_X;
             mouse_press_Y[Event.MouseButton.Button] = mouse_Y;
             
-            
-            //Reset camera if middle mouse button pressed
+            //Handle button pressed
             switch( Event.MouseButton.Button ) {
+                case sf::Mouse::Left:
+                    //App.ShowMouseCursor(true);
+                    break;
                 case sf::Mouse::Middle:
                     resetCamera();
                     break;
                 case sf::Mouse::Right:
                     //Toggle mouselook
                     mouselooking=!mouselooking;
+                    App.ShowMouseCursor(!mouselooking);
+                    if (mouselooking) {
+                        App.SetCursorPosition( center_X, center_Y);
+                    }
+                    break;
                 default:
                     break;
             }
@@ -254,14 +264,29 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         
             //Forget that this mouse button was pressed
             mouse_press[Event.MouseButton.Button] = false;
+            
+            //Handle button release
+            switch (Event.MouseButton.Button) {
+                case sf::Mouse::Left:
+                    App.ShowMouseCursor(!mouselooking);
+                    if (mouselooking) {
+                        App.SetCursorPosition( center_X, center_Y);
+                    }
+                    break;
+                default:
+                    break;
+            }
             break;
         
         //Mouse move
         case sf::Event::MouseMoved:
 
-            //Update virtual mouse pointer
-            mouse_X += (Event.MouseMove.X - center_X);
-            mouse_Y += (Event.MouseMove.Y - center_Y);
+            //Update virtual mouse pointer (for mouselook)
+            //mouse_X += (Event.MouseMove.X - last_X);
+            //mouse_Y += (Event.MouseMove.Y - last_Y);
+            mouse_X = Event.MouseMove.X;
+            mouse_Y = Event.MouseMove.Y;
+            
             int diff_X;
             int diff_Y;
 
@@ -292,21 +317,22 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             {    //Don't mouselook if left mouse button is held
 
                 //Use change in X position to rotate about Y-axis
-                diff_X = mouse_X - mouse_press_X[sf::Mouse::Right];
+                diff_X = mouse_X - last_X;
                 viewer.turn( diff_X/mouseSensitivity );  //mouse sensitivity
 
                 //Use change in Y position to rotate about side-axis
-                diff_Y = mouse_Y - mouse_press_Y[sf::Mouse::Right];
+                diff_Y = mouse_Y - last_Y;
                 viewer.tilt( diff_Y/mouseSensitivity );  //mouse sensitivity
+                
+                //Reset real mouse pointer if mouselooking
+                App.SetCursorPosition( center_X, center_Y);
+                
+                //Remember last mouse position for mouselooking
+                last_X = center_X;
+                last_Y = center_Y;
+                
             }
             
-            //Remember last mouse position for mouselooking
-            mouse_press_X[sf::Mouse::Right] = mouse_X;
-            mouse_press_Y[sf::Mouse::Right] = mouse_Y;
-            
-            //Trap real mouse pointer
-            App.SetCursorPosition( center_X, center_Y);
-
             break;
         //Unhandled events
         default:

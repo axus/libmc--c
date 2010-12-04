@@ -94,6 +94,9 @@ namespace mc__ {
             //Current mouse pointer position (virtual)
             int mouse_X, mouse_Y;
             
+            //Previous mouse position
+            int last_X, last_Y;
+            
             //Center coordinates in window
             int center_X, center_Y;
         

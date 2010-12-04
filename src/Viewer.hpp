@@ -22,27 +22,28 @@
 #ifndef MC__VIEWER_H
 #define MC__VIEWER_H
 
-//Version 0.10
-#define MC__VIEWER_VERSION 0x001E
+//Version 0.0.31
+#define MC__VIEWER_VERSION 0x001F
 
-//DevIL
-#include <IL/il.h>
-#include <IL/ilu.h>
+//mc__
+#include "World.hpp"
+
+//STL
+#include <string>
+#include <map>
 
 //OpenGL
 #include <gl/gl.h>
 #include <gl/glu.h>
 
-//STL
-#include <string>
-
-//mc__
-#include "World.hpp"
+//DevIL
+#include <IL/il.h>
+#include <IL/ilu.h>
 
 namespace mc__ {
 
     //Library version checker in mc__ namespace
-    uint32_t getVersion();
+    unsigned long getVersion();
     
     enum face_ID { WEST=0, EAST=1, DOWN=2, UP=3, NORTH=4, SOUTH=5, FACE_MAX};
         
@@ -72,6 +73,9 @@ namespace mc__ {
     class Viewer {
         public:
 
+            //relate MapChunk* -> GL List
+            typedef std::map< mc__::MapChunk*, GLuint> mapChunkUintMap_t;
+
             Viewer();
             
             //Map block ID to block information
@@ -96,7 +100,10 @@ namespace mc__ {
             //Draw minichunks only
             void drawChunks( const mc__::World& world);
             
-            //Draw 16x128x16 chunks only
+            //Draw a 16x128x16 chunk, unmark "UPDATED" flag
+            void drawMapChunk(mc__::MapChunk* mc);
+            
+            //Draw all the mapchunks
             void drawMapChunks( const mc__::World& world);
             
             //Draw everything
@@ -106,9 +113,12 @@ namespace mc__ {
             void move( GLfloat side, GLfloat up, GLfloat forward);
             void turn( GLfloat degrees);  //Change current yaw by "degrees"
             void tilt( GLfloat degrees);  //Change current pitch by "degrees"
-            void viewport( GLint x, GLint y, GLsizei width, GLsizei height);
             void reset(GLfloat x, GLfloat y, GLfloat z,
                 GLfloat yaw, GLfloat pitch);
+                
+            //Camera perspective functions
+            void viewport( GLint x, GLint y, GLsizei width, GLsizei height);
+            void setDrawDistance( GLdouble d);
             
             //Export functions
             bool writeChunkBin(mc__::Chunk *chunk,
@@ -122,6 +132,10 @@ namespace mc__ {
 
         protected:
             
+            //Draw distance
+            GLdouble drawDistance;
+            GLfloat aspectRatio;
+            
             //Current camera angle
             GLfloat cam_yaw, cam_pitch, cam_vecX, cam_vecY, cam_vecZ;
             
@@ -132,8 +146,11 @@ namespace mc__ {
             ILuint il_texture_map;
             ILuint ilTextureList[texmap_TILE_MAX];
             
-            //openGL image
+            //openGL image (for texture)
             GLuint image;
+            
+            //Relate world mapchunks to GL lists
+            mapChunkUintMap_t glListMap;
             
             //Init functions
             void startOpenGL();

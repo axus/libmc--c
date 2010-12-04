@@ -57,6 +57,8 @@ namespace mc__ {
             //Ordered list of block indices to draw
             std::set<uint16_t> visibleIndices;
             
+            //flags used  by Viewer
+            enum FLAGS { INVISIBLE=0x1, UPDATED=0x2};
             uint32_t flags;
         protected:
             bool updateVisFlags(uint8_t x, uint8_t y, uint8_t z, bool opaque,
