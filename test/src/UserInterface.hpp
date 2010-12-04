@@ -75,7 +75,6 @@ namespace mc__ {
             bool handleKeys();
 
             //SFML
-            //sf::Clock& clock;
             sf::WindowSettings Settings;
             sf::RenderWindow App;
 

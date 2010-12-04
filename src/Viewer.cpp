@@ -23,14 +23,15 @@
 /*
     OpenGL has specific meaning for x, y, and z axes.
     
-    z-axis is distance from the initial viewpoint.  As Z increases, the
-    location gets closer to the initial viewpoint. (negative is farther)
+    z-axis is distance from the initial viewpoint (facing forward). As Z
+    increases, the location gets closer to the initial viewpoint. Negative is
+    farther.
     
     y-axis is "up" relative to the initial viewpoint.  As Y increases,
-    the location moves further "up".
+    the location moves farther "up".
     
     x-axis is "right" relative to the intial viewpoint.  As X increases,
-    the location moves further "right".
+    the location moves farther "right".
 
     Block faces are always aligned with major axes. So, we can say that each
     face is on an axis, and is "high" or "low" compared to the opposing face.
@@ -56,6 +57,9 @@
     A face will have four points containing its letter.
     
 */
+
+//Library version info
+uint32_t getVersion() { return MC__VIEWER_VERSION; }
 
 //libmc--c
 #include "Viewer.hpp"

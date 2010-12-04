@@ -23,7 +23,7 @@
 #define MC__VIEWER_H
 
 //Version 0.10
-#define MC__VIEWER_VERSION 0x000A
+#define MC__VIEWER_VERSION 0x001E
 
 //DevIL
 #include <IL/il.h>
@@ -41,6 +41,9 @@
 
 namespace mc__ {
 
+    //Library version checker in mc__ namespace
+    uint32_t getVersion();
+    
     enum face_ID { WEST=0, EAST=1, DOWN=2, UP=3, NORTH=4, SOUTH=5, FACE_MAX};
         
     //Physical properties, to associate with blockID (internal to engine)
