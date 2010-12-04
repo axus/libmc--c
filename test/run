@@ -1,3 +1,3 @@
 
-cd bin
+cd `dirname $0`/bin
 mc--c

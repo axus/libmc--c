@@ -97,7 +97,7 @@ void genWorld(World& world)
 
 int main(int argc, char** argv)
 {
-    uint32_t frames=0, max_frames=0;
+    uint32_t max_frames=0;
     bool run_limit=false;
   
     //Command line option
@@ -132,6 +132,8 @@ int main(int argc, char** argv)
     mc__::UserInterface ui("libmc--c example", world, player, events);
         
     //Run until user exits
+    /*
+    uint32_t frames=0;
     sf::Clock clock;
     while (ui.run() && (!run_limit || (frames < max_frames) )) {
 
@@ -142,6 +144,12 @@ int main(int argc, char** argv)
         //Reset clock before running UI and game logic
         clock.Reset();
     }
+    */
+    //faster running...
+    while (ui.run()) {
+        sf::Sleep(0.01f);   //100FPS
+    }
+
     
     //Sleep 5 seconds if run to max frames
     if (run_limit) {

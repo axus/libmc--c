@@ -53,18 +53,18 @@ UserInterface::UserInterface(
 
     //initialize objects here
     texture_map_filename("terrain.png"),    //block textures
-    mouseSensitivity(2.5),                  //Mouselook factor
+    mouseSensitivity(2.8),                  //Mouselook factor, higher is slower
     Settings(32, 0, 0),                     //0 stencil, 0 anti-aliasing
     App(sf::VideoMode(800, 600, 32),        //800x600, 32-bit color window
         name, sf::Style::Close, Settings),
     world(w), player(p), events(ev), debugging(dbg),
-    mouselooking(false), //Start with mouselook off
+    mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(800/2), center_Y(600/2),       //Center in middle of window
     keys_typed(0)                           //Empty keypress buffer
 {
 
     //Enable vsync
-    App.UseVerticalSync(true);
+    //App.UseVerticalSync(true);
 
     //Start with no mouse buttons pressed and click position centered
     int i;
@@ -87,7 +87,8 @@ UserInterface::UserInterface(
 
     //Reset cursor to center
     App.SetCursorPosition( center_X, center_Y);
-    last_X = center_X; last_Y = center_Y;
+    last_X = center_X;
+    last_Y = center_Y;
     
     //Turn off key repeat
     App.EnableKeyRepeat(false);
@@ -122,6 +123,18 @@ bool UserInterface::run()
             //Stop running when Esc is pressed
             Running = false;
         }
+    }
+    
+    //Handle UI events
+    if (toggle_mouselook) {
+        mouselooking=!mouselooking;
+        App.ShowMouseCursor(!mouselooking);
+        if (mouselooking) {
+            App.SetCursorPosition( center_X, center_Y);
+            last_X = mouse_X = center_X;
+            last_Y = mouse_Y = center_Y;
+        }
+        toggle_mouselook=false;
     }
     
     //Handle keyboard state
@@ -183,9 +196,16 @@ bool UserInterface::actions()
 //Reset camera to player
 void UserInterface::resetCamera()
 {
+    //Reset viewer to player position
     viewer.reset(16*player.abs_X, 16*player.eyes_Y, 16*player.abs_Z,
         player.yaw, player.pitch);
     
+    //Reset mouse position
+    last_X = mouse_X = center_X;
+    last_Y = mouse_Y = center_Y;
+
+    
+    //Status message
     cout << "Moved camera to player @ " << (int)player.abs_X << ","
         << (int)player.abs_Y << "," << (int)player.abs_Z << "("
         << (int)player.eyes_Y << ")" << endl;
@@ -221,6 +241,11 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         //Key released
         case sf::Event::KeyReleased:
             key_held[Event.Key.Code] = false;
+            
+            //DEBUG
+            if (Event.Key.Code == sf::Key::Quote) {
+                App.SetCursorPosition( center_X, center_Y);
+            }
             break;
             
         //Mousewheel scroll
@@ -241,18 +266,15 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             //Handle button pressed
             switch( Event.MouseButton.Button ) {
                 case sf::Mouse::Left:
-                    //App.ShowMouseCursor(true);
+                    //cerr << "Left-click @ " <<mouse_X<<","<<mouse_Y<< endl;
                     break;
                 case sf::Mouse::Middle:
                     resetCamera();
                     break;
                 case sf::Mouse::Right:
                     //Toggle mouselook
-                    mouselooking=!mouselooking;
-                    App.ShowMouseCursor(!mouselooking);
-                    if (mouselooking) {
-                        App.SetCursorPosition( center_X, center_Y);
-                    }
+                    toggle_mouselook=true;
+                    //cerr << "Right-click @ " <<mouse_X<<","<<mouse_Y<< endl;
                     break;
                 default:
                     break;
@@ -264,37 +286,31 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         
             //Forget that this mouse button was pressed
             mouse_press[Event.MouseButton.Button] = false;
-            
-            //Handle button release
-            switch (Event.MouseButton.Button) {
-                case sf::Mouse::Left:
-                    App.ShowMouseCursor(!mouselooking);
-                    if (mouselooking) {
-                        App.SetCursorPosition( center_X, center_Y);
-                    }
-                    break;
-                default:
-                    break;
-            }
             break;
         
         //Mouse move
         case sf::Event::MouseMoved:
 
-            //Update virtual mouse pointer (for mouselook)
-            //mouse_X += (Event.MouseMove.X - last_X);
-            //mouse_Y += (Event.MouseMove.Y - last_Y);
-            mouse_X = Event.MouseMove.X;
-            mouse_Y = Event.MouseMove.Y;
-            
-            int diff_X;
-            int diff_Y;
+            //Update virtual mouse pointer, depending on mouselook
+            if (mouselooking) {
+                mouse_X += (Event.MouseMove.X - center_X);
+                mouse_Y += (Event.MouseMove.Y - center_Y);
+                /*
+                cerr << "X=" << Event.MouseMove.X << "Y=" << Event.MouseMove.Y
+                    << ", mouseX=" << mouse_X << ", mouseY=" << mouse_Y
+                    << ", lastX=" << last_X << ", lastY=" << last_Y << endl;
+                */
+            } else {
+                mouse_X = Event.MouseMove.X;
+                mouse_Y = Event.MouseMove.Y;
+            }
+     
 
             //Translate camera if moved while holding left button
             if (mouse_press[sf::Mouse::Left]) {
 
                 //Step camera to side for mouse-X motion
-                diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
+                int diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
                 
                 if (diff_X != 0) {
                     viewer.move(diff_X , 0, 0);
@@ -304,7 +320,7 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                 }
 
                 //Step camera up for mouse-Y motion
-                diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
+                int diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
                 if (diff_Y != 0) {
                     viewer.move(0, diff_Y ,0);
                     
@@ -317,21 +333,30 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             {    //Don't mouselook if left mouse button is held
 
                 //Use change in X position to rotate about Y-axis
-                diff_X = mouse_X - last_X;
-                viewer.turn( diff_X/mouseSensitivity );  //mouse sensitivity
+                int diff_X = mouse_X - last_X;
 
-                //Use change in Y position to rotate about side-axis
-                diff_Y = mouse_Y - last_Y;
-                viewer.tilt( diff_Y/mouseSensitivity );  //mouse sensitivity
+                //Turn left/right based on mouse sensitivity
+                if (diff_X != 0) {
+                    viewer.turn( (float)diff_X/mouseSensitivity );
+                }
+
+                //Tilt up/down based on mouse sensitivity
+                int diff_Y = mouse_Y - last_Y;
+                if (diff_Y != 0) {
+                    viewer.tilt( (float)diff_Y/mouseSensitivity );
+                }
                 
-                //Reset real mouse pointer if mouselooking
+            }
+            
+            //Trap real mouse pointer in center of window if mouselooking
+            if (mouselooking) {
                 App.SetCursorPosition( center_X, center_Y);
                 
                 //Remember last mouse position for mouselooking
-                last_X = center_X;
-                last_Y = center_Y;
-                
+                last_X = mouse_X;
+                last_Y = mouse_Y;
             }
+
             
             break;
         //Unhandled events

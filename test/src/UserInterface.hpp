@@ -73,6 +73,9 @@ namespace mc__ {
             
             //Process keys typed
             bool handleKeys();
+            
+            //Process mouse movement
+            bool handleMouse();
 
             //SFML
             sf::WindowSettings Settings;
@@ -88,8 +91,8 @@ namespace mc__ {
             //Event loop    
             sf::Event lastEvent;
             
-            //Currently mouse-looking
-            bool mouselooking;
+            //Mouse-looking
+            bool mouselooking, toggle_mouselook;
             
             //Current mouse pointer position (virtual)
             int mouse_X, mouse_Y;
