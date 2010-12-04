@@ -64,7 +64,7 @@ UserInterface::UserInterface(
 {
 
     //Enable vsync
-    //App.UseVerticalSync(true);
+    App.UseVerticalSync(true);
 
     //Start with no mouse buttons pressed and click position centered
     int i;
@@ -125,7 +125,7 @@ bool UserInterface::run()
         }
     }
     
-    //Handle UI events
+    //Handle mouselook toggle
     if (toggle_mouselook) {
         mouselooking=!mouselooking;
         App.ShowMouseCursor(!mouselooking);
@@ -139,6 +139,9 @@ bool UserInterface::run()
     
     //Handle keyboard state
     if (!handleKeys()) { Running = false; }
+
+    //Handle mouse position changes
+    handleMouse();
 
     //Redraw the world       
     viewer.drawWorld(world);
@@ -304,59 +307,6 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
                 mouse_X = Event.MouseMove.X;
                 mouse_Y = Event.MouseMove.Y;
             }
-     
-
-            //Translate camera if moved while holding left button
-            if (mouse_press[sf::Mouse::Left]) {
-
-                //Step camera to side for mouse-X motion
-                int diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
-                
-                if (diff_X != 0) {
-                    viewer.move(diff_X , 0, 0);
-                    
-                    //Save new mouse position
-                    mouse_press_X[sf::Mouse::Left] = mouse_X;
-                }
-
-                //Step camera up for mouse-Y motion
-                int diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
-                if (diff_Y != 0) {
-                    viewer.move(0, diff_Y ,0);
-                    
-                    //Save new mouse position
-                    mouse_press_Y[sf::Mouse::Left] = mouse_Y;
-                }
-
-            }
-            else if (mouselooking)
-            {    //Don't mouselook if left mouse button is held
-
-                //Use change in X position to rotate about Y-axis
-                int diff_X = mouse_X - last_X;
-
-                //Turn left/right based on mouse sensitivity
-                if (diff_X != 0) {
-                    viewer.turn( (float)diff_X/mouseSensitivity );
-                }
-
-                //Tilt up/down based on mouse sensitivity
-                int diff_Y = mouse_Y - last_Y;
-                if (diff_Y != 0) {
-                    viewer.tilt( (float)diff_Y/mouseSensitivity );
-                }
-                
-            }
-            
-            //Trap real mouse pointer in center of window if mouselooking
-            if (mouselooking) {
-                App.SetCursorPosition( center_X, center_Y);
-                
-                //Remember last mouse position for mouselooking
-                last_X = mouse_X;
-                last_Y = mouse_Y;
-            }
-
             
             break;
         //Unhandled events
@@ -365,6 +315,63 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
     }
     
     return result;
+}
+
+//Change viewer based on total mouse movements
+bool UserInterface::handleMouse()
+{
+    //Translate camera if moved while holding left button
+    if (mouse_press[sf::Mouse::Left]) {
+
+        //Step camera to side for mouse-X motion
+        int diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
+        
+        if (diff_X != 0) {
+            viewer.move(diff_X , 0, 0);
+            
+            //Save new mouse position
+            mouse_press_X[sf::Mouse::Left] = mouse_X;
+        }
+
+        //Step camera up for mouse-Y motion
+        int diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
+        if (diff_Y != 0) {
+            viewer.move(0, diff_Y ,0);
+            
+            //Save new mouse position
+            mouse_press_Y[sf::Mouse::Left] = mouse_Y;
+        }
+
+    }
+    else if (mouselooking)
+    {    //Don't mouselook if left mouse button is held
+
+        //Use change in X position to rotate about Y-axis
+        int diff_X = mouse_X - last_X;
+
+        //Turn left/right based on mouse sensitivity
+        if (diff_X != 0) {
+            viewer.turn( (float)diff_X/mouseSensitivity );
+        }
+
+        //Tilt up/down based on mouse sensitivity
+        int diff_Y = mouse_Y - last_Y;
+        if (diff_Y != 0) {
+            viewer.tilt( (float)diff_Y/mouseSensitivity );
+        }
+        
+    }
+    
+    //Trap real mouse pointer in center of window if mouselooking
+    if (mouselooking) {
+        App.SetCursorPosition( center_X, center_Y);
+        
+        //Remember last mouse position for mouselooking
+        last_X = mouse_X;
+        last_Y = mouse_Y;
+    }
+
+    return true;    //no way to exit game via mouse ;)
 }
 
 //After reading in all events, handle keypresses separately
