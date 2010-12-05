@@ -129,7 +129,7 @@ namespace mc__ {
             void printChunks(const mc__::World& world) const;
             bool saveChunks(const mc__::World& world) const;
             
-            //RGB settings for leaves, grass :)
+            //RGB settings for leaves, grass. TODO: use biome flag from MapChunk
             GLubyte leaf_color[4];
             GLubyte grass_color[4];
 
@@ -155,8 +155,11 @@ namespace mc__ {
             //Relate world mapchunks to GL lists
             mapChunkUintMap_t glListMap;
             
-            //GL display list of display lists!
-            GLuint glWorldList;
+            //GL display lists of display lists that player can see
+            GLuint glListPlayer;
+            
+            //GL display lists of display lists that camera could see
+            GLuint glListCamera;
             
             //Init functions
             void startOpenGL();

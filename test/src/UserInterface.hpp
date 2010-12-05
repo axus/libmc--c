@@ -19,21 +19,25 @@
     <http://www.gnu.org/licenses/>.
 */
 
-//STL
-#include <iostream>
-#include <string>
-#include <iomanip>
-#include <fstream>
-
-
-//SFML
-#include <SFML/Graphics.hpp>
+#ifndef MC__USERINTERFACE_HPP
+#define MC__USERINTERFACE_HPP
 
 //libmc--c classes
 #include <mc--/World.hpp>
 #include <mc--/Viewer.hpp>
 #include <mc--/Player.hpp>
 #include <mc--/Events.hpp>
+
+//SFML
+#include <SFML/Graphics.hpp>
+
+//STL
+#include <iostream>
+#include <string>
+#include <iomanip>
+#include <fstream>
+#include <vector>
+
 
 namespace mc__ {
 
@@ -118,3 +122,5 @@ namespace mc__ {
             size_t keys_typed;
     };
 }
+
+#endif

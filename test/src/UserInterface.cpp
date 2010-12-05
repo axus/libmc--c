@@ -180,10 +180,10 @@ bool UserInterface::actions()
         }
     }
     
-/*
     //Create some acknowledgement if chunk received?
     if (chunk_received) {
       
+      /*
         //Allocate event data, remember to delete it after receiving it
         Events::dataLook *data = new Events::dataLook;
         
@@ -192,8 +192,8 @@ bool UserInterface::actions()
         data->animation = player.animation;
 
         events.put(Events::ACTION_LOOK, NULL);
+      */
     }
-*/
   
     return running;
 }
@@ -201,9 +201,9 @@ bool UserInterface::actions()
 //Reset camera to player
 void UserInterface::resetCamera()
 {
-    //Reset viewer to player position
+    //Reset viewer to player position (change YAW 180 degrees)
     viewer.reset(16*player.abs_X, 16*player.eyes_Y, 16*player.abs_Z,
-        player.yaw, player.pitch);
+        player.yaw + 180, player.pitch);
     
     //Reset mouse position
     last_X = mouse_X = center_X;
