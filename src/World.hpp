@@ -22,24 +22,22 @@
 #ifndef MC__WORLD_H
 #define MC__WORLD_H
 
-//STL list
-#include <vector>
-#include <map>      //TODO: replace with unordered_map
 
 //mc__ classes
 #include "MapChunk.hpp" //includes "Chunk.hpp"
 
+//STL list
+#include <unordered_map>      //map / unordered_map / hash_map
+
 //Define class inside mc__ namespace
 namespace mc__ {
     
-    //Coordinate to chunk mapping types
-    typedef std::map< int8_t, Chunk* > YChunkMap_t;
-    typedef std::map< uint64_t, YChunkMap_t* > XZChunksMap_t;
-    typedef std::map< uint64_t, MapChunk* > XZMapChunk_t;
+    //Map Coordinates to MapChunk
+    typedef std::unordered_map< uint64_t, MapChunk* > XZMapChunk_t;
     
-    //Output iterator for reading World chunks
-    class chunkIterator;
-    
+    //List of mini-chunks to update
+    typedef std::unordered_set< Chunk* > chunkSet_t;
+
     //World class ;)
     class World {
         
@@ -56,7 +54,7 @@ namespace mc__ {
                 uint32_t ziplength, uint8_t *zipped, bool unzip=true);
             
             //Return chunk at X,Y,Z
-            mc__::Chunk* getChunk(int32_t X, int8_t Y, int32_t Z);
+            mc__::MapChunk* getChunk(int32_t X, int32_t Z);
             
             //Return new chunk at X,Y,Z, erasing old chunk
             mc__::Chunk* newChunk(int32_t X, int8_t Y, int32_t Z,
@@ -85,8 +83,10 @@ namespace mc__ {
             uint64_t getKey(const int32_t X, const int32_t Z) const;
             
             //Access this to see chunks in the world
-            XZChunksMap_t coordChunksMap;
             XZMapChunk_t coordMapChunks;    //X|Z -> MapChunk*
+            
+            //List of mini-chunks to apply to world
+            chunkSet_t chunkUpdates;
             
             //World spawn point
             int32_t spawn_X;
@@ -99,32 +99,8 @@ namespace mc__ {
 
         protected:
            //Will be deleted when World ends
-            bool addChunk( Chunk *chunk);
+            bool addChunkUpdate( Chunk *chunk);
     };
-    
-    //Minimal iterator object class for listing all world chunks
-    class chunkIterator {
-        public:
-            chunkIterator( const World& w, bool dbg=false);
-            chunkIterator& operator++(int);
-            Chunk* operator* ();
-            bool end(); //End of world?
-            
-            friend bool operator==(chunkIterator&, chunkIterator&);
-            friend bool operator!=(chunkIterator&, chunkIterator&);
-        protected:
-            const World& world;
-            YChunkMap_t *chunks;
-            Chunk *chunk;
-            XZChunksMap_t::const_iterator iter_xz;
-            YChunkMap_t::const_iterator iter_y;
-        public:
-            bool debugging;
-    };
-
-    //Define those friend operators in mc__::
-    bool operator==(chunkIterator&, chunkIterator&);
-    bool operator!=(chunkIterator&, chunkIterator&);
 
 }
 

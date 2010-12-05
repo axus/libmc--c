@@ -58,7 +58,13 @@
     91          0x5B      Jack-O-Lantern
 */
 
+//STL
+#include <unordered_set>
+
+
 namespace mc__ {
+
+    typedef std::unordered_set<uint16_t> indexList_t;
 
     //Block in the game world
     typedef struct {

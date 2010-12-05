@@ -85,7 +85,12 @@ void genWorld(World& world)
     mc__::Block block1 = {58, 0, 0};   //Workbench
     mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 8, 2, 8);
     chunk1->block_array[0] = block1;
+    
+    //Add the single chunk to 0,0 MapChunk
     world.addMapChunk(chunk1);
+    
+    //Free memory used by block, because it's copied
+    delete chunk1;
 
     //Move the world in these directions at start
     world.spawn_X = 8;
@@ -147,7 +152,7 @@ int main(int argc, char** argv)
     */
     //faster running...
     while (ui.run()) {
-        sf::Sleep(0.01f);   //100FPS
+        Sleep(10);   //100FPS
     }
 
     

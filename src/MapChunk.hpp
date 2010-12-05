@@ -26,7 +26,7 @@
 #include "Chunk.hpp"
 
 //STL
-#include <set>
+
 
 namespace mc__ {
 
@@ -55,7 +55,7 @@ namespace mc__ {
             uint8_t visflags[mapChunkBlockMax];
             
             //Ordered list of block indices to draw
-            std::set<uint16_t> visibleIndices;
+            indexList_t visibleIndices;
             
             //flags used  by Viewer
             enum FLAGS { INVISIBLE=0x1, UPDATED=0x2};
@@ -63,7 +63,7 @@ namespace mc__ {
         protected:
             bool updateVisFlags(uint8_t x, uint8_t y, uint8_t z, bool opaque,
             bool adjA, bool adjB, bool adjE, bool adjF,
-            std::set<uint16_t>& changes);
+            indexList_t& changes);
     };
 }
 

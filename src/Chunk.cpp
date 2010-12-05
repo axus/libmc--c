@@ -324,8 +324,6 @@ bool Chunk::zip()
     zipped_length = compressBound(byte_length);
 
     //Re-allocate zipped bytes
-    /*if (zipped != NULL) { delete zipped; }
-    zipped = new Bytef[ zipped_length ];*/
     allocZip(zipped_length);
 
     //Use Zlib to compress the byte_array

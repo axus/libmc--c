@@ -63,6 +63,8 @@ UserInterface::UserInterface(
     keys_typed(0)                           //Empty keypress buffer
 {
 
+    //TODO: Init window settings from configuration file
+
     //Enable vsync
     App.UseVerticalSync(true);
 
@@ -178,10 +180,10 @@ bool UserInterface::actions()
         }
     }
     
+/*
     //Create some acknowledgement if chunk received?
     if (chunk_received) {
       
-      /*
         //Allocate event data, remember to delete it after receiving it
         Events::dataLook *data = new Events::dataLook;
         
@@ -190,8 +192,8 @@ bool UserInterface::actions()
         data->animation = player.animation;
 
         events.put(Events::ACTION_LOOK, NULL);
-      */
     }
+*/
   
     return running;
 }

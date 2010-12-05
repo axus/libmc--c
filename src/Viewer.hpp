@@ -74,7 +74,7 @@ namespace mc__ {
         public:
 
             //relate MapChunk* -> GL List
-            typedef std::map< mc__::MapChunk*, GLuint> mapChunkUintMap_t;
+            typedef std::unordered_map< mc__::MapChunk*, GLuint> mapChunkUintMap_t;
 
             Viewer();
             

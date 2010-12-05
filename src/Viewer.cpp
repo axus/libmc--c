@@ -88,7 +88,6 @@ using std::flush;
 
 using std::string;
 using std::stringstream;
-using std::set;
 
 const float Viewer::PI = std::atan(1.0)*4;
 
@@ -468,64 +467,55 @@ void Viewer::drawBlock( const mc__::Block& block,
 
 }
 
-using mc__::XZChunksMap_t;
-using mc__::YChunkMap_t;
+using mc__::chunkSet_t;
 
 //Draw the minichunks in mc__::World
 void Viewer::drawChunks( const World& world)
 {
-    //Reference to world chunks data structure
-    const XZChunksMap_t& coordChunksMap = world.coordChunksMap;
+    //Reference to world mini-chunks data structure
+    const chunkSet_t& chunkUpdates = world.chunkUpdates;
     
     //Variables to iterate through list of chunks
-    XZChunksMap_t::const_iterator iter_xz;
-    YChunkMap_t::const_iterator iter_y;
-    //uint64_t key;
-    GLint off_x, off_y, off_z;
-    GLint X, Y, Z;
-    
-    //For all chunk stacks (X,Z)
-    for (iter_xz = coordChunksMap.begin();
-        iter_xz != coordChunksMap.end(); iter_xz++)
-    {
-        //key = iter_xz->first;
-        YChunkMap_t *chunks=iter_xz->second;
-        
-        //For all chunks in stack (Y)
-        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
-        {
-            Chunk *chunk = iter_y->second;
-            mc__::Chunk& myChunk = *chunk;
+    chunkSet_t::const_iterator iter_chunk;
 
-            //If the chunk has not uncompressed it's data, do so now
-            if (! myChunk.isUnzipped) {
-                
-                //Debug output
-                if (debugging) {
-                    cout << "Unzipping chunk @ " << (int)myChunk.X << ","
-                        << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
-                }
-                
-                //Unzip the chunk
-                if (!myChunk.unzip()) {
-                    cerr << "ERROR UNZIPPING" << endl;
-                    continue;
-                }
+    
+    //For all chunks in set
+    for (iter_chunk =  chunkUpdates.begin();
+         iter_chunk != chunkUpdates.end(); iter_chunk++)
+    {
+        Chunk *chunk = *iter_chunk;
+        //Crash here if they screwed up :)
+        mc__::Chunk& myChunk = *chunk;
+
+        //If the chunk has not uncompressed it's data, do so now
+        if (! myChunk.isUnzipped) {
+            
+            //Debug output
+            if (debugging) {
+                cout << "Unzipping chunk @ " << (int)myChunk.X << ","
+                    << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
             }
             
-            //When indexing block in chunk array,
-            //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
-    
-            //Draw every block in chunk.  x,y,z determined by position in array.
-            size_t index=0;
-            for (off_x=0, X=myChunk.X; off_x <= myChunk.size_X; off_x++, X++) {
-            for (off_z=0, Z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, Z++) {
-            for (off_y=0, Y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, Y++) {
-                drawBlock( myChunk.block_array[index], X, Y, Z);
-                index++;
-            }}}
-
+            //Unzip the chunk
+            if (!myChunk.unzip()) {
+                cerr << "ERROR UNZIPPING" << endl;
+                continue;
+            }
         }
+        
+        //When indexing block in chunk array,
+        //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
+
+        //Draw every block in chunk.  x,y,z determined by position in array.
+        size_t index=0;
+        GLint off_x, off_y, off_z;
+        GLint X, Y, Z;
+        for (off_x=0, X=myChunk.X; off_x <= myChunk.size_X; off_x++, X++) {
+        for (off_z=0, Z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, Z++) {
+        for (off_y=0, Y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, Y++) {
+            drawBlock( myChunk.block_array[index], X, Y, Z);
+            index++;
+        }}}
     }
 }
 
@@ -581,8 +571,8 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         //chunk vars
         GLint X, Y, Z;
         uint8_t vflags;
-        set<uint16_t>& visibleIndices = myChunk.visibleIndices;
-        set<uint16_t>::const_iterator iter;
+        indexList_t& visibleIndices = myChunk.visibleIndices;
+        indexList_t::const_iterator iter;
 
         glEnd();    //Halt the drawing in progress
 
@@ -948,9 +938,6 @@ bool Viewer::saveChunks(const mc__::World& world) const
     int32_t X, Z;
     int8_t Y;
     stringstream filename;
-  
-     //DEBUG!!!
-    //MapChunk *mc = coordMapChunks[ getKey(chunkX, chunkZ)];
     
     //Reference map chunks data structure
     const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
@@ -987,46 +974,60 @@ bool Viewer::saveChunks(const mc__::World& world) const
     return true;
 }
 
-//List all the chunks to stdout
+//List all the Map Chunks to stdout
 void Viewer::printChunks(const mc__::World& world) const
 {
-    XZChunksMap_t::const_iterator iter_xz;
-    YChunkMap_t::const_iterator iter_y;
-    
-    uint64_t key;
-    int32_t X, Z;
-    int8_t Y;
     
     //Reference world chunk data structure
-    const XZChunksMap_t& coordChunksMap = world.coordChunksMap;
+    const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
+    XZMapChunk_t::const_iterator iter_xz;
     
-    //For all chunk stacks (X,Z)
-    for (iter_xz = coordChunksMap.begin();
-        iter_xz != coordChunksMap.end(); iter_xz++)
+    //For all map chunks (X,Z)
+    for (iter_xz = coordMapChunks.begin();
+        iter_xz != coordMapChunks.end(); iter_xz++)
     {
-        key = iter_xz->first;
-        X = (key >> 32);
-        Z = (key & 0xFFFFFFFF);
-        YChunkMap_t *chunks=iter_xz->second;
-        
-        //For all chunks in stack (Y)
-        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
-        {
-            Y = iter_y->first;
-            Chunk *chunk = iter_y->second;
-            cout << "Chunk @ "
-                << (int)X << "," << (int)Y << "," << (int)Z
-                << " [" << chunk->X << "," << (int)chunk->Y << "," << chunk->Z
-                << "] " << (int)chunk->size_X << "," << (int)chunk->size_Y
-                << "," << (int)chunk->size_Z << endl;
-            cout << "\t" << chunk->zipped_length << " bytes zipped";
-            if (chunk->isUnzipped) {
-                cout << ", " << chunk->array_length << " blocks, "
-                << chunk->byte_length << " bytes unzipped";
-            }
-            cout << "." << endl;
+        uint64_t key = iter_xz->first;
+        MapChunk *mc = iter_xz->second;
+        if (mc == NULL) {
+            cerr << "Print NULL mapchunk" << endl;
+            continue;
+        }
+        long X = (key >> 32);
+        short Y = 0;
+        long Z = (key & 0xFFFFFFFF);
+        cout << "MapChunk @ "
+            << X << "," << Y << "," << Z
+            << " [" << (long)mc->X << "," << (long)mc->Y << "," << (long)mc->Z
+            << "] " << (long)mc->size_X << "," << (short)mc->size_Y
+            << "," << (long)mc->size_Z << endl;
+        cout << "\t" << mc->zipped_length << " bytes zipped";
+        if (mc->isUnzipped) {
+            cout << ", " << mc->array_length << " blocks, "
+            << mc->byte_length << " bytes unzipped";
         }
     }
+    
+    //For all mini-chunks
+    const chunkSet_t& chunkUpdates = world.chunkUpdates;
+    chunkSet_t::const_iterator iter_chunk;
+    
+    for (iter_chunk =  chunkUpdates.begin();
+         iter_chunk != chunkUpdates.end(); iter_chunk++)
+    {
+        Chunk *chunk = *iter_chunk;
+        //Crash here if they screwed up :)
+        mc__::Chunk& myChunk = *chunk;
+
+        cout << "Chunk @ " << (long)myChunk.X << "," << (long)myChunk.Y << ","
+             << (long)myChunk.Z << "size=" << (long)myChunk.size_X << ","
+             << (short)myChunk.size_Y << "," << (long)myChunk.size_Z << endl;
+        cout << "\t" << myChunk.zipped_length << " bytes zipped";
+        if (myChunk.isUnzipped) {
+            cout << ", " << myChunk.array_length << " blocks, "
+            << myChunk.byte_length << " bytes unzipped";
+        }
+    }
+
 }
 
 

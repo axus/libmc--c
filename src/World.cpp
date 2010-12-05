@@ -29,11 +29,11 @@ using std::dec;
 
 //mc--
 #include "World.hpp"
-using std::vector;
 using mc__::World;
 using mc__::Chunk;
 using mc__::Block;
-using mc__::chunkIterator;
+
+//using mc__::chunkIterator;
 
 
 //Create empty world
@@ -44,21 +44,27 @@ World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0), debugging(false)
 //Destroy world
 World::~World()
 {
-    //Delete all chunks and YchunkMaps
-    XZChunksMap_t::iterator iter_xz;
-    for (iter_xz = coordChunksMap.begin();
-        iter_xz != coordChunksMap.end(); iter_xz++)
-    {
-        YChunkMap_t* Ychunks = iter_xz->second;
-        if (Ychunks != NULL) {
-            YChunkMap_t::iterator iter_y;
-            for (iter_y = Ychunks->begin(); iter_y != Ychunks->end(); iter_y++)
-            {
-                Chunk* chunk=iter_y->second;
-                if (chunk != NULL) { delete chunk; }
-            }
-        }
+
+    //Delete all map chunks
+    XZMapChunk_t::iterator iter_xz;  
+    for (iter_xz = coordMapChunks.begin();
+        iter_xz != coordMapChunks.end(); iter_xz++) {
+        MapChunk* mc=iter_xz->second;
+        if (mc != NULL) { delete mc; } else {
+            cerr << "delete Null MapChunk" << endl;}
+            
     }
+
+    //Delete all unused mini-chunks
+    chunkSet_t::iterator iter_chunk;
+    for (iter_chunk = chunkUpdates.begin(); iter_chunk != chunkUpdates.end();
+        iter_chunk++)
+    {
+        Chunk* chunk=*iter_chunk;
+        if ( chunk != NULL) { delete chunk; } else {
+            cerr << "delete Null Chunk" << endl;}
+    }
+    
 }
 
 //Add compressed chunk to list/map
@@ -72,7 +78,7 @@ bool World::addChunkZip(int32_t X, int8_t Y, int32_t Z,
     Chunk* chunk = new Chunk(size_X, size_Y, size_Z, X, Y, Z);
     if (chunk) {
         chunk->copyZip(ziplength, zipped);
-        addChunk(chunk);
+        addChunkUpdate(chunk);
         
         //byte_array and block_array are still NULL!
         if (unzip) {
@@ -111,80 +117,43 @@ uint64_t World::getKey(const int32_t X, const int32_t Z) const
 }
 
 //Add chunk to mini-chunk list.  Still needs to be added to map!
-bool World::addChunk( Chunk *chunk)
+bool World::addChunkUpdate( Chunk *chunk)
 {
-    //Can't add null chunks
+    //Don't add null chunks
     if (chunk == NULL) { return false; }
-
-    bool result=true;
-    const uint64_t key = getKey(chunk->X, chunk->Z);
-
-    //Lookup stack of chunks by XZ
-    XZChunksMap_t::const_iterator iter_xz = coordChunksMap.find( key );
-
-    //Create a new stack if needed and set iter_xz
-    if (iter_xz == coordChunksMap.end()) {
-        coordChunksMap.insert( XZChunksMap_t::value_type(key, new YChunkMap_t));
-        iter_xz = coordChunksMap.find(key);
-    }
-
-    //Get stack of chunks at XZ
-    YChunkMap_t* Ychunks = iter_xz->second;
-    if (Ychunks == NULL) {
-        //This should never happen.
-        Ychunks = new YChunkMap_t;
-        result = false;
-    }
-
-    //Check for existing chunk, delete it if found
-    YChunkMap_t::const_iterator iter_y = Ychunks->find(chunk->Y);
-    if (iter_y != Ychunks->end()) {
-
-        //Delete the old chunk
-        Chunk* oldChunk = iter_y->second;
-        if (oldChunk != NULL) {
-            //Had to delete old chunk!
-            delete oldChunk;
-        }
-    }
     
-    //Assign new chunk
-    (*Ychunks)[chunk->Y] = chunk;
+    //Add chunk to set.  Ignores duplicate pointer adds ;p
+    chunkUpdates.insert(chunk);
     
-    return result;
+    return true;
+
 }
 
-//Return chunk pointer at X,Y,Z if it exists, NULL otherwise
-mc__::Chunk* World::getChunk(int32_t X, int8_t Y, int32_t Z)
+//Return MapChunk pointer at X,Y,Z if it exists, NULL otherwise
+mc__::MapChunk* World::getChunk(int32_t X, int32_t Z)
 {
-    mc__::Chunk* result;
-        
-    //Lookup stack of chunks by XZ
-    XZChunksMap_t::const_iterator iter_xz = coordChunksMap.find( getKey(X,Z));
+    mc__::MapChunk* result=NULL;
     
-    //Return NULL if XZ stack not found
-    if (iter_xz == coordChunksMap.end()) { return NULL; }
-    YChunkMap_t* yChunks = iter_xz->second;
-    if (yChunks == NULL) { return NULL; }
+    uint64_t key = getKey(X, Z);
+    XZMapChunk_t::const_iterator iter_xz = coordMapChunks.find(key);
+    if (iter_xz != coordMapChunks.end()) {
+        result = iter_xz->second;
+    }
     
-    //Look for chunk at Y coordinate
-    YChunkMap_t::const_iterator iter_y = yChunks->find( Y );
-    if (iter_y == yChunks->end()) { return NULL; }
-    result = iter_y->second;
-    
-    //Return chunk at location    
     return result;
 }
 
-//Return chunk pointer at X,Y,Z .  Erase old chunk if it exists
+//Allocate new chunk on to-be-added list
 mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
             uint8_t size_X, uint8_t size_Y, uint8_t size_Z, bool unzipped)
 {
-    //Create the new chunk
+    //Create the new chunk, with no data in it
     mc__::Chunk* chunk = new Chunk(size_X, size_Y, size_Z, X, Y, Z, unzipped);
         
-    //Add the chunk pointer to world
-    addChunk( chunk );
+    //Add the chunk pointer to list of to-be-added chunks
+    addChunkUpdate( chunk );
+    
+    //Caller must add data to the chunk!
     
     //Return chunk at location    
     return chunk;
@@ -212,7 +181,8 @@ bool World::addMapChunk( Chunk* chunk)
       
         //Create a new MapChunk in coordMapChunks if needed
         mapchunk = new MapChunk(X, Z);
-        coordMapChunks[key] = mapchunk;
+        //coordMapChunks[key] = mapchunk;
+        coordMapChunks.insert( XZMapChunk_t::value_type(key, mapchunk));
         
         MapChunk* neighbor;
         //Check neighbor A (-X)
@@ -256,7 +226,7 @@ bool World::addMapChunk( Chunk* chunk)
         mapchunk = iter->second;
     }
     
-    //Finally, add it
+    //Finally, add the mini-chunk to the MapChunk
     result = mapchunk->addChunk(chunk);
     
     return result;
@@ -267,42 +237,40 @@ bool World::addMapChunk( Chunk* chunk)
 bool World::updateMapChunks(bool cleanup)
 {
 
-    //Variables to iterate through list of chunks
-    XZChunksMap_t::iterator iter_xz;
-    YChunkMap_t::iterator iter_y;
-    uint64_t key;
-    
-    //For all chunk stacks (X,Z)
-    for (iter_xz = coordChunksMap.begin();
-        iter_xz != coordChunksMap.end(); iter_xz++)
+    //Apply all unused mini-chunks to map then delete them
+    chunkSet_t::const_iterator iter_chunk;
+    for (iter_chunk = chunkUpdates.begin(); iter_chunk != chunkUpdates.end();
+        iter_chunk++)
     {
-        key = iter_xz->first;
-        YChunkMap_t*& chunks=iter_xz->second;
-        
-        //For all chunks in stack (Y)
-        for (iter_y = chunks->begin(); iter_y != chunks->end(); iter_y++)
+        Chunk* chunk=*iter_chunk;
+        if ( chunk != NULL)
         {
             //Get the next chunk pointer
-            Chunk*& chunk = iter_y->second;
+            Chunk* chunk = *iter_chunk;
             
             //Add chunk to map (uncompresses if needed)
             if (addMapChunk(chunk)) {
-                ;
+              //DEBUG
+              cout << "Updated chunk to map @ X=" << chunk->X
+                << " Y=" << (int)chunk->Y << "Z=" << chunk->Z << endl;
             } else {
-                cerr << "Error adding chunk to map @ key=0x" << hex << key
-                    << " Y=" << dec << (int)(iter_y->first) << endl;
+                cerr << "Error updating chunk to map @ X=" << chunk->X
+                << " Y=" << (int)chunk->Y << "Z=" << chunk->Z << endl;
             }
             
             //Delete the mini-chunk
             if (cleanup) { delete chunk; chunk = NULL;}
+        } else {
+            cerr << "update Null Chunk" << endl;
         }
-        //Delete the stack of mini-chunks
-        if (cleanup) { delete chunks; chunks = NULL;}
+        
     }
+
     //Clear the mini-chunk list
-    if (cleanup) { coordChunksMap.clear(); }
-    
+    if (cleanup) { chunkUpdates.clear(); }
+
     return true;
+
 }
 
 //Generate chunk representing block ID 0 - 95
@@ -467,101 +435,4 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     bool result=addMapChunk(treeChunk );
     
     return result;
-}
-
-//
-//Minimal iterator object class for listing all world chunks
-//
-
-//        XZChunksMap_t::const_iterator iter_xz;
-//        YChunkMap_t::const_iterator iter_y;
-chunkIterator::chunkIterator( const World& w, bool dbg):
-    world(w), chunks(NULL), chunk(NULL), debugging(dbg)
-{
-    //Assign internal iterators to start of world coordinate map
-    iter_xz = world.coordChunksMap.begin();
-    
-    //Move iterator until a non-null chunk is found
-    while (chunks == NULL && iter_xz != world.coordChunksMap.end()) {
-        chunks = iter_xz->second;
-        if (chunks == NULL) {
-            iter_xz++;
-        } else {
-            //Search until non-null chunk found
-            iter_y = chunks->begin();
-            while (iter_y != chunks->end() && chunk == NULL) {
-                chunk = iter_y->second;
-                iter_y++;
-            }
-
-        }
-    }
-}
-
-//Increment this iterator
-chunkIterator& chunkIterator::operator++(int)
-{
-  
-/*
-    //Handle stupid situation
-    if (chunks == NULL) {
-        cerr << "ERROR: chunkIterator::operator++ chunks" << endl;
-        while (chunks == NULL && iter_xz != world.coordChunksMap.end()) {
-            iter_xz++;
-            chunks = iter_xz->second;
-            if (chunks != NULL) {
-                cerr << "FOUND CHUNKS @ 0x" << hex
-                    << iter_xz->first << endl << dec;
-                iter_y = chunks->begin();
-            }
-        }
-    } else {
-
-        //Increment
-        iter_y++;
-    }
-*/
-    //If you did something stupid, it's gonna crash
-    iter_y++;
-
-    //Handle end of chunk list
-    if (iter_y == chunks->end()) {
-        iter_xz++;
-        if (iter_xz == world.coordChunksMap.end()) {
-            return *this;
-        }
-        chunks = iter_xz->second;
-        iter_y = chunks->begin();
-    }
-    
-    //Assign chunk pointer
-    chunk = iter_y->second;
-    
-    //Return self
-    return *this;
-
-}
-
-//Derefence the iterator to get a chunk
-Chunk* chunkIterator::operator*()
-{
-    //Return the currently pointed chunk
-    return chunk;
-}
-
-//Check if we're at the end of the world
-bool chunkIterator::end()
-{
-    return (iter_xz == world.coordChunksMap.end());
-}
-
-//Comparison operators
-bool mc__::operator==(chunkIterator& left, chunkIterator& right)
-{
-    return (left.iter_xz == right.iter_xz && left.iter_y == right.iter_y);
-}
-
-bool mc__::operator!=(chunkIterator& left, chunkIterator& right)
-{
-    return !(left == right);
 }

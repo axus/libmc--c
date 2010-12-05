@@ -31,7 +31,6 @@ using mc__::Block;
 //STL
 #include <iostream>
 #include <iomanip>
-using std::set;
 using std::cerr;
 using std::endl;
 using std::hex;
@@ -96,18 +95,20 @@ bool MapChunk::addChunk( Chunk *chunk)
     uint16_t c_index=0;                //external chunk index
     
     //Track changed blocks
-    set<uint16_t> changes;
+    indexList_t changes;
     
+    
+    // 3D range: x_ to max_x, z_ to max_z, y_ to max_y
     //For X...
     for (x_ = in_x; x_ <= max_x; x_++) {
-        //Check X neighbor adjacency
+        //Check X neighbor chunk adjacency
         if (x_ == 0) { adjA=true; adjB=false; }
         else if (x_ < 15) { adjA=false; }
         else { adjB=true; }
             
     //For X,Z...
     for(z_ = in_z; z_ <= max_z; z_++) {
-        //Check Z neighbor adjacency
+        //Check Z neighbor chunk adjacency
         if (z_ == 0) { adjE=true; adjF=false;}
         else if (z_ < 15) { adjE=false; }
         else { adjF=true; }
@@ -139,7 +140,7 @@ bool MapChunk::addChunk( Chunk *chunk)
     }}}
 
     //Check updated blocks for visibility, update visibleIndices
-    set<uint16_t>::const_iterator iter;
+    indexList_t::const_iterator iter;
     for (iter = changes.begin(); iter != changes.end(); iter++) {
         index = *iter;
 
@@ -178,7 +179,7 @@ bool MapChunk::addChunk( Chunk *chunk)
 //Return true if changes were made to neighbor outside of MapChunk
 bool MapChunk::updateVisFlags(uint8_t x_, uint8_t y_, uint8_t z_, bool opaque,
     bool adjA, bool adjB, bool adjE, bool adjF,
-    set<uint16_t>& changes)
+    indexList_t& changes)
 {
     bool result=false;
   

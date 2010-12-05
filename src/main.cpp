@@ -27,7 +27,6 @@
 #include <string>
 #include <iomanip>
 #include <fstream>
-#include <vector>
 
 using std::cout;
 using std::cerr;
@@ -39,7 +38,6 @@ using std::setw;
 using std::setfill;
 using std::ofstream;
 using std::ios;
-using std::vector;
 using std::map;
 
 //Compiler specific options

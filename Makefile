@@ -6,7 +6,7 @@ HEADERS     = Events.hpp Chunk.hpp MapChunk.hpp Player.hpp World.hpp Viewer.hpp 
 LIBS        = -L$(HOME)/lib -lopengl32 -lglu32 -lDevIL -lILU -lz
 INCLUDES    = -I$(HOME)/include
 ###DEBUG       = on
-###MOREFLAGS   =
+MOREFLAGS   = -std=c++0x -march=native
 
 #I suggest using SFML for OpenGL:  -lsfml-system -lsfml-window -lsfml-graphics
 
