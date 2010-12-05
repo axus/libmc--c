@@ -4,6 +4,8 @@ DevIL 1.7.8
     http://openil.sourceforge.net/
 GCC 4.5.0 library and standard C++ library
     http://gcc.gnu.org/install/build.html
+GLEW 1.5.7
+    http://glew.sourceforge.net/
 Zlib 1.2.5
     http://zlib.net/zlib125-dll.zip
     http://zlib.net/zlib-1.2.5.tar.gz

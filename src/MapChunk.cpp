@@ -157,7 +157,7 @@ bool MapChunk::addChunk( Chunk *chunk)
     }
     
     //Mark neighor chunks as UPDATED, if needed
-    if (updateNeighbors) {
+    if (updateNeighbors && false) {
         if (neighbors[0] != NULL) {
             neighbors[0]->flags |= MapChunk::UPDATED;
         }

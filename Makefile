@@ -3,7 +3,7 @@
 BIN         = libmc--c.a
 SRCFILES    = Events.cpp Chunk.cpp MapChunk.cpp Player.cpp World.cpp Viewer.cpp
 HEADERS     = Events.hpp Chunk.hpp MapChunk.hpp Player.hpp World.hpp Viewer.hpp Entity.hpp 
-LIBS        = -L$(HOME)/lib -lopengl32 -lglu32 -lDevIL -lILU -lz
+LIBS        = -L$(HOME)/lib -lglew32 -lopengl32 -lglu32 -lDevIL -lILU -lz
 INCLUDES    = -I$(HOME)/include
 ###DEBUG       = on
 MOREFLAGS   = -std=c++0x -march=native

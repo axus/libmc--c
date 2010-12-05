@@ -33,8 +33,11 @@
 #include <map>
 
 //OpenGL
-#include <gl/gl.h>
-#include <gl/glu.h>
+#include <GL/glew.h>
+#include <GL/gl.h>
+#include <GL/glu.h>
+#include <GL/glext.h>
+
 
 //DevIL
 #include <IL/il.h>
@@ -151,6 +154,9 @@ namespace mc__ {
             
             //Relate world mapchunks to GL lists
             mapChunkUintMap_t glListMap;
+            
+            //GL display list of display lists!
+            GLuint glWorldList;
             
             //Init functions
             void startOpenGL();

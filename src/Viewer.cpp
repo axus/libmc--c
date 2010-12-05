@@ -143,10 +143,14 @@ bool Viewer::init(const std::string &filename)
     //glBind texture before assigning it
     glBindTexture(GL_TEXTURE_2D, image);
     
-    //Copy current DevIL image to OpenGL image.  
+    //Copy current DevIL image to OpenGL image.
     glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
         ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
         ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+/*    gluBuild2DMipmaps( GL_TEXTURE_2D, ilGetInteger(IL_IMAGE_BPP),
+        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
+        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+*/
 
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
@@ -519,7 +523,7 @@ void Viewer::drawChunks( const World& world)
     }
 }
 
-//Render single map chunk from GL list, compiling if needed
+//Create gl list for mapchunk, if needed
 void Viewer::drawMapChunk(MapChunk* mapchunk)
 {
     MapChunk& myChunk = *mapchunk;
@@ -565,8 +569,12 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
     }
     
     
-    //Compile and draw GL list if needed
+    //Compile GL list if needed (drawing to screen happens elsewhere)
     if (myChunk.flags & MapChunk::UPDATED) {
+
+        //DEBUG updates
+        cout << "MapChunk UPDATED flag: " << (int)myChunk.X << ","
+                << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
 
         //chunk vars
         GLint X, Y, Z;
@@ -649,17 +657,26 @@ void Viewer::startOpenGL() {
     glPushMatrix(); 
 
     //Create OpenGL texture
+    glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);//Quick mipmaps
+    
     glGenTextures(1, &image);
     glBindTexture(GL_TEXTURE_2D, image);    //bind empty texture
-    
-    //Set texture zoom filters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);  //GL_LINEAR?
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     
     //Set out-of-range texture coordinates
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+    //Make textures "blocky" when up close
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
+    //Use texture mipmaps when far away
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+        GL_NEAREST_MIPMAP_NEAREST);
+
+    //Generate mipmaps
+    glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+
+
     //No blending
     glDisable(GL_BLEND);
 
