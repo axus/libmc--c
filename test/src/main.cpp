@@ -129,15 +129,14 @@ int main(int argc, char** argv)
     //Generate a test world
     genWorld(world);
 
-    //Set player initial position and viewpoint
+    //Set player initial position and viewpoint (height, yaw, pitch)
     player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
-        world.spawn_Y + 1, 0, 0);
+        world.spawn_Y + 1, 180, 0);
 
     //Create user interface to world
     mc__::UserInterface ui("libmc--c example", world, player, events);
         
     //Run until user exits
-    /*
     uint32_t frames=0;
     sf::Clock clock;
     while (ui.run() && (!run_limit || (frames < max_frames) )) {
@@ -149,12 +148,13 @@ int main(int argc, char** argv)
         //Reset clock before running UI and game logic
         clock.Reset();
     }
-    */
+    
+    /*
     //faster running...
     while (ui.run()) {
         Sleep(10);   //100FPS
     }
-
+    */
     
     //Sleep 5 seconds if run to max frames
     if (run_limit) {

@@ -20,9 +20,9 @@ BUILD=build
 
 
 # -mconsole: Create a console application
-# -mwindows: Create a GUI application
+# -mwindows: Create a GUI only application
 # -Wl,--enable-auto-import: Let the ld.exe linker automatically import from libraries
-LDFLAGS=-Wl,--enable-auto-import -mwindows
+LDFLAGS=-Wl,--enable-auto-import -mconsole
 
 #Minimum Windows version: Windows XP, IE 6.01
 #CPPFLAGS=-D_WIN32_WINNT=0x0500 -DWINVER=0x0500 -D_WIN32_IE=0x0601 $(MOREFLAGS)
@@ -60,7 +60,10 @@ $(BUILD)/%.o: $(SRCDIR)/%.cpp
 $(BIN): $(OBJ)
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
 
-
+#Build again, don't care why
+rebuild: 
+	$(CC) $(OBJ) $(CFLAGS) $(LDFLAGS) $(LIBS) -o $(BIN)
+	
 #Create install directories if needed
 $(INSTALL_BIN): 
 	@[ -d $@ ] || mkdir -p $@
