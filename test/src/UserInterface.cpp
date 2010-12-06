@@ -249,10 +249,12 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             
             //DEBUG
             if (Event.Key.Code == sf::Key::Quote) {
-                //App.SetCursorPosition( center_X, center_Y);
-                cout << "Cam @ " << viewer.cam_X << "," << viewer.cam_Y
-                    << "," << viewer.cam_Y << " Player @ " << player.abs_X
-                    << "," << player.abs_Y << "," << player.abs_Z << endl;
+                int view_X = (int)viewer.cam_X >> 4;
+                int view_Y = (int)viewer.cam_Y >> 4;
+                int view_Z = (int)viewer.cam_Z >> 4;
+                cout << "Cam @ " << view_X << ", " << view_Y
+                    << ", " << view_Z << " Player @ " << player.abs_X
+                    << ", " << player.abs_Y << ", " << player.abs_Z << endl;
             }
             break;
             
@@ -274,15 +276,15 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             //Handle button pressed
             switch( Event.MouseButton.Button ) {
                 case sf::Mouse::Left:
-                    //cerr << "Left-click @ " <<mouse_X<<","<<mouse_Y<< endl;
                     break;
-                case sf::Mouse::Middle:
+                case sf::Mouse::XButton1:
+                case sf::Mouse::XButton2:
+                    //Move camera back to player
                     resetCamera();
                     break;
                 case sf::Mouse::Right:
                     //Toggle mouselook
                     toggle_mouselook=true;
-                    //cerr << "Right-click @ " <<mouse_X<<","<<mouse_Y<< endl;
                     break;
                 default:
                     break;
@@ -325,8 +327,23 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
 //Change viewer based on total mouse movements
 bool UserInterface::handleMouse()
 {
-    //Translate camera if moved while holding left button
-    if (mouse_press[sf::Mouse::Left]) {
+    //Translate camera in Z if moved while holding middle button
+    if (mouse_press[sf::Mouse::Middle]) {
+
+        //Step camera to side for mouse-X motion
+        int diff_Z = mouse_X - mouse_press_X[sf::Mouse::Middle];
+        
+        if (diff_Z != 0) {
+            viewer.move(0 , 0, diff_Z);
+
+            //Save new mouse position
+            mouse_press_X[sf::Mouse::Middle] = mouse_X;
+            mouse_press_Y[sf::Mouse::Middle] = mouse_Y;
+        }
+    }
+  
+    //Translate camera in X or Y if moved while holding left button
+    else if (mouse_press[sf::Mouse::Left]) {
 
         //Step camera to side for mouse-X motion
         int diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
@@ -386,11 +403,7 @@ bool UserInterface::handleKeys()
     size_t index;
     
     //Init movement
-    bool movement[MOVE_COUNT];
-    for (index = 0; index < MOVE_COUNT; index++)
-    {
-        movement[index] = false;
-    }
+    bool movement[MOVE_COUNT] = {false, false, false, false, false, false, false, false};
     
     //Handle single keypresses in order
     if (keys_typed >= 1024) { keys_typed = 1024; }

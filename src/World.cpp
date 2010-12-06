@@ -181,8 +181,8 @@ bool World::addMapChunk( Chunk* chunk)
       
         //Create a new MapChunk in coordMapChunks if needed
         mapchunk = new MapChunk(X, Z);
-        //coordMapChunks[key] = mapchunk;
         coordMapChunks.insert( XZMapChunk_t::value_type(key, mapchunk));
+        mapChunks.push_back( mapchunk );
         
         MapChunk* neighbor;
         //Check neighbor A (-X)

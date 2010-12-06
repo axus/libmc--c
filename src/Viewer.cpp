@@ -626,12 +626,12 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
 //Draw the megachunks in mc__::World
 void Viewer::drawMapChunks( const World& world)
 {
+/*
     //Reference to world MapChunks data structure
     const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
-    
+
     //Variables to iterate through list of chunks
     XZMapChunk_t::const_iterator iter_xz;
-
     //For all megachunks
     for (iter_xz = coordMapChunks.begin();
         iter_xz != coordMapChunks.end(); iter_xz++)
@@ -639,6 +639,14 @@ void Viewer::drawMapChunks( const World& world)
         MapChunk *mapchunk = iter_xz->second;
         drawMapChunk(mapchunk);
     }
+*/
+    const mapChunkList_t& mapChunks = world.mapChunks;
+    mapChunkList_t::const_iterator iter;
+    for (iter = mapChunks.begin(); iter != mapChunks.end(); iter++)
+    {
+        drawMapChunk(*iter);
+    }
+    
 }
 
 //OpenGL Set up buffer, perspective, blah blah blah
@@ -912,9 +920,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 75, 115,115,115,115,115,115,0xF7);    //RedstoneTorch
     setBlockInfo( 76, 99, 99, 99, 99, 99, 99, 0xFF);    //RedstoneTorchLit
     setBlockInfo( 77, 1,  1,  1,  1,  1,  1,  0xE7);    //StoneButton
-    setBlockInfo( 78, 66, 68, 66, 68, 66, 68, 0xC3);    //SnowPlate
+    setBlockInfo( 78, 66, 66, 66, 66, 66, 66, 0x00);    //SnowLayer(*)
+        //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
     setBlockInfo( 79, 67, 67, 67, 67, 67, 67, 0x04);    //Ice
-    setBlockInfo( 80, 66, 66, 66, 66, 66, 66, 0x00);    //Snow
+    setBlockInfo( 80, 66, 66, 66, 66, 66, 66, 0x00);    //SnowBlock
     setBlockInfo( 81, 70, 70, 71, 69, 70, 70, 0x00);    //Cactus
     setBlockInfo( 82, 72, 72, 72, 72, 72, 72, 0x00);    //Clay
     setBlockInfo( 83, 73, 73, 73, 73, 73, 73, 0xF7);    //Reed (*)

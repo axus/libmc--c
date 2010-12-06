@@ -26,8 +26,9 @@
 //mc__ classes
 #include "MapChunk.hpp" //includes "Chunk.hpp"
 
-//STL list
+//STL
 #include <unordered_map>      //map / unordered_map / hash_map
+#include <vector>
 
 //Define class inside mc__ namespace
 namespace mc__ {
@@ -37,6 +38,9 @@ namespace mc__ {
     
     //List of mini-chunks to update
     typedef std::unordered_set< Chunk* > chunkSet_t;
+    
+    //Straight list of map-chunks loaded in world
+    typedef std::vector< MapChunk* > mapChunkList_t;
 
     //World class ;)
     class World {
@@ -84,6 +88,7 @@ namespace mc__ {
             
             //Access this to see chunks in the world
             XZMapChunk_t coordMapChunks;    //X|Z -> MapChunk*
+            mapChunkList_t mapChunks;       //List of MapChunk*
             
             //List of mini-chunks to apply to world
             chunkSet_t chunkUpdates;
