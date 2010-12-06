@@ -23,7 +23,7 @@
 #define MC__EVENTS_H
 
 //STL
-#include <list>
+#include <deque>
 
 //Compiler specific options
 #ifdef _MSC_VER
@@ -127,14 +127,19 @@ namespace mc__ {
             //Function pointers
             typedef uint8_t(*CB)(type_t t, const void* d);
             
+            Events();
+            
             //Add event
             void put(type_t t, const void *d);
             
             //Get next unhandled event
             bool get(Event_t& result);
             
+            //Empty/not empty
+            bool isEmpty;
+            
         protected:
-            std::list<Event_t> myQueue;
+            std::deque<Event_t> myQueue;
 
     };
 }

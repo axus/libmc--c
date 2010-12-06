@@ -32,6 +32,7 @@ using mc__::Block;
 #include <iostream>
 #include <iomanip>
 using std::cerr;
+using std::cout;
 using std::endl;
 using std::hex;
 using std::dec;
@@ -72,6 +73,10 @@ bool MapChunk::addChunk( Chunk *chunk)
         }
     }
     bool updateNeighbors=false;
+    
+    //DEBUG
+    cout << "addChunk " << chunk->X << "," << (int)chunk->Y << ","
+        << chunk->Z << endl;
     
     //References to chunk data structures
     uint8_t in_x = (chunk->X & 0x0F);

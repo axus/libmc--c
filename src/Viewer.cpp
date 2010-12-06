@@ -147,10 +147,6 @@ bool Viewer::init(const std::string &filename)
     glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
         ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
         ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-/*    gluBuild2DMipmaps( GL_TEXTURE_2D, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-*/
 
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
@@ -473,7 +469,9 @@ void Viewer::drawBlock( const mc__::Block& block,
 
 using mc__::chunkSet_t;
 
+/*
 //Draw the minichunks in mc__::World
+//  DEBUGGING ONLY!
 void Viewer::drawChunks( const World& world)
 {
     //Reference to world mini-chunks data structure
@@ -522,6 +520,7 @@ void Viewer::drawChunks( const World& world)
         }}}
     }
 }
+*/
 
 //Create gl list for mapchunk, if needed
 void Viewer::drawMapChunk(MapChunk* mapchunk)
@@ -578,15 +577,20 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
 
         //chunk vars
         GLint X, Y, Z;
-        uint8_t vflags;
         indexList_t& visibleIndices = myChunk.visibleIndices;
         indexList_t::const_iterator iter;
 
         glEnd();    //Halt the drawing in progress
 
+        //Calculate facemask to apply to visflags
+        // WORK IN PROGRESS
+        GLint view_X = (int)cam_X >> 4;
+        GLint view_Y = (int)cam_Y >> 4;
+        GLint view_Z = (int)cam_Z >> 4;
+        
         //Start the GL_COMPILING! Don't execute.
         glNewList(gl_list, GL_COMPILE);
-
+        
         //Draw the visible chunks
         for (iter = visibleIndices.begin(); iter != visibleIndices.end(); iter++)
         {
@@ -596,12 +600,21 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
             X = myChunk.X + (index >> 11);
             Y = myChunk.Y + (index & 0x7F);
             Z = myChunk.Z + ((index >> 7) & 0xF);
-            vflags = myChunk.visflags[index];
-            drawBlock( myChunk.block_array[index], X, Y, Z, vflags);
+            
+            //Base visibility flags
+            uint8_t vflags = myChunk.visflags[index];
+            
+            //Mark faces player cannot see as invisible
+            uint8_t pvflags = 0;
+            pvflags |= (X < view_X ? 0x80 : (X > view_X ? 0x40 : 0x00));
+            pvflags |= (Y < view_Y ? 0x20 : (Y > view_Y ? 0x10 : 0x00));
+            pvflags |= (Z < view_Z ? 0x08 : (Z > view_Z ? 0x04 : 0x00));
+            
+            drawBlock( myChunk.block_array[index], X, Y, Z, pvflags | vflags );
         }
-        
         //End the list
         glEndList();
+        
         glBegin(GL_QUADS);  //Proceed.
 
         //Finished drawing chunk, no longer "updated"

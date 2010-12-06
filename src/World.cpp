@@ -251,8 +251,8 @@ bool World::updateMapChunks(bool cleanup)
             //Add chunk to map (uncompresses if needed)
             if (addMapChunk(chunk)) {
               //DEBUG
-              cout << "Updated chunk to map @ X=" << chunk->X
-                << " Y=" << (int)chunk->Y << "Z=" << chunk->Z << endl;
+              cout << "Updated chunk to map @ " << chunk->X
+                << "," << (int)chunk->Y << "," << chunk->Z << endl;
             } else {
                 cerr << "Error updating chunk to map @ X=" << chunk->X
                 << " Y=" << (int)chunk->Y << "Z=" << chunk->Z << endl;
@@ -316,9 +316,9 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
 }
 
 //Generate a flat chunk and insert to MapChunks
-bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
+bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
     
-    const uint8_t size_X=16, size_Y=2, size_Z=16;
+    const uint8_t size_X=16, size_Y=height, size_Z=16;
     
     //Align grass to MapChunk grid
     int32_t chunkX = X & 0xFFFFFFF0;
@@ -339,11 +339,16 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z) {
     //Assign blocks from bottom right to top right.
     for (index=0; index < flatChunk->array_length; index++ ) {
 
-        //Alternate between dirt and grass
-        if (index&1) {
-            firstBlockArray[index].blockID = 2; //Grass
-        } else {
+        //Bedrock, stone, dirt, or grass
+        uint8_t gen_y = (index & ((1<<7)-1) );
+        if (gen_y < 2) {
+            firstBlockArray[index].blockID = 7; //Bedrock
+        } else if (gen_y < height - 4) {
+            firstBlockArray[index].blockID = 1; //Stone
+        } else if (gen_y < height - 1) {
             firstBlockArray[index].blockID = 3; //Dirt
+        } else {
+            firstBlockArray[index].blockID = 2; //Grass
         }
     }
 

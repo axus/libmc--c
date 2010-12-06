@@ -52,6 +52,7 @@ namespace mc__ {
             mc__::MapChunk *neighbors[4]; //Adjacent mapchunks to A, B, E, F
             
             //8 bits: [ A | B | C | D | E | F | invisible | self ] (1=opaque)
+            // IF A BIT IS SET, THAT FACE IS NOT DRAWN
             uint8_t visflags[mapChunkBlockMax];
             
             //Ordered list of block indices to draw

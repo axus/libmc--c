@@ -19,34 +19,45 @@
     <http://www.gnu.org/licenses/>.
 */
 
+//mc--
 #include "Events.hpp"
+using mc__::Events;
 
 //C
 //#include <cstring>
 
 //STL
-using std::list;
+//using std::deque;
 
-//mc--
-using mc__::Events;
 
+//Constructor
+Events::Events(): isEmpty(true)
+{
+}
 
 //Add events
 void Events::put(type_t t, const void *d)
 {
     Event_t event = { t, d};
     myQueue.push_back( event );
+    isEmpty = false;
 }
 
 //Pop the next event off the list, return false if not found
 bool Events::get(Event_t& result) {
     
     if (myQueue.empty()) {
+        isEmpty = true;
         return false;
     }
     
     result = myQueue.back();
     myQueue.pop_back();
-    
+
+    if (myQueue.empty()) {
+        isEmpty = true;
+        return false;
+    }
+
     return true;
 }

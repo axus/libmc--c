@@ -163,7 +163,7 @@ bool UserInterface::actions()
     
     //Process all events
     Events::Event_t event;
-    while ( events.get(event) ) {
+    while ( !events.isEmpty && events.get(event) ) {
         switch( event.type ) {
             case Events::GAME_CHAT_MESSAGE:
                 //TODO: draw chat message to screen
@@ -180,10 +180,10 @@ bool UserInterface::actions()
         }
     }
     
+      /*
     //Create some acknowledgement if chunk received?
     if (chunk_received) {
       
-      /*
         //Allocate event data, remember to delete it after receiving it
         Events::dataLook *data = new Events::dataLook;
         
@@ -192,8 +192,8 @@ bool UserInterface::actions()
         data->animation = player.animation;
 
         events.put(Events::ACTION_LOOK, NULL);
-      */
     }
+      */
   
     return running;
 }
@@ -249,7 +249,10 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             
             //DEBUG
             if (Event.Key.Code == sf::Key::Quote) {
-                App.SetCursorPosition( center_X, center_Y);
+                //App.SetCursorPosition( center_X, center_Y);
+                cout << "Cam @ " << viewer.cam_X << "," << viewer.cam_Y
+                    << "," << viewer.cam_Y << " Player @ " << player.abs_X
+                    << "," << player.abs_Y << "," << player.abs_Z << endl;
             }
             break;
             

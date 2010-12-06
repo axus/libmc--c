@@ -26,15 +26,17 @@ BBIN=$(addprefix $(BUILD)/, $(BIN))
 
 # Debug, or optimize
 ifeq ($(DEBUG),on)
-  CFLAGS=-Wall -g -DDEBUG
+  CFLAGS=-Wall -O2 -g -pg -DDEBUG
 else
   # All warnings, optimization level 3
   CFLAGS=-Wall -O3
 endif
 
+#
+.PHONY: rebuild
 
 # Default target of make is "all"
-.all: all      
+.all: all
 all: $(BBIN) $(LIBBIN)
 
 # Build object files with chosen options
@@ -45,6 +47,11 @@ $(BUILD)/%.o: $(SRCDIR)/%.cpp $(SRCDIR)/%.hpp
 $(BBIN): $(OBJ)
 	ar r $@ $^
 	ranlib $@
+
+#Build again, don't care why
+rebuild: $(OBJ)
+	ar r $(BBIN) $^
+	ranlib $(BBIN)
 
 #Create install directories if needed
 $(INSTALL_LIB): 

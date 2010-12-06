@@ -154,11 +154,12 @@ namespace mc__ {
             
             //Relate world mapchunks to GL lists
             mapChunkUintMap_t glListMap;
+            mapChunkUintMap_t glListMapOccluded;
             
             //GL display lists of display lists that player can see
             GLuint glListPlayer;
             
-            //GL display lists of display lists that camera could see
+            //GL display lists of display lists that player cannot see
             GLuint glListCamera;
             
             //Init functions

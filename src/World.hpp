@@ -71,7 +71,7 @@ namespace mc__ {
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);
             
             //Generate chunk 16x2x16 containing grass over dirt
-            bool genFlatGrass(int32_t X, int8_t Y, int32_t Z);
+            bool genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height);
 
             //Generate a tree with bottom at X,Y,Z
             //  optional: dimensions size_X, size_Y, size_Z

@@ -52,34 +52,36 @@ void debugKey(const World& world, int32_t X, int8_t Y, int32_t Z)
 void genWorld(World& world)
 {
     
-    if (!world.genFlatGrass(0, 0, 0)) {
-        cout << "Error: genFlatGrass ";
-        debugKey(world, 0,0,0);
-    }
+    
+    //Create a square mile of solid terrain
+    int32_t gen_X, gen_Z;
+    for (gen_X = -160; gen_X <= 160; gen_X += 16) {
+    for (gen_Z = -160; gen_Z <= 160; gen_Z += 16) {
+        //Generate 16x16 terrain at X,0,Z, height of 64
+        if (!world.genFlatGrass(gen_X, 0, gen_Z, 64)) {
+            cout << "Error: genFlatGrass ";
+            debugKey(world, 0,0,16);
+        }
+    }}
 
-    if (!world.genChunkTest(0, 2, 0)) {
+    //Draw all block IDs
+    if (!world.genChunkTest(0, 64, 0)) {
         cout << "Error: genChunkTest ";
-        debugKey(world, 0,2,0);
+        debugKey(world, 0,64,0);
+    }
+    if (!world.genChunkTest(0, 65, 31)) {
+        cout << "Error: genChunkTest ";
+        debugKey(world, 0,65,31);
     }
     
     //Grow some trees
-    if (!world.genTree(11, 2, 5)) {
+    if (!world.genTree(11, 64, 5)) {
         cout << "Error: genTree ";
-        debugKey(world, 9, 2, 3);
+        debugKey(world, 9, 64, 3);
     }
-    if (!world.genTree(4, 2, 7, 3, 10, 3)) {
+    if (!world.genTree(4, 64, 7, 3, 10, 3)) {
         cout << "Error: genTree ";
-        debugKey(world, 3, 2, 6);
-    }
-    
-    //Create chunks behind the spawn
-    if (!world.genFlatGrass(0, 0, 16)) {
-        cout << "Error: genFlatGrass ";
-        debugKey(world, 0,0,16);
-    }
-    if (!world.genChunkTest(0, 3, 31)) {
-        cout << "Error: genChunkTest ";
-        debugKey(world, 0,3,31);
+        debugKey(world, 3, 64, 6);
     }
 
     mc__::Block block1 = {58, 0, 0};   //Workbench
@@ -94,7 +96,7 @@ void genWorld(World& world)
 
     //Move the world in these directions at start
     world.spawn_X = 8;
-    world.spawn_Y = 3;
+    world.spawn_Y = 64;
     world.spawn_Z = 16;
 
 }
@@ -139,6 +141,7 @@ int main(int argc, char** argv)
     //Run until user exits
     uint32_t frames=0;
     sf::Clock clock;
+    /*
     while (ui.run() && (!run_limit || (frames < max_frames) )) {
 
         //Sleep some to decrease CPU usage in between UI updates
@@ -147,14 +150,14 @@ int main(int argc, char** argv)
         
         //Reset clock before running UI and game logic
         clock.Reset();
-    }
+    }*/
     
-    /*
+    
     //faster running...
     while (ui.run()) {
         Sleep(10);   //100FPS
     }
-    */
+    
     
     //Sleep 5 seconds if run to max frames
     if (run_limit) {
