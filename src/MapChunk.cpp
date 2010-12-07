@@ -75,8 +75,8 @@ bool MapChunk::addChunk( Chunk *chunk)
     bool updateNeighbors=false;
     
     //DEBUG
-    cout << "addChunk " << chunk->X << "," << (int)chunk->Y << ","
-        << chunk->Z << endl;
+    //cout << "addChunk " << chunk->X << "," << (int)chunk->Y << ","
+    //    << chunk->Z << endl;
     
     //References to chunk data structures
     uint8_t in_x = (chunk->X & 0x0F);
@@ -210,6 +210,8 @@ bool MapChunk::updateVisFlags(uint8_t x_, uint8_t y_, uint8_t z_, bool opaque,
     uint8_t* D_flags;
     uint8_t* E_flags;
     uint8_t* F_flags;
+
+    //Adjacent block could be from this MapChunk, or neighbor, or NULL
 
     //Get flags pointers to adjacent block visflags
     //-X block face

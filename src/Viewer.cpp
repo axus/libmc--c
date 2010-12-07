@@ -571,23 +571,30 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
     //Compile GL list if needed (drawing to screen happens elsewhere)
     if (myChunk.flags & MapChunk::UPDATED) {
 
+        //Halt the drawing in progress
+        glEnd();    
+
         //DEBUG updates
-        cout << "MapChunk UPDATED flag: " << (int)myChunk.X << ","
-                << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
+        //cout << "MapChunk UPDATED flag: " << (int)myChunk.X << ","
+        //        << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
 
         //chunk vars
-        GLint X, Y, Z;
+        GLint X=myChunk.X>>4;   //chunk coord for far block face culling
+        GLint Y=64;
+        GLint Z=myChunk.Z>>4;   //chunk coord for far block face culling
         indexList_t& visibleIndices = myChunk.visibleIndices;
         indexList_t::const_iterator iter;
 
-        glEnd();    //Halt the drawing in progress
-
-        //Calculate facemask to apply to visflags
+        //Calculate facemask to apply to visflags, based on chunk X/Z
         // WORK IN PROGRESS
-        GLint view_X = (int)cam_X >> 4;
-        GLint view_Y = (int)cam_Y >> 4;
-        GLint view_Z = (int)cam_Z >> 4;
-        
+        GLint view_X = ((int)cam_X >> 8);
+        GLint view_Z = ((int)cam_Z >> 8);
+
+        //Mark faces player cannot see from their MapChunk as invisible
+        uint8_t pvflags = 0;
+        pvflags |= (X < view_X ? 0x80 : (X > view_X ? 0x40 : 0x00));
+        pvflags |= (Z < view_Z ? 0x08 : (Z > view_Z ? 0x04 : 0x00));
+                
         //Start the GL_COMPILING! Don't execute.
         glNewList(gl_list, GL_COMPILE);
         
@@ -604,12 +611,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
             //Base visibility flags
             uint8_t vflags = myChunk.visflags[index];
             
-            //Mark faces player cannot see as invisible
-            uint8_t pvflags = 0;
-            pvflags |= (X < view_X ? 0x80 : (X > view_X ? 0x40 : 0x00));
-            pvflags |= (Y < view_Y ? 0x20 : (Y > view_Y ? 0x10 : 0x00));
-            pvflags |= (Z < view_Z ? 0x08 : (Z > view_Z ? 0x04 : 0x00));
-            
+            //Draw the block (based on block type)
             drawBlock( myChunk.block_array[index], X, Y, Z, pvflags | vflags );
         }
         //End the list
@@ -664,6 +666,7 @@ void Viewer::startOpenGL() {
 
     //Enable texture mapping
     glEnable(GL_TEXTURE_2D);
+    glEnable(GL_CULL_FACE); glCullFace(GL_BACK);
     
     //Transparency in textures
     glEnable(GL_ALPHA_TEST);

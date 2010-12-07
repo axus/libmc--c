@@ -362,6 +362,39 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
     return result;
 }
 
+//Generate brick of block ID @ x,y,z size_X*size_Y*size_Z
+bool World::genWall(int32_t X, int8_t Y, int32_t Z,
+    int32_t size_X, int8_t size_Y, int32_t size_Z, uint8_t ID)
+{
+    //Allocate mini-chunk
+    Chunk *brickChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, X, Y, Z);
+    
+    //Point at array of blocks
+    Block *&blockArray = brickChunk->block_array;
+
+    //Index variables
+    size_t index=0;
+
+    //When indexing block in chunk array,
+    //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
+
+    //Assign blocks from bottom right to top right.
+    for (index=0; index < brickChunk->array_length; index++ ) {
+        //All one type
+        blockArray[index].blockID = ID;
+    }
+
+    //Pack blocks in chunk and zip
+    brickChunk->packBlocks();
+    brickChunk->zip();
+
+    //Map (X | Z | Y) -> Chunk*
+    bool result=addMapChunk(brickChunk );   //TODO: split it up!
+    
+    return result;
+}
+
+
 //Generate a leafy tree with base at (X,Y,Z), chunk origin will be different
 bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     uint8_t size_X, uint8_t size_Y, uint8_t size_Z, uint8_t leavesID)

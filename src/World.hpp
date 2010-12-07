@@ -74,6 +74,10 @@ namespace mc__ {
             //Generate chunk 16x13x1 containing block ID 0 - 96
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);
             
+            //Generate brick of block ID @ x,y,z size_X*size_Y*size_Z
+            bool genWall(int32_t X, int8_t Y, int32_t Z,
+                int32_t size_X, int8_t size_Y, int32_t size_Z, uint8_t ID);
+            
             //Generate chunk 16x2x16 containing grass over dirt
             bool genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height);
 
