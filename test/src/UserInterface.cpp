@@ -331,13 +331,13 @@ bool UserInterface::handleMouse()
     if (mouse_press[sf::Mouse::Middle]) {
 
         //Step camera to side for mouse-X motion
-        int diff_Z = mouse_X - mouse_press_X[sf::Mouse::Middle];
+        int diff_Z = mouse_Y - mouse_press_Y[sf::Mouse::Middle];
         
         if (diff_Z != 0) {
             viewer.move(0 , 0, diff_Z);
 
             //Save new mouse position
-            mouse_press_X[sf::Mouse::Middle] = mouse_X;
+            //mouse_press_X[sf::Mouse::Middle] = mouse_X;
             mouse_press_Y[sf::Mouse::Middle] = mouse_Y;
         }
     }

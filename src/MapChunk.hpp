@@ -49,7 +49,7 @@ namespace mc__ {
             bool addChunk( mc__::Chunk *update);
             
             //Neighbors
-            mc__::MapChunk *neighbors[4]; //Adjacent mapchunks to A, B, E, F
+            mc__::MapChunk *neighbors[6]; //Adjacent mapchunks to A, B, C, D, E, F
             
             //8 bits: [ A | B | C | D | E | F | invisible | self ] (1=opaque)
             // IF A BIT IS SET, THAT FACE IS NOT DRAWN
@@ -62,9 +62,8 @@ namespace mc__ {
             enum FLAGS { INVISIBLE=0x1, UPDATED=0x2};
             uint32_t flags;
         protected:
-            bool updateVisFlags(uint8_t x, uint8_t y, uint8_t z, bool opaque,
-            bool adjA, bool adjB, bool adjE, bool adjF,
-            indexList_t& changes);
+            bool updateVisFlags( uint16_t i, bool adj[6], indexList_t& changes);
+
     };
 }
 

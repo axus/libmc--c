@@ -27,6 +27,7 @@ using mc__::Block;
 
 //C
 #include <cstring>  //memset
+#include <assert.h>
 
 //STL
 #include <iostream>
@@ -46,6 +47,8 @@ MapChunk::MapChunk( int32_t X, int32_t Z):
     neighbors[1] = NULL;
     neighbors[2] = NULL;
     neighbors[3] = NULL;
+    neighbors[4] = NULL;
+    neighbors[5] = NULL;
     
     //Default everything invisible and unblocked
     memset( visflags, 0x2, mapChunkBlockMax);
@@ -93,7 +96,7 @@ bool MapChunk::addChunk( Chunk *chunk)
     }
     
     //Track adjacency to neighbor MapChunk
-    bool adjA=false, adjB=false, adjE=false, adjF=false;
+    bool adj_N[6] = { false, false, false, false, false, false};      //A, B, C, D, E, F
     
     uint16_t x_, y_, z_;             //internal chunk offsets
     uint16_t index;                 //internal chunk index
@@ -102,46 +105,43 @@ bool MapChunk::addChunk( Chunk *chunk)
     //Track changed blocks
     indexList_t changes;
     
-    
     // 3D range: x_ to max_x, z_ to max_z, y_ to max_y
     //For X...
     for (x_ = in_x; x_ <= max_x; x_++) {
         //Check X neighbor chunk adjacency
-        if (x_ == 0) { adjA=true; adjB=false; }
-        else if (x_ < 15) { adjA=false; }
-        else { adjB=true; }
+        if (x_ == 0) { adj_N[0]=true; adj_N[1]=false; }
+        else if (x_ < 15) { adj_N[0]=false; }
+        else { adj_N[1]=true; }
             
     //For X,Z...
     for(z_ = in_z; z_ <= max_z; z_++) {
         //Check Z neighbor chunk adjacency
-        if (z_ == 0) { adjE=true; adjF=false;}
-        else if (z_ < 15) { adjE=false; }
-        else { adjF=true; }
+        if (z_ == 0) { adj_N[4]=true; adj_N[5]=false;}
+        else if (z_ < 15) { adj_N[4]=false; }
+        else { adj_N[5]=true; }
         
     //For X,Y,Z
+    adj_N[2] = false;
+    adj_N[3] = false;
     for(y_ = in_y; y_ <= max_y; y_++, c_index++) {
         index = (x_<<11)|(z_<<7)|y_;
         
         //Copy the block
         Block& block=chunk->block_array[c_index];
         block_array[index] = block;
-        
-        //Update visibility flags (for building visible set later)
-        bool opaque = Chunk::isOpaque[block.blockID];
-        
-        //Air is invisible        
-        if (block.blockID == 0) {
-            visflags[index] |= 0x2;
-        } else {
-            //Everything else is visible
-            visflags[index] &= ~0x2;
+
+        //Determine Y-adjacency (to mapchunks that don't exist!)
+        switch (y_) {
+            case 0: adj_N[2] = true; adj_N[3] = false; break;
+            case 1: adj_N[2] = false; break;
+            case 127: adj_N[3] = true; break;
+            default: adj_N[2] = false; adj_N[3] = false;
         }
-        
+                
         //Update visflags, get list of updated block indices
-        if (updateVisFlags(x_,y_,z_,opaque, adjA, adjB, adjE, adjF, changes)) {
+        if (updateVisFlags(index, adj_N, changes)) {
             updateNeighbors=true;
         }
-
     }}}
 
     //Check updated blocks for visibility, update visibleIndices
@@ -169,11 +169,11 @@ bool MapChunk::addChunk( Chunk *chunk)
         if (neighbors[1] != NULL) {
             neighbors[1]->flags |= MapChunk::UPDATED;
         }
-        if (neighbors[2] != NULL) {
-            neighbors[2]->flags |= MapChunk::UPDATED;
+        if (neighbors[4] != NULL) {
+            neighbors[4]->flags |= MapChunk::UPDATED;
         }
-        if (neighbors[3] != NULL) {
-            neighbors[3]->flags |= MapChunk::UPDATED;
+        if (neighbors[5] != NULL) {
+            neighbors[5]->flags |= MapChunk::UPDATED;
         }
     }
     
@@ -182,156 +182,152 @@ bool MapChunk::addChunk( Chunk *chunk)
 
 //update local and neighbor visflags array for opacity at x,y,z
 //Return true if changes were made to neighbor outside of MapChunk
-bool MapChunk::updateVisFlags(uint8_t x_, uint8_t y_, uint8_t z_, bool opaque,
-    bool adjA, bool adjB, bool adjE, bool adjF,
-    indexList_t& changes)
+bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
+                                indexList_t& changes)
 {
     bool result=false;
-  
-    //Local index
-    const uint16_t index = (( (uint16_t)x_<<11)|( (uint16_t)z_<<7)| y_);
-    
-    //Adjacent block indices
-    uint16_t indexA = index - (1<<11);  //X-1
-    uint16_t indexB = index + (1<<11);  //X+1
-    uint16_t indexC = index - 1;        //Y-1
-    uint16_t indexD = index + 1;        //Y+1
-    uint16_t indexE = index - (1<<7);   //Z-1
-    uint16_t indexF = index + (1<<7);   //Z+1
-    uint16_t n_index;
 
-    //Copy visflags
+    //Copy my block info
+    uint8_t blockID = block_array[index].blockID;
     uint8_t my_flags = visflags[index];
     
-    //Adjacent flags
-    uint8_t* A_flags;
-    uint8_t* B_flags;
-    uint8_t* C_flags;
-    uint8_t* D_flags;
-    uint8_t* E_flags;
-    uint8_t* F_flags;
+    //Determine opacity and cubicity from blockID
+    bool opaque = Chunk::isOpaque[blockID];
+    bool cube = Chunk::isCube[blockID];
 
-    //Adjacent block could be from this MapChunk, or neighbor, or NULL
+    //Air is invisible
+    if (blockID == 0) {
+        my_flags = 0x2;
+    } else {
+        //Everything else is visible
+        my_flags &= ~0x2;
+    }
+     
+    //Block index of adjacent block
+    uint16_t index_n=0;
+    
+    //adjacent visibility flags (pointer and copy)
+    uint8_t *flags_p;
+    uint8_t flags_v;
+    
+    //Block ID of adjacent block
+    uint8_t blockid_n;
+    
+    //Visibility flags mask for me and neighbors
+    uint8_t thisMask, neighborMask;
 
-    //Get flags pointers to adjacent block visflags
-    //-X block face
-    if (!adjA) {
-        A_flags = visflags + indexA;
-        changes.insert(indexA);
-    } else if ( neighbors[0] != NULL) {
-        n_index = (y_|(z_<<7)|(0xF<<11));
-        A_flags = neighbors[0]->visflags + n_index;
-    } else {
-        A_flags = NULL;
-    }
-    if (A_flags == NULL || (*A_flags & 1)) {
-        my_flags |= 0x80;   //A is blocked
-    } else {
-        my_flags &= ~0x80;   //A is unblocked
-    }
+    //Update flags for each adjacent block
+    for (int i = 0; i < 6; i++) {
+        //Calculate hard to predict values from face index
+        switch (i) {
+            case 0:  //X-1
+                neighborMask = 0x40;
+                index_n = index - (1<<11);
+                break;
+            case 1:  //X+1
+                neighborMask = 0x80;
+                index_n = index + (1<<11);
+                break;
+            case 2:        //Y-1
+                neighborMask = 0x10;
+                index_n = index - 1;
+                break;
+            case 3:   //Y+1
+                neighborMask = 0x20;
+                index_n = index + 1;
+                break;
+            case 4:   //Z-1
+                neighborMask = 0x04;
+                index_n = index - (1<<7);
+                break;
+            case 5:   //Z+1
+                neighborMask = 0x08;
+                index_n = index + (1<<7);
+                break;
+            default:  //me
+                neighborMask = 0x01;
+                index_n = index;
+        }
+        index_n = index_n % uint16_t(1<<15);
+        //assert( index_n < 32768);
 
-    //+X block face
-    if (!adjB) {
-        B_flags = visflags + indexB;
-        changes.insert(indexB);
-    } else if ( neighbors[1] != NULL) {
-        n_index = (y_|(z_<<7));
-        B_flags = neighbors[1]->visflags + n_index;
-    } else {
-        B_flags = NULL;
-    }
-    if (B_flags == NULL || (*B_flags & 1)) {
-        my_flags |= 0x40;   //B is blocked
-    } else {
-        my_flags &= ~0x40;   //B is unblocked
-    }
-
-    //-Y block face
-    if (y_ > 0) {
-        C_flags = visflags + indexC;
-        changes.insert(indexC);
-    } else {
-        C_flags = NULL;
-    }
-    if (C_flags == NULL || (*C_flags & 1)) {
-        my_flags |= 0x20;   //C is blocked
-    } else {
-        my_flags &= ~0x20;   //C is unblocked
-    }
-
-    //+Y block face
-    if (y_ < 127) {
-        D_flags = visflags + indexD;
-        changes.insert(indexD);
-    } else {
-        D_flags = NULL;
-    }
-    if (D_flags == NULL || (*D_flags & 1)) {
-        my_flags |= 0x10;   //D is blocked
-    } else {
-        my_flags &= ~0x10;   //D is unblocked
-    }
-
-    //-Z block face
-    if (!adjE) {
-        E_flags = visflags + indexE;
-        changes.insert(indexE);
-    } else if ( neighbors[2] != NULL) {
-        n_index = (y_|(0xF<<7)|(x_<<11));
-        E_flags = neighbors[2]->visflags + n_index;
-    } else {
-        E_flags = NULL;
-    }
-    if (E_flags == NULL || (*E_flags & 1)) {
-        my_flags |= 0x08;   //E is blocked
-    } else {
-        my_flags &= ~0x08;   //E is unblocked
-    }
-
-    //+Z block face
-    if (!adjF) {
-        F_flags = visflags + indexF;
-        changes.insert(indexF);
+        //Copy from this MapChunk, or neighbor, or NULL
+        MapChunk *neighbor = neighbors[i];
+        if (!adj_N[i]) {
+            //Index inside this MapChunk
+            flags_p = &(visflags[index_n]);
+            flags_v = *flags_p;
+            blockid_n = block_array[index_n].blockID;
+        } else if ( neighbor != NULL) {
+            //Index inside neighbor
+            flags_p = &(neighbor->visflags[index_n]);
+            flags_v = *flags_p;
+            blockid_n = neighbor->block_array[index_n].blockID;
+        } else {
+            //Index inside unloaded MapChunk
+            flags_p = NULL;
+            flags_v = 0xFD;
+            blockid_n = 1;
+        }
         
-    } else if ( neighbors[3] != NULL) {
-        n_index = (y_|(x_<<11));
-        F_flags = neighbors[3]->visflags + n_index;
+        //vismask for this face depends on which face
+        thisMask = (0x80 >> i);
         
-    } else {
-        F_flags = NULL;
-    }
-    if (F_flags == NULL || (*F_flags & 1)) {
-        my_flags |= 0x04;   //F is blocked
-    } else {
-        my_flags &= ~0x04;   //F is unblocked
+        //Get neigbhor opacity/cubity        
+        bool n_opaque = Chunk::isOpaque[blockid_n];
+        bool n_cube = Chunk::isCube[blockid_n];
+
+        //My default flags depend on if neighbor is opaque        
+        if (n_opaque) {
+            my_flags |= thisMask;
+        } else {
+            my_flags &= ~thisMask;
+        }
+        
+        //Update neighbor face and my face depending on combination
+        if (opaque) {
+            //I am opaque...
+            flags_v |= neighborMask;            
+        } else if (cube) {
+            //I am translucent cube
+            if (!n_opaque && n_cube) {
+                //Neighbor is translucent cube
+                flags_v |= neighborMask;
+                my_flags |= thisMask;
+            } else if (!n_cube) {
+                //Neighbor is item
+                flags_v &= ~neighborMask;
+                my_flags &= ~thisMask;
+            } else {
+                //Neighbor is opaque
+                flags_v &= ~neighborMask;
+            }
+        } else {
+            //I am item
+            flags_v &= ~neighborMask;
+        }
+        
+        //Update neighbor block flags
+        if ((flags_p != NULL) && (flags_v != *flags_p)) {
+            *flags_p = flags_v;
+            
+            //Mark change
+            if (adj_N[i]) {
+                //Change outside this mapchunk
+                result=true;
+            } else {
+                //Change inside this mapchunk
+                changes.insert(index_n);
+            }
+        }
     }
 
-    //Set neighbor block flags
-    if (opaque) {
-        my_flags |= 1;
-        if (A_flags) { *A_flags |= 0x40; }
-        if (B_flags) { *B_flags |= 0x80; }
-        if (C_flags) { *C_flags |= 0x10; }
-        if (D_flags) { *D_flags |= 0x20; }
-        if (E_flags) { *E_flags |= 0x04; }
-        if (F_flags) { *F_flags |= 0x08; }
-    } else {
-        my_flags &= ~1;
-        if (A_flags) { *A_flags &= ~0x40; }
-        if (B_flags) { *B_flags &= ~0x80; }
-        if (C_flags) { *C_flags &= ~0x10; }
-        if (D_flags) { *D_flags &= ~0x20; }
-        if (E_flags) { *E_flags &= ~0x04; }
-        if (F_flags) { *F_flags &= ~0x08; }
-    }
-
-    //Insert myself into changes if I changed
-    if (my_flags != visflags[index]) {
+    //Mark change if I changed
+    if (my_flags != visflags[index] ) {
         changes.insert(index);
         visflags[index] = my_flags;
     }
 
-    result=true;    //TODO: true only if external neighbor changed
     return result;
 }
 

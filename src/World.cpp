@@ -208,8 +208,8 @@ bool World::addMapChunk( Chunk* chunk)
         if (iter != coordMapChunks.end()) {
             //Double-link neighbors
             neighbor = iter->second;
-            mapchunk->neighbors[2] = neighbor;
-            neighbor->neighbors[3] = mapchunk;
+            mapchunk->neighbors[4] = neighbor;
+            neighbor->neighbors[5] = mapchunk;
         }
 
         //Check neighbor F (+Z)
@@ -217,8 +217,8 @@ bool World::addMapChunk( Chunk* chunk)
         if (iter != coordMapChunks.end()) {
             //Double-link neighbors
             neighbor = iter->second;
-            mapchunk->neighbors[3] = neighbor;
-            neighbor->neighbors[2] = mapchunk;
+            mapchunk->neighbors[5] = neighbor;
+            neighbor->neighbors[4] = mapchunk;
         }
 
     } else {

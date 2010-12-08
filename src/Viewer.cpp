@@ -403,6 +403,8 @@ void Viewer::drawCube( uint8_t blockID,
 void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 {
 
+    //TODO: quad always faces player somehow
+
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
 
@@ -426,6 +428,12 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
     glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
     glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
 
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+
     tx_0 = blockInfo[blockID].tx[EAST];
     tx_1 = blockInfo[blockID].tx[EAST] + tmr;
     ty_0 = blockInfo[blockID].ty[EAST] + tmr;    //flip y
@@ -434,6 +442,13 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
     glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
     glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
     glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left:    HDF
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left:  HCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left:    HDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
+
 }
 
 //Draw a placed mc__::Block in openGL

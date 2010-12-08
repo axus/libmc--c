@@ -154,6 +154,7 @@ namespace mc__ {
             //Useful block info
             static const uint8_t maxBlockID=96;
             static const bool isOpaque[];
+            static const bool isCube[]; //item = !cube
     };
 }
 
