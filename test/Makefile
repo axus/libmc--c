@@ -7,8 +7,8 @@ LIBS        = -L$(HOME)/lib -lnet-- -lwsock32 -lmc--c -lopengl32 -lglu32 -lDevIL
 
 INCLUDES    = -I$(HOME)/include
 LOGFILES    = network.log
-DEBUG       = on
-MOREFLAGS   = -std=c++0x
+###DEBUG       = on
+MOREFLAGS   = -std=c++0x -fno-rtti
 
 #Where to install or uninstall
 INSTALL_BIN = $(HOME)/bin

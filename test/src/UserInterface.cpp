@@ -47,19 +47,26 @@ using mc__::Viewer;
 using mc__::Player;
 using mc__::UserInterface;
 
+//UI settings
+const unsigned short UI_width=860;      //Pixel width
+const unsigned short UI_height=480;     //Pixel height
+const unsigned char UI_bpp=32;          //Bits per pixel
+const float UI_mouse_sensitivity=2.8;   //Mouselook sensitivity, high is slower
+
 //Constructor
 UserInterface::UserInterface(
         const string& name, World& w, Player& p, Events& ev, bool dbg):
 
     //initialize objects here
     texture_map_filename("terrain.png"),    //block textures
-    mouseSensitivity(2.8),                  //Mouselook factor, higher is slower
-    Settings(32, 0, 0),                     //0 stencil, 0 anti-aliasing
-    App(sf::VideoMode(800, 600, 32),        //800x600, 32-bit color window
-        name, sf::Style::Close, Settings),
+    mouseSensitivity(UI_mouse_sensitivity), //Mouselook sensitivity
+    Settings(UI_bpp, 0, 0),                 //32bpp, 0 stencil, 0 anti-aliasing
+    App(sf::VideoMode(UI_width, UI_height, UI_bpp), 
+        name, sf::Style::Close, Settings),  //860x480, 32-bit color window
+    viewer(UI_width, UI_height),
     world(w), player(p), events(ev), debugging(dbg),
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
-    center_X(800/2), center_Y(600/2),       //Center in middle of window
+    center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window
     keys_typed(0)                           //Empty keypress buffer
 {
 
@@ -110,7 +117,7 @@ UserInterface::~UserInterface()
 //Handle game and SFML events, draw game
 bool UserInterface::run()
 {
-    bool Running=true;
+    bool Running=true, inputs=false;
 
     //Handle events set by game
     Running = actions();
@@ -125,6 +132,7 @@ bool UserInterface::run()
             //Stop running when Esc is pressed
             Running = false;
         }
+        inputs=true;
     }
     
     //Handle mouselook toggle
@@ -139,11 +147,11 @@ bool UserInterface::run()
         toggle_mouselook=false;
     }
     
-    //Handle keyboard state
+    //Handle keyboard state (they might be pressed down)
     if (!handleKeys()) { Running = false; }
 
-    //Handle mouse position changes
-    handleMouse();
+    //Handle mouse position changes (if there were inputs)
+    if (inputs && handleMouse()) {;}
 
     //Redraw the world       
     viewer.drawWorld(world);

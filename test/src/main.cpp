@@ -63,7 +63,6 @@ void genWorld(World& world)
     
     //Free memory used by block, because it's copied
     delete chunk1;
-
     
     //Create a square mile of solid terrain
     int32_t gen_X, gen_Z;
