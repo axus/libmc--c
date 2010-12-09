@@ -69,7 +69,7 @@ namespace mc__ {
             bool updateMapChunks(bool cleanup=true);
 
             //Add one mini-chunk to the map
-            bool addMapChunk( mc__::Chunk *chunk);
+            bool addMapChunk( const mc__::Chunk *chunk);
             
             //Generate chunk 16x13x1 containing block ID 0 - 96
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);

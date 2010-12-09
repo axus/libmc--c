@@ -22,13 +22,6 @@
 #ifndef MC__CHUNK_H
 #define MC__CHUNK_H
 
-//Compiler specific options
-#ifdef _MSC_VER
-    #include "ms_stdint.h"
-#else
-    #include <stdint.h>
-#endif
-
 /*
     //Block IDs and associated metadata
     Decimal     Hex       Name              Data        Range
@@ -58,8 +51,17 @@
     91          0x5B      Jack-O-Lantern
 */
 
+
+//Compiler specific options
+#ifdef _MSC_VER
+    #include "ms_stdint.h"
+#else
+    #include <stdint.h>
+#endif
+
 //STL
 #include <unordered_set>
+
 
 
 namespace mc__ {
@@ -113,6 +115,11 @@ namespace mc__ {
             
             //Allocate space for byte_array[byte_length]
             uint8_t* allocByteArray();
+            
+            //Free allocated memory
+            void deleteZip();
+            void deleteBlockArray();
+            void deleteByteArray();
 
             //Copy compressed data to chunk
             void copyZip( uint32_t length, uint8_t *data);

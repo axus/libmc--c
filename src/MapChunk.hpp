@@ -46,7 +46,7 @@ namespace mc__ {
             //~MapChunk();
 
             //Update with (mini)-chunk
-            bool addChunk( mc__::Chunk *update);
+            bool addChunk( const mc__::Chunk *update);
             
             //Neighbors
             mc__::MapChunk *neighbors[6]; //Adjacent mapchunks to A, B, C, D, E, F

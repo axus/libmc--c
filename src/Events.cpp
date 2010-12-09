@@ -23,13 +23,6 @@
 #include "Events.hpp"
 using mc__::Events;
 
-//C
-//#include <cstring>
-
-//STL
-//using std::deque;
-
-
 //Constructor
 Events::Events(): isEmpty(true)
 {

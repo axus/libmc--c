@@ -275,16 +275,14 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             
             //Handle button pressed
             switch( Event.MouseButton.Button ) {
-                case sf::Mouse::Left:
+                case sf::Mouse::Right:
+                    //Toggle mouselook
+                    toggle_mouselook=true;
                     break;
                 case sf::Mouse::XButton1:
                 case sf::Mouse::XButton2:
                     //Move camera back to player
                     resetCamera();
-                    break;
-                case sf::Mouse::Right:
-                    //Toggle mouselook
-                    toggle_mouselook=true;
                     break;
                 default:
                     break;
@@ -305,11 +303,6 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
             if (mouselooking) {
                 mouse_X += (Event.MouseMove.X - center_X);
                 mouse_Y += (Event.MouseMove.Y - center_Y);
-                /*
-                cerr << "X=" << Event.MouseMove.X << "Y=" << Event.MouseMove.Y
-                    << ", mouseX=" << mouse_X << ", mouseY=" << mouse_Y
-                    << ", lastX=" << last_X << ", lastY=" << last_Y << endl;
-                */
             } else {
                 mouse_X = Event.MouseMove.X;
                 mouse_Y = Event.MouseMove.Y;
@@ -327,38 +320,57 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
 //Change viewer based on total mouse movements
 bool UserInterface::handleMouse()
 {
+    static int diff_X, diff_Y, diff_Z;
+    bool moved=false;
+    
+    diff_X=0; diff_Y=0; diff_Z=0;
+  
     //Translate camera in Z if moved while holding middle button
     if (mouse_press[sf::Mouse::Middle]) {
 
-        //Step camera to side for mouse-X motion
-        int diff_Z = mouse_Y - mouse_press_Y[sf::Mouse::Middle];
+        //Step camera to side for mouse-Y motion
+        diff_Z = mouse_press_Y[sf::Mouse::Middle] - mouse_Y;
         
         if (diff_Z != 0) {
-            viewer.move(0 , 0, diff_Z);
+            //viewer.move(0 , 0, diff_Z);
+            moved=true;
 
             //Save new mouse position
-            //mouse_press_X[sf::Mouse::Middle] = mouse_X;
             mouse_press_Y[sf::Mouse::Middle] = mouse_Y;
         }
+
+        //Step camera to side for mouse-X motion
+        diff_X = mouse_X - mouse_press_X[sf::Mouse::Middle];
+        
+        if (diff_X != 0) {
+            //viewer.move(diff_X , 0, 0);
+            moved=true;
+            
+            //Save new mouse position
+            mouse_press_X[sf::Mouse::Middle] = mouse_X;
+        }
+
     }
   
     //Translate camera in X or Y if moved while holding left button
     else if (mouse_press[sf::Mouse::Left]) {
 
         //Step camera to side for mouse-X motion
-        int diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
+        diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
         
         if (diff_X != 0) {
-            viewer.move(diff_X , 0, 0);
+            //viewer.move(diff_X , 0, 0);
+            moved=true;
             
             //Save new mouse position
             mouse_press_X[sf::Mouse::Left] = mouse_X;
         }
 
         //Step camera up for mouse-Y motion
-        int diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
+        diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
         if (diff_Y != 0) {
-            viewer.move(0, diff_Y ,0);
+            //viewer.move(0, diff_Y ,0);
+            moved=true;
             
             //Save new mouse position
             mouse_press_Y[sf::Mouse::Left] = mouse_Y;
@@ -369,19 +381,24 @@ bool UserInterface::handleMouse()
     {    //Don't mouselook if left mouse button is held
 
         //Use change in X position to rotate about Y-axis
-        int diff_X = mouse_X - last_X;
+        int look_X = mouse_X - last_X;
 
         //Turn left/right based on mouse sensitivity
-        if (diff_X != 0) {
-            viewer.turn( (float)diff_X/mouseSensitivity );
+        if (look_X != 0) {
+            viewer.turn( (float)look_X/mouseSensitivity );
         }
 
         //Tilt up/down based on mouse sensitivity
-        int diff_Y = mouse_Y - last_Y;
-        if (diff_Y != 0) {
-            viewer.tilt( (float)diff_Y/mouseSensitivity );
+        int look_Y = mouse_Y - last_Y;
+        if (look_Y != 0) {
+            viewer.tilt( (float)look_Y/mouseSensitivity );
         }
         
+    }
+    
+    //Move viewer if needed
+    if (moved) {
+        viewer.move(diff_X, diff_Y, diff_Z);
     }
     
     //Trap real mouse pointer in center of window if mouselooking

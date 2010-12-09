@@ -35,7 +35,6 @@ using mc__::Block;
 
 //using mc__::chunkIterator;
 
-
 //Create empty world
 World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0), debugging(false)
 {
@@ -52,8 +51,8 @@ World::~World()
         MapChunk* mc=iter_xz->second;
         if (mc != NULL) { delete mc; } else {
             cerr << "delete Null MapChunk" << endl;}
-            
     }
+    coordMapChunks.clear();
 
     //Delete all unused mini-chunks
     chunkSet_t::iterator iter_chunk;
@@ -64,7 +63,7 @@ World::~World()
         if ( chunk != NULL) { delete chunk; } else {
             cerr << "delete Null Chunk" << endl;}
     }
-    
+    chunkUpdates.clear();
 }
 
 //Add compressed chunk to list/map
@@ -160,7 +159,7 @@ mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
 }
 
 //Unzip/copy one mini-chunk to appropriate map chunk
-bool World::addMapChunk( Chunk* chunk)
+bool World::addMapChunk( const Chunk* chunk)
 {
     //Validate pointer
     if (chunk == NULL) {
@@ -248,6 +247,11 @@ bool World::updateMapChunks(bool cleanup)
             //Get the next chunk pointer
             Chunk* chunk = *iter_chunk;
             
+            //Unzip chunk if needed
+            if (! chunk->isUnzipped ) {
+                chunk->unzip();
+            }
+            
             //Add chunk to map (uncompresses if needed)
             if (addMapChunk(chunk)) {
               //DEBUG
@@ -307,8 +311,8 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     }
 
     //Pack blocks in chunk and zip
-    testChunk->packBlocks();
-    testChunk->zip();
+    //testChunk->packBlocks();
+    //testChunk->zip();
 
     bool result=addMapChunk(testChunk );
 
@@ -353,8 +357,8 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
     }
 
     //Pack blocks in chunk and zip
-    flatChunk->packBlocks();
-    flatChunk->zip();
+    //flatChunk->packBlocks();
+    //flatChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
     bool result=addMapChunk(flatChunk );
@@ -385,8 +389,8 @@ bool World::genWall(int32_t X, int8_t Y, int32_t Z,
     }
 
     //Pack blocks in chunk and zip
-    brickChunk->packBlocks();
-    brickChunk->zip();
+    //brickChunk->packBlocks();
+    //brickChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
     bool result=addMapChunk(brickChunk );   //TODO: split it up!
@@ -466,8 +470,8 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
     }
 
     //Pack blocks in chunk, and zip
-    treeChunk->packBlocks();
-    treeChunk->zip();
+    //treeChunk->packBlocks();
+    //treeChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
     bool result=addMapChunk(treeChunk );

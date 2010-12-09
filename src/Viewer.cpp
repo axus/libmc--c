@@ -91,6 +91,7 @@ using std::stringstream;
 
 const float Viewer::PI = std::atan(1.0)*4;
 
+
 //Library version info
 unsigned long mc__::getVersion() { return MC__VIEWER_VERSION; }
 
@@ -228,7 +229,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, aspectRatio, 1.f, drawDistance);
+    gluPerspective(60, aspectRatio, 0.01f, drawDistance);
     
     //Reload matrix mode
     glPushAttrib(GL_TRANSFORM_BIT);
@@ -237,7 +238,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
 //Resize far draw distance
 void Viewer::setDrawDistance( GLdouble d)
 {
-    gluPerspective(60, aspectRatio, 1.f, d);
+    gluPerspective(60, aspectRatio, 0.01f, d);
 }
 
 //Set glColor if needed by block type and face
@@ -971,6 +972,20 @@ bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename) const
     //Validate pointer
     if (chunk == NULL) { return false; }
     
+    //Zip if needed
+    if (chunk->zipped == NULL && chunk->block_array != NULL) {
+        cerr << "Zipped chunk before writing" << endl;
+        chunk->packBlocks();
+        chunk->zip();
+    }
+    
+    //Unzip if needed
+    if (chunk->byte_array == NULL && chunk->zipped != NULL) {
+        cerr << "Unzipped chunk before writing" << endl;
+        chunk->unzip();
+        chunk->unpackBlocks();
+    }
+    
     //Open binary file for output
     ofstream binFile(filename.c_str(), ios::out | ios::binary);
     uint8_t *bytes = chunk->byte_array;
@@ -1016,10 +1031,8 @@ bool Viewer::saveChunks(const mc__::World& world) const
         
         //Copy binary chunk data to file
         if (chunk != NULL) {
-            //Pack and unpack...
+            //Pack blocks to byte_array
             chunk->packBlocks();
-            chunk->unpackBlocks();
-            
             writeChunkBin( chunk, filename.str());
         } else {
             cerr << "Chunk not found @ "

@@ -38,7 +38,6 @@
 #include <GL/glu.h>
 #include <GL/glext.h>
 
-
 //DevIL
 #include <IL/il.h>
 #include <IL/ilu.h>

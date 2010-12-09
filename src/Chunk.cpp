@@ -191,7 +191,7 @@ void Chunk::setCoord(int32_t x, int8_t y, int32_t z)
 Block* Chunk::allocBlockArray()
 {
     //No leaks
-    if (block_array == NULL) { delete block_array; }
+    deleteBlockArray();
     
     //Assign array and clear to 0
     block_array = new Block[array_length];
@@ -199,26 +199,49 @@ Block* Chunk::allocBlockArray()
     return block_array;
 }
 
+//Free memory
+void Chunk::deleteBlockArray() {
+    if (block_array != NULL) {
+        delete block_array;
+        block_array = NULL;
+    }
+}
+
 //Allocate space for byte_array[byte_length]
 uint8_t* Chunk::allocByteArray()
 {
     //No leaks
-    if (byte_array == NULL) { delete byte_array; }
+    deleteByteArray();
 
     byte_array = new uint8_t[ byte_length];
     memset(byte_array, 0, byte_length);
     return byte_array;
 }
 
+//Free memory
+void Chunk::deleteByteArray() {
+    if (byte_array != NULL) {
+        delete byte_array;
+        byte_array = NULL;
+    }
+}
 
 //Allocate space for zipped data
 uint8_t* Chunk::allocZip( uint32_t size)
 {
-    if (zipped != NULL) { delete zipped; }
+    deleteZip();
     zipped_length = size;
     zipped = new uint8_t[zipped_length];
     
     return zipped;
+}
+
+//Free memory
+void Chunk::deleteZip() {
+    if (zipped != NULL) {
+        delete zipped;
+        zipped = NULL;
+    }
 }
 
 //Copy compressed data to chunk

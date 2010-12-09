@@ -22,6 +22,7 @@
 #ifndef MC__PLAYER
 #define MC__PLAYER
 
+
 //mc-- classes
 #include "Entity.hpp"
 #include "Chunk.hpp"
@@ -31,6 +32,7 @@ using mc__::Item;
 
 //STL
 #include <string>
+
 
 //Definition
 namespace mc__ {

@@ -20,7 +20,6 @@
 */
 
 #include "Player.hpp"
-
 using mc__::Player;
 
 using std::string;

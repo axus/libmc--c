@@ -55,7 +55,7 @@ MapChunk::MapChunk( int32_t X, int32_t Z):
 }
 
 //Add chunk, update visibility
-bool MapChunk::addChunk( Chunk *chunk)
+bool MapChunk::addChunk( const Chunk *chunk)
 {
     //Validate
     if (chunk == NULL) {
@@ -67,13 +67,9 @@ bool MapChunk::addChunk( Chunk *chunk)
         return false;
     }
     
-    //If chunk is still zipped...
-    if (! chunk->isUnzipped) {
-
-        //Unzip the chunk
-        if (!chunk->unzip()) {
-            return false;
-        }
+    //Can't add a chunk with NULL block_array
+    if (chunk->block_array == NULL) {
+        return false;
     }
     bool updateNeighbors=false;
     
