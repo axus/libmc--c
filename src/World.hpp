@@ -109,6 +109,10 @@ namespace mc__ {
         protected:
            //Will be deleted when World ends
             bool addChunkUpdate( Chunk *chunk);
+
+            mc__::Chunk* makeFlatGrass(uint8_t size_X, uint8_t size_Y,
+                uint8_t size_Z, int32_t x, int8_t y, int32_t z);
+
     };
 
 }

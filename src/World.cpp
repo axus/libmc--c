@@ -319,19 +319,15 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     return result;
 }
 
-//Generate a flat chunk and insert to MapChunks
-bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
-    
-    const uint8_t size_X=16, size_Y=height, size_Z=16;
-    
-    //Align grass to MapChunk grid
-    int32_t chunkX = X & 0xFFFFFFF0;
-    int32_t chunkZ = Z & 0xFFFFFFF0;
+//Create a new chunk of flatgrass
+Chunk* World::makeFlatGrass(uint8_t size_X, uint8_t size_Y, uint8_t size_Z,
+                    int32_t x, int8_t y, int32_t z)
+{
 
-    //Allocate mini-chunk
-    Chunk *flatChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, chunkX, Y, chunkZ);
-    
-    //Allocate array of blocks
+    //Allocate the new chunk space
+    Chunk* flatChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, x, y, z);
+
+    //Reference array of blocks
     Block *&firstBlockArray = flatChunk->block_array;
 
     //Index variables
@@ -347,9 +343,9 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
         uint8_t gen_y = (index & ((1<<7)-1) );
         if (gen_y < 2) {
             firstBlockArray[index].blockID = 7; //Bedrock
-        } else if (gen_y < height - 4) {
+        } else if (gen_y < size_Y - 4) {
             firstBlockArray[index].blockID = 1; //Stone
-        } else if (gen_y < height - 1) {
+        } else if (gen_y < size_Y - 1) {
             firstBlockArray[index].blockID = 3; //Dirt
         } else {
             firstBlockArray[index].blockID = 2; //Grass
@@ -359,6 +355,34 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
     //Pack blocks in chunk and zip
     //flatChunk->packBlocks();
     //flatChunk->zip();
+    
+    return flatChunk;
+}
+
+//Generate a flat chunk and insert to MapChunks (reuse if possible)
+bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
+    
+    const uint8_t size_X=16, size_Z=16;
+    
+    //Align grass to MapChunk grid
+    int32_t chunkX = X & 0xFFFFFFF0;
+    int32_t chunkZ = Z & 0xFFFFFFF0;
+
+    static Chunk *flatChunk = NULL;
+    static int8_t lastHeight = 0;
+    
+    //Allocate mini-chunk if different from previous chunk
+    if (flatChunk == NULL) {
+        flatChunk = makeFlatGrass(size_X, height, size_Z, chunkX, Y, chunkZ);
+    } else if (lastHeight != height) {
+        delete flatChunk;
+        flatChunk = makeFlatGrass(size_X, height, size_Z, chunkX, Y, chunkZ);
+    } else {
+        //Same chunk, different location
+        flatChunk->X = chunkX;
+        flatChunk->Y = Y;
+        flatChunk->Z = chunkZ;
+    }
 
     //Map (X | Z | Y) -> Chunk*
     bool result=addMapChunk(flatChunk );

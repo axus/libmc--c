@@ -95,8 +95,9 @@ const float Viewer::PI = std::atan(1.0)*4;
 //Library version info
 unsigned long mc__::getVersion() { return MC__VIEWER_VERSION; }
 
-Viewer::Viewer():
+Viewer::Viewer(unsigned short width, unsigned short height):
     cam_X(0), cam_Y(0), cam_Z(0), drawDistance(4096.f),
+    view_width(width), view_height(height), aspectRatio((GLfloat)width/height),
     cam_yaw(0), cam_pitch(0),
     cam_vecX(0), cam_vecY(0), cam_vecZ(0), debugging(false)
 {
@@ -678,7 +679,7 @@ void Viewer::startOpenGL() {
     glDepthMask(GL_TRUE);
 
     //Set viewport and perspective
-    viewport(0, 0, 800, 600);
+    viewport(0, 0, view_width, view_height);
 
     //Enable texture mapping
     glEnable(GL_TEXTURE_2D);

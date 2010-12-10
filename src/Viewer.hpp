@@ -78,7 +78,7 @@ namespace mc__ {
             //relate MapChunk* -> GL List
             typedef std::unordered_map< mc__::MapChunk*, GLuint> mapChunkUintMap_t;
 
-            Viewer();
+            Viewer(unsigned short width, unsigned short height);
             
             //Map block ID to block information
             BlockInfo blockInfo[256];
@@ -136,6 +136,7 @@ namespace mc__ {
             
             //Draw distance
             GLdouble drawDistance;
+            unsigned short view_width, view_height;
             GLfloat aspectRatio;
             
             //Current camera angle
