@@ -139,9 +139,6 @@ int main(int argc, char** argv)
     //Game events
     Events events;
 
-    //Generate a test world
-    genWorld(world);
-
     //Set player initial position and viewpoint (height, yaw, pitch)
     player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
         world.spawn_Y + 1, 180, 0);
@@ -149,6 +146,9 @@ int main(int argc, char** argv)
     //Create user interface to world
     mc__::UserInterface ui("libmc--c example", world, player, events);
         
+    //Generate a test world
+    genWorld(world);
+
     //Run until user exits
     uint32_t frames=0;
     sf::Clock clock;

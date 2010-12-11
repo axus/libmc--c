@@ -2,13 +2,13 @@
 
 BIN         = bin/mc--c.exe
 SRCFILES    = UserInterface.cpp main.cpp
-LIBS        = -L$(HOME)/lib -lnet-- -lwsock32 -lmc--c -lopengl32 -lglu32 -lDevIL -lILU \
+LIBS        = -L$(HOME)/lib -lnet-- -lwsock32 -lmc--c -lglew32 -lopengl32 -lglu32 -lDevIL -lILU \
 -lsfml-system -lsfml-window -lsfml-graphics -lz
 
 INCLUDES    = -I$(HOME)/include
 LOGFILES    = network.log
-###DEBUG       = on
-MOREFLAGS   = -std=c++0x -fno-rtti
+DEBUG       = on
+MOREFLAGS   = -std=c++0x
 
 #Where to install or uninstall
 INSTALL_BIN = $(HOME)/bin

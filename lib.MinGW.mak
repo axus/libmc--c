@@ -26,7 +26,7 @@ BBIN=$(addprefix $(BUILD)/, $(BIN))
 
 # Debug, or optimize
 ifeq ($(DEBUG),on)
-  CFLAGS=-Wall -O2 -g -pg -DDEBUG
+  CFLAGS=-Wall -g -pg -DDEBUG
 else
   # All warnings, optimization level 3
   CFLAGS=-Wall -O3
