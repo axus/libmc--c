@@ -255,8 +255,8 @@ bool World::updateMapChunks(bool cleanup)
             //Add chunk to map (uncompresses if needed)
             if (addMapChunk(chunk)) {
               //DEBUG
-              cout << "Updated chunk to map @ " << chunk->X
-                << "," << (int)chunk->Y << "," << chunk->Z << endl;
+              //cout << "Updated chunk to map @ " << chunk->X
+              //  << "," << (int)chunk->Y << "," << chunk->Z << endl;
             } else {
                 cerr << "Error updating chunk to map @ X=" << chunk->X
                 << " Y=" << (int)chunk->Y << "Z=" << chunk->Z << endl;
