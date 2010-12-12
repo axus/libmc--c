@@ -96,8 +96,13 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0);
 
             //Specific block drawing functions
-            void drawCube( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t visflags=0);
+            void drawCube( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t visflags=0);
+            void drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t visflags=0);
             void drawItem( uint8_t blockID, GLint x, GLint y, GLint z);
+            void drawGroundItem( uint8_t blockID, GLint x, GLint y, GLint z);
+            void drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z);
             
             //Draw minichunks only
             void drawChunks( const mc__::World& world);

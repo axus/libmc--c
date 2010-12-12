@@ -98,6 +98,7 @@ UserInterface::UserInterface(
     App.SetCursorPosition( center_X, center_Y);
     last_X = center_X;
     last_Y = center_Y;
+    toggle_mouselook=true;
     
     //Turn off key repeat
     App.EnableKeyRepeat(false);
@@ -219,9 +220,9 @@ void UserInterface::resetCamera()
 
     
     //Status message
-    cout << "Moved camera to player @ " << (int)player.abs_X << ","
-        << (int)player.abs_Y << "," << (int)player.abs_Z << "("
-        << (int)player.eyes_Y << ")" << endl;
+     cout << "Moved camera to player @ " << player.abs_X << ","
+         << player.abs_Y << " (" << player.eyes_Y << ")," << player.abs_Z
+         << "Yaw=" << player.yaw << " Pitch=" << player.pitch<< endl;
 
 }
 
@@ -329,10 +330,35 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
 bool UserInterface::handleMouse()
 {
     static int diff_X, diff_Y, diff_Z;
-    bool moved=false;
+    bool moved=false, inhibit_mouselook=false;
     
     diff_X=0; diff_Y=0; diff_Z=0;
   
+    //Translate camera in X or Y if moved while holding left button
+    if (mouse_press[sf::Mouse::Left]) {
+
+        //Step camera to side for mouse-X motion
+        diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
+        
+        if (diff_X != 0) {
+            //viewer.move(diff_X , 0, 0);
+            moved=true;
+            
+            //Save new mouse position
+            mouse_press_X[sf::Mouse::Left] = mouse_X;
+        }
+
+        //Step camera up for mouse-Y motion
+        diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
+        if (diff_Y != 0) {
+            //viewer.move(0, diff_Y ,0);
+            moved=true;
+            
+            //Save new mouse position
+            mouse_press_Y[sf::Mouse::Left] = mouse_Y;
+        }
+        inhibit_mouselook=true;
+    }
     //Translate camera in Z if moved while holding middle button
     if (mouse_press[sf::Mouse::Middle]) {
 
@@ -357,35 +383,9 @@ bool UserInterface::handleMouse()
             //Save new mouse position
             mouse_press_X[sf::Mouse::Middle] = mouse_X;
         }
-
+        inhibit_mouselook=true;
     }
-  
-    //Translate camera in X or Y if moved while holding left button
-    else if (mouse_press[sf::Mouse::Left]) {
-
-        //Step camera to side for mouse-X motion
-        diff_X = mouse_X - mouse_press_X[sf::Mouse::Left];
-        
-        if (diff_X != 0) {
-            //viewer.move(diff_X , 0, 0);
-            moved=true;
-            
-            //Save new mouse position
-            mouse_press_X[sf::Mouse::Left] = mouse_X;
-        }
-
-        //Step camera up for mouse-Y motion
-        diff_Y = mouse_press_Y[sf::Mouse::Left] - mouse_Y;
-        if (diff_Y != 0) {
-            //viewer.move(0, diff_Y ,0);
-            moved=true;
-            
-            //Save new mouse position
-            mouse_press_Y[sf::Mouse::Left] = mouse_Y;
-        }
-
-    }
-    else if (mouselooking)
+    if (mouselooking && !inhibit_mouselook)
     {    //Don't mouselook if left mouse button is held
 
         //Use change in X position to rotate about Y-axis

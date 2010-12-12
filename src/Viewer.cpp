@@ -252,7 +252,7 @@ void Viewer::setBlockColor(uint8_t blockID, face_ID face)
         case 0:
             glColor3ub( 255, 255, 255);
             break;
-        case 2:
+        case 2:     //Grass
             if (face == mc__::UP) {
                 red=grass_color[0]; green=grass_color[1]; blue=grass_color[2];
             } else {
@@ -260,7 +260,7 @@ void Viewer::setBlockColor(uint8_t blockID, face_ID face)
             }
             glColor3ub( red, green, blue);
             break;
-        case 18:
+        case 18:    //Leaves
             red=leaf_color[0]; green=leaf_color[1]; blue=leaf_color[2];
             glColor3ub( red, green, blue);
             break;
@@ -286,7 +286,7 @@ void Viewer::drawCube( uint8_t blockID,
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
 
-    //For each face, load the appropriate texture for the block ID, and draw square
+    //For each face, use the appropriate texture offsets for the block ID
     //       ADE ---- BDE
     //       /.       /|
     //      / .      / |
@@ -401,11 +401,218 @@ void Viewer::drawCube( uint8_t blockID,
     setBlockColor( 0, (face_ID)0);
 }
 
+//Use OpenGL to draw half a solid cube with appropriate textures for blockID
+void Viewer::drawHalfBlock( uint8_t blockID,
+    GLint x, GLint y, GLint z, uint8_t vflags)
+{
+    
+    //Face coordinates (in pixels)
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH/2;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //For each face, use the appropriate texture offsets for the block ID
+    //       ADE ---- BDE
+    //       /|       /|
+    //      /ACE . ./BCE
+    //    ADF ---- BDF/
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //   Texture map was loaded upside down...
+    // 0.0 -------------> 1.0 (X)
+    // |
+    // |
+    // |
+    // |
+    // |
+    // |
+    // v
+    // 1.0
+    // (Y)
+    
+    //
+    // (tx_0, ty_1)      (tx_1, ty_1)
+    //
+    // (tx_0, ty_0)      (tx_1, ty_0)
+
+    //A
+    if (!(vflags & 0x80)) {
+        tx_0 = blockInfo[blockID].tx[WEST];
+        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
+        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
+        ty_1 = blockInfo[blockID].ty[WEST];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+
+    //B
+    if (!(vflags & 0x40)) {
+        tx_0 = blockInfo[blockID].tx[EAST];
+        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
+        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
+        ty_1 = blockInfo[blockID].ty[EAST];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
+    }
+    
+    //C
+    if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    }
+    
+    //D
+    if (!(vflags & 0x10)) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = blockInfo[blockID].tx[UP] + tmr;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+    
+    //E
+    if (!(vflags & 0x08)) {
+        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[NORTH];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    }
+    
+    //F
+    if (!(vflags & 0x04)) {
+        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[SOUTH];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    }
+}
+
+//Draw item blockID which is placed flat on the ground
+void Viewer::drawGroundItem( uint8_t blockID, GLint x, GLint y, GLint z)
+{
+    //TODO: metadata
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Object boundaries... flat square 1 pixel off the ground
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + 1;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //C
+    //if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    //}
+    //D
+    //if (!(vflags & 0x10)) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = blockInfo[blockID].tx[UP] + tmr;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    //}
+
+}
+
+//Draw item blockID which is placed flat on the wall
+void Viewer::drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z)
+{
+    //TODO: metadata
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Object boundaries... flat square 1 pixel off the wall
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + 1;
+
+    //E
+    //if (!(vflags & 0x08)) {
+        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[NORTH];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    //}
+    
+    //F
+    //if (!(vflags & 0x04)) {
+        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[SOUTH];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    //}
+}
+
 //Draw item blockID which is placed as a block
 void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 {
 
     //TODO: quad always faces player somehow
+
 
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
@@ -453,6 +660,8 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 
 }
 
+
+
 //Draw a placed mc__::Block in openGL
 void Viewer::drawBlock( const mc__::Block& block,
     GLint x, GLint y, GLint z, uint8_t vflags)
@@ -473,6 +682,26 @@ void Viewer::drawBlock( const mc__::Block& block,
         case 0x0:
             drawCube(block.blockID, x, y, z, vflags);
             break;
+        case 0x1:   //TODO: correct models
+        case 0x3:
+        case 0x7:
+        case 0xC:
+            drawHalfBlock(block.blockID, x, y, z, vflags);
+            break;
+        case 0x4:   //TODO: correct models
+        case 0x5:
+        case 0x8:
+        case 0xA:
+        case 0xD:
+        case 0xE:
+            drawWallItem(block.blockID, x, y, z);
+            break;
+        case 0x6:   //TODO: correct models
+        case 0x9:
+        case 0xB:
+            drawGroundItem(block.blockID, x, y, z);
+            break;
+        case 0x2:   //TODO: correct models
         case 0xF:
             drawItem(block.blockID, x, y, z);
             break;
@@ -485,59 +714,6 @@ void Viewer::drawBlock( const mc__::Block& block,
 }
 
 using mc__::chunkSet_t;
-
-/*
-//Draw the minichunks in mc__::World
-//  DEBUGGING ONLY!
-void Viewer::drawChunks( const World& world)
-{
-    //Reference to world mini-chunks data structure
-    const chunkSet_t& chunkUpdates = world.chunkUpdates;
-    
-    //Variables to iterate through list of chunks
-    chunkSet_t::const_iterator iter_chunk;
-
-    
-    //For all chunks in set
-    for (iter_chunk =  chunkUpdates.begin();
-         iter_chunk != chunkUpdates.end(); iter_chunk++)
-    {
-        Chunk *chunk = *iter_chunk;
-        //Crash here if they screwed up :)
-        mc__::Chunk& myChunk = *chunk;
-
-        //If the chunk has not uncompressed it's data, do so now
-        if (! myChunk.isUnzipped) {
-            
-            //Debug output
-            if (debugging) {
-                cout << "Unzipping chunk @ " << (int)myChunk.X << ","
-                    << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
-            }
-            
-            //Unzip the chunk
-            if (!myChunk.unzip()) {
-                cerr << "ERROR UNZIPPING" << endl;
-                continue;
-            }
-        }
-        
-        //When indexing block in chunk array,
-        //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
-
-        //Draw every block in chunk.  x,y,z determined by position in array.
-        size_t index=0;
-        GLint off_x, off_y, off_z;
-        GLint X, Y, Z;
-        for (off_x=0, X=myChunk.X; off_x <= myChunk.size_X; off_x++, X++) {
-        for (off_z=0, Z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, Z++) {
-        for (off_y=0, Y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, Y++) {
-            drawBlock( myChunk.block_array[index], X, Y, Z);
-            index++;
-        }}}
-    }
-}
-*/
 
 //Create gl list for mapchunk, if needed
 void Viewer::drawMapChunk(MapChunk* mapchunk)
@@ -576,20 +752,14 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         glCallList(gl_list);
 
     } else {
-        glEnd();    //Halt the drawing in progress
-        
         gl_list = glGenLists(1);
         glListMap[mapchunk] = gl_list;
         myChunk.flags |= MapChunk::UPDATED;
-        glBegin(GL_QUADS);  //Proceed.
     }
     
     
     //Compile GL list if needed (drawing to screen happens elsewhere)
     if (myChunk.flags & MapChunk::UPDATED) {
-
-        //Halt the drawing in progress
-        glEnd();    
 
         //DEBUG updates
         //cout << "MapChunk UPDATED flag: " << (int)myChunk.X << ","
@@ -614,8 +784,9 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
                 
         //Start the GL_COMPILING! Don't execute.
         glNewList(gl_list, GL_COMPILE);
+        glBegin(GL_QUADS);
         
-        //Draw the visible chunks
+        //Draw the visible blocks
         for (iter = visibleIndices.begin(); iter != visibleIndices.end(); iter++)
         {
             //When indexing block in chunk array,
@@ -629,12 +800,12 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
             uint8_t vflags = myChunk.visflags[index];
             
             //Draw the block (based on block type)
-            drawBlock( myChunk.block_array[index], X, Y, Z, pvflags | vflags );
+            drawBlock(myChunk.block_array[index], X, Y, Z, vflags/*pvflags|*/);
+            //Uncomment pvflags to hide faces player can't see
         }
         //End the list
+        glEnd();
         glEndList();
-        
-        glBegin(GL_QUADS);  //Proceed.
 
         //Finished drawing chunk, no longer "updated"
         myChunk.flags &= ~(MapChunk::UPDATED);
@@ -773,7 +944,7 @@ bool Viewer::drawWorld(const World& world)
     glTranslatef( -cam_X, -cam_Y, -cam_Z );
 
     //Start putting quads in memory
-    glBegin(GL_QUADS);
+    //glBegin(GL_QUADS);
 
     //Draw the loaded mini-chunks
     //drawChunks(world);
@@ -786,7 +957,7 @@ bool Viewer::drawWorld(const World& world)
     drawBlock( block1, 0, 0, 2);
 
     //Finish putting quads in memory, and draw
-    glEnd();
+    //glEnd();
     
     return true;
 }
@@ -906,7 +1077,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 41, 39, 39, 55, 23, 39, 39, 0x00);    //GoldBlock
     setBlockInfo( 42, 38, 38, 54, 22, 38, 38, 0x00);    //IronBlock
     setBlockInfo( 43, 5,  5,  6,  6,  5,  5,  0x00);    //DoubleStep
-    setBlockInfo( 44, 5,  5,  6,  6,  5,  5,  0x20);    //Step
+    setBlockInfo( 44, 5,  5,  6,  6,  5,  5,  0x30);    //Step
     setBlockInfo( 45, 7,  7,  7,  7,  7,  7,  0x00);    //Brick
     setBlockInfo( 46, 8,  8, 10,  9,  8,  8,  0x00);    //TNT
     setBlockInfo( 47, 35, 35, 4,  4,  35, 35, 0x00);    //Bookshelf
@@ -928,7 +1099,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 63, 4,  4,  4,  4,  4,  4,  0x47);    //SignPost (*)
     setBlockInfo( 64, 97, 81, 97, 81, 97, 81, 0xA7);    //WoodDoor (*)
     setBlockInfo( 65, 83, 83, 83, 83, 83, 83, 0x57);    //Ladder (*)
-    setBlockInfo( 66, 128,112,128,112,112,112,0x57);    //Track (*)
+    setBlockInfo( 66, 112,112,128,128,128,128,0x67);    //Track (*)
     setBlockInfo( 67, 16, 16, 16, 16, 16, 16, 0x10);    //CobbleStairs
     setBlockInfo( 68, 4,  4,  4,  4,  4,  4,  0xD7);    //WallSign (*)
     setBlockInfo( 69, 96, 16, 96, 16, 96, 16, 0x27);    //Lever
@@ -940,7 +1111,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 75, 115,115,115,115,115,115,0xF7);    //RedstoneTorch
     setBlockInfo( 76, 99, 99, 99, 99, 99, 99, 0xFF);    //RedstoneTorchLit
     setBlockInfo( 77, 1,  1,  1,  1,  1,  1,  0xE7);    //StoneButton
-    setBlockInfo( 78, 66, 66, 66, 66, 66, 66, 0x00);    //SnowLayer(*)
+    setBlockInfo( 78, 66, 66, 66, 66, 66, 66, 0xC0);    //SnowLayer(*)
         //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
     setBlockInfo( 79, 67, 67, 67, 67, 67, 67, 0x04);    //Ice
     setBlockInfo( 80, 66, 66, 66, 66, 66, 66, 0x00);    //SnowBlock
