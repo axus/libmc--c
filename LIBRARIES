@@ -1,9 +1,9 @@
 libmc--c depends on several libraries.  I've only built libmc--c using MinGW.
 
+C++ compiler supporting STL, C++0x
+    http://gcc.gnu.org/install/build.html
 DevIL 1.7.8
     http://openil.sourceforge.net/
-GCC 4.5.0 library and standard C++ library
-    http://gcc.gnu.org/install/build.html
 GLEW 1.5.7
     http://glew.sourceforge.net/
 Zlib 1.2.5
@@ -22,11 +22,13 @@ ILU.dll
 ILUT.dll
 libgcc_s_dw2-1.dll
 libstdc++-6.dll
+zlib1.dll
 
 
 If rebuilding libmc--c with MinGW, these headers are required on INCLUDE path:
 <IL/il.h>
 <IL/ilu.h>
+<zlib.h>
 <iostream>
 <string>
 <iomanip>
