@@ -230,7 +230,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, aspectRatio, 0.01f, drawDistance);
+    gluPerspective(60, aspectRatio, 1.0f, drawDistance);
     
     //Reload matrix mode
     glPushAttrib(GL_TRANSFORM_BIT);
@@ -239,7 +239,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
 //Resize far draw distance
 void Viewer::setDrawDistance( GLdouble d)
 {
-    gluPerspective(60, aspectRatio, 0.01f, d);
+    gluPerspective(60, aspectRatio, 1.0f, d);
 }
 
 //Set glColor if needed by block type and face

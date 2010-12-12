@@ -150,9 +150,9 @@ int main(int argc, char** argv)
     mc__::UserInterface ui("libmc--c example", world, player, events);
         
     //Run until user exits
+    /*
     uint32_t frames=0;
     sf::Clock clock;
-    /*
     while (ui.run() && (!run_limit || (frames < max_frames) )) {
 
         //Sleep some to decrease CPU usage in between UI updates
