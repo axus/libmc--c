@@ -81,7 +81,7 @@ namespace mc__ {
             Viewer(unsigned short width, unsigned short height);
             
             //Map block ID to block information
-            BlockInfo blockInfo[texmap_TILE_MAX];
+            BlockInfo blockInfo[256];
             
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
@@ -147,10 +147,10 @@ namespace mc__ {
 
             //DevIL textures
             ILuint il_texture_map;
+            ILuint ilTextureList[texmap_TILE_MAX];
             
             //openGL image (for texture)
             GLuint image;
-            GLuint image_array; //texture array (still one openGL ID)
             
             //Relate world mapchunks to GL lists
             mapChunkUintMap_t glListMap;
@@ -167,9 +167,7 @@ namespace mc__ {
             void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
                 uint8_t D, uint8_t E, uint8_t F, uint8_t properties);
             bool loadBlockInfo();
-
-            bool splitTextureMap( ILuint texmap, ILuint tiles_x, ILuint tiles_y);
-
+            
             //Change face colors if needed by blockID
             void setBlockColor(uint8_t blockID, face_ID face);
 

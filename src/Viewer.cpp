@@ -142,7 +142,6 @@ bool Viewer::init(const std::string &filename)
         return 0;   //error, exit program
     }
 
-/*
     //glBind texture before assigning it
     glBindTexture(GL_TEXTURE_2D, image);
     
@@ -150,10 +149,6 @@ bool Viewer::init(const std::string &filename)
     glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
         ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
         ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-*/
-    if (!splitTextureMap( il_texture_map, texmap_TILES, texmap_TILES)) {
-        return false;
-    }
 
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
@@ -235,7 +230,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, aspectRatio, 8.0f, drawDistance);
+    gluPerspective(60, aspectRatio, 0.01f, drawDistance);
     
     //Reload matrix mode
     glPushAttrib(GL_TRANSFORM_BIT);
@@ -244,7 +239,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
 //Resize far draw distance
 void Viewer::setDrawDistance( GLdouble d)
 {
-    gluPerspective(60, aspectRatio, 8.0f, d);
+    gluPerspective(60, aspectRatio, 0.01f, d);
 }
 
 //Set glColor if needed by block type and face
@@ -288,6 +283,9 @@ void Viewer::drawCube( uint8_t blockID,
     GLint E = (z << 4) + 0;
     GLint F = (z << 4) + texmap_TILE_LENGTH;
 
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
     //For each face, load the appropriate texture for the block ID, and draw square
     //       ADE ---- BDE
     //       /.       /|
@@ -314,80 +312,6 @@ void Viewer::drawCube( uint8_t blockID,
     // (tx_0, ty_1)      (tx_1, ty_1)
     //
     // (tx_0, ty_0)      (tx_1, ty_0)
-
-    uint16_t textureID;
-
-    //A
-    if (!(vflags & 0x80)) {
-        setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
-        textureID = blockInfo[blockID].textureID[0];
-        
-        glTexCoord3i(0,0, textureID); glVertex3i( A, C, E);  //Lower left:  ACE
-        glTexCoord3i(1,0, textureID); glVertex3i( A, C, F);  //Lower right: ACF
-        glTexCoord3i(1,1, textureID); glVertex3i( A, D, F);  //Top right:   ADF
-        glTexCoord3i(0,1, textureID); glVertex3i( A, D, E);  //Top left:    ADE
-    }
-
-    //B
-    if (!(vflags & 0x40)) {
-        setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
-        textureID = blockInfo[blockID].textureID[1];
-        
-        glTexCoord3i(0,1, textureID); glVertex3i( B, C, F);  //Lower left:  BCF
-        glTexCoord3i(1,1, textureID); glVertex3i( B, C, E);  //Lower right: BCE
-        glTexCoord3i(1,1, textureID); glVertex3i( B, D, E);  //Top right:   BDE
-        glTexCoord3i(0,1, textureID); glVertex3i( B, D, F);  //Top left:    BDF
-    }
-    
-    //C
-    if (!(vflags & 0x20)) {
-        setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
-        textureID = blockInfo[blockID].textureID[2];
-        
-        glTexCoord3i(0,1, textureID); glVertex3i( A, C, E);  //Lower left:  ACE
-        glTexCoord3i(1,1, textureID); glVertex3i( B, C, E);  //Lower right: BCE
-        glTexCoord3i(1,1, textureID); glVertex3i( B, C, F);  //Top right:   BCF
-        glTexCoord3i(0,1, textureID); glVertex3i( A, C, F);  //Top left:    ACF
-    }
-    
-    //D
-    if (!(vflags & 0x10)) {
-        setBlockColor(blockID, UP);  //Set leaf/grass color if needed
-        textureID = blockInfo[blockID].textureID[3];
-    
-        glTexCoord3i(0,1, textureID); glVertex3i( A, D, F);  //Lower left:  ADF
-        glTexCoord3i(1,1, textureID); glVertex3i( B, D, F);  //Lower right: BDF
-        glTexCoord3i(1,1, textureID); glVertex3i( B, D, E);  //Top right:   BDE
-        glTexCoord3i(0,1, textureID); glVertex3i( A, D, E);  //Top left:    ADE
-    }
-    
-    //E
-    if (!(vflags & 0x08)) {
-        setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
-        textureID = blockInfo[blockID].textureID[4];
-        
-        glTexCoord3i(0,1, textureID); glVertex3i( B, C, E);  //Lower left:  BCE
-        glTexCoord3i(1,1, textureID); glVertex3i( A, C, E);  //Lower right: ACE
-        glTexCoord3i(1,1, textureID); glVertex3i( A, D, E);  //Top right:   ADE
-        glTexCoord3i(0,1, textureID); glVertex3i( B, D, E);  //Top left:    BDE
-    }
-    
-    //F
-    if (!(vflags & 0x04)) {
-        setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
-        textureID = blockInfo[blockID].textureID[5];
-        
-        glTexCoord3i(0,1, textureID); glVertex3i( A, C, F);  //Lower left:  ACF
-        glTexCoord3i(1,1, textureID); glVertex3i( B, C, F);  //Lower right: BCF
-        glTexCoord3i(1,1, textureID); glVertex3i( B, D, F);  //Top right:   BDF
-        glTexCoord3i(0,1, textureID); glVertex3i( A, D, F);  //Top left:    ADF
-    }
-
-    //Return color to normal
-    setBlockColor( 0, (face_ID)0);
-/*
-    //Texture map coordinates (0.0 - 1.0)
-    GLfloat tx_0, tx_1, ty_0, ty_1;
 
     //A
     if (!(vflags & 0x80)) {
@@ -472,10 +396,9 @@ void Viewer::drawCube( uint8_t blockID,
         glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
         glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
     }
-
+    
     //Return color to normal
     setBlockColor( 0, (face_ID)0);
-*/
 }
 
 //Draw item blockID which is placed as a block
@@ -749,7 +672,7 @@ void Viewer::drawMapChunks( const World& world)
 void Viewer::startOpenGL() {
     //Set color and depth clear value
     glClearDepth(1.0f);
-    glClearColor(0.875f, 0.875f, 1.f, 1.f);
+    glClearColor(0.f, 0.f, 0.f, 1.f);
 
     // Enable Z-buffer read and write
     glEnable(GL_DEPTH_TEST);
@@ -794,8 +717,9 @@ void Viewer::startOpenGL() {
     //Generate mipmaps
     glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
 
+
     //No blending
-    //glDisable(GL_BLEND);
+    glDisable(GL_BLEND);
 
 }
 
@@ -1220,64 +1144,7 @@ void Viewer::outputRGBAData() {
     outfile.close();
 }
 
-//Chop texture map into ilImages array (don't bind anything to GL)
-bool Viewer::splitTextureMap( ILuint texmap, ILuint tiles_x, ILuint tiles_y)
-{
-    ILuint SrcX, SrcY, Width, Height;
-    
-    //Load the texture map to devIL
-    ilBindImage(texmap);
-    
-    Width = ilGetInteger(IL_IMAGE_WIDTH)/tiles_x;
-    Height = ilGetInteger(IL_IMAGE_HEIGHT)/tiles_y;
-    
-    //Allocated devIL texture array
-    ILuint ilTexture3D;
-    ilGenImages(1, &ilTexture3D);
 
-    //Set texture array to allocated texture
-    if (!ilTexImage( Width, Height, texmap_TILE_MAX, 4, IL_RGBA,
-        IL_UNSIGNED_BYTE, NULL))
-    {
-        cerr << "Could not allocate textures for IL images" << endl;
-    }
-    ilBindImage(ilTexture3D);
-
-    //Copy alpha channel when blitting, don't blend it.
-    ilDisable(IL_BLIT_BLEND);
-
-    //For each tile...
-    size_t x=0, y=0;
-    ILint index=0;
-    for (y = 0; y < tiles_y; y++) {
-        for (x = 0; x < tiles_x; x++) {
-
-            //Blit the rectangle from texture map ID to texture array ID
-            SrcX = x * Width;
-            SrcY = y * Height;
-            ilBlit( texmap, 0, 0, index, SrcX, SrcY, 0, Width, Height, 1);
-
-            index++;
-        }
-    }
-
-    //glEnable(GL_TEXTURE_2D);
-
-    //Use image_array ID for array of 2D images
-    glBindTexture(GL_TEXTURE_2D_ARRAY, image_array);
-
-    //Copy current DevIL image array to OpenGL image array
-    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT),
-        texmap_TILE_MAX, 0,
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-
-    
-    //free memory used by DevIL for textures
-    ilDeleteImages(1, &ilTexture3D);
-    
-    return true;
-}
 
 /*
 //Blit from texture map to current OpenGL texture

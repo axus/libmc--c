@@ -219,9 +219,9 @@ void UserInterface::resetCamera()
 
     
     //Status message
-    cout << "Moved camera to player @ " << player.abs_X << ","
-        << player.abs_Y << " (" << player.eyes_Y << ")," << player.abs_Z 
-        << "Yaw=" << player.yaw << " Pitch=" << player.pitch<< endl;
+    cout << "Moved camera to player @ " << (int)player.abs_X << ","
+        << (int)player.abs_Y << "," << (int)player.abs_Z << "("
+        << (int)player.eyes_Y << ")" << endl;
 
 }
 
