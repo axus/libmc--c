@@ -169,6 +169,8 @@ int main(int argc, char** argv)
         Sleep(10);   //100FPS
     }
     
+    //Send disconnect message
+    
     
     //Sleep 5 seconds if run to max frames
     if (run_limit) {

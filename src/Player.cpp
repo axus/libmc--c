@@ -29,8 +29,7 @@ Player::Player(const std::string& entity_name): Entity(), name(entity_name)
 {
 }
 
-bool Player::setPosLook( double x, double y, double z,
-    double h, float yaw_, float pitch_)
+bool Player::setPosition( double x, double y, double z, double h)
 {
     //Absolute position (double)
     abs_X = x;
@@ -45,9 +44,27 @@ bool Player::setPosLook( double x, double y, double z,
     Y = (int64_t)y;
     Z = (int64_t)z;
 
+    return true;
+}
+
+bool Player::setLook( float yaw_, float pitch_)
+{
     //Looking in this direction
     yaw = yaw_;
     pitch = pitch_;
+    
+    return true;
+}
+
+//Set position and look direction
+bool Player::setPosLook( double x, double y, double z,
+    double h, float yaw_, float pitch_)
+{
+    //At this location (eyes at h)
+    setPosition(x, y, z, h);
+
+    //Looking in this direction
+    setLook(yaw_, pitch_);
     
     return true;
 }

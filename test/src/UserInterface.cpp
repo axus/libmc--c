@@ -89,7 +89,7 @@ UserInterface::UserInterface(
     }
 
     //Load terrain.png
-    viewer.init(texture_map_filename);
+    viewer.init(texture_map_filename, false);   //DEBUG: no mipmaps
 
     //Reset camera
     resetCamera();
@@ -221,8 +221,8 @@ void UserInterface::resetCamera()
     
     //Status message
      cout << "Moved camera to player @ " << player.abs_X << ","
-         << player.abs_Y << " (" << player.eyes_Y << ")," << player.abs_Z
-         << "Yaw=" << player.yaw << " Pitch=" << player.pitch<< endl;
+         << player.abs_Y << "(" << player.eyes_Y << "), " << player.abs_Z
+         << "  Yaw=" << player.yaw << " Pitch=" << player.pitch<< endl;
 
 }
 

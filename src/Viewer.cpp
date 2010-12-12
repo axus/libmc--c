@@ -99,7 +99,7 @@ Viewer::Viewer(unsigned short width, unsigned short height):
     cam_X(0), cam_Y(0), cam_Z(0), drawDistance(4096.f),
     view_width(width), view_height(height), aspectRatio((GLfloat)width/height),
     cam_yaw(0), cam_pitch(0),
-    cam_vecX(0), cam_vecY(0), cam_vecZ(0), debugging(false)
+    cam_vecX(0), cam_vecY(0), cam_vecZ(0), use_mipmaps(true), debugging(false)
 {
     //Dark green tree leaves
     leaf_color[0] = 0x00;    //Red
@@ -116,7 +116,7 @@ Viewer::Viewer(unsigned short width, unsigned short height):
 }
 
 //Start up OpenGL
-bool Viewer::init(const std::string &filename)
+bool Viewer::init(const std::string &filename, bool mipmaps)
 {
 
     //Compare devIL DLL version to header version
@@ -124,6 +124,8 @@ bool Viewer::init(const std::string &filename)
         cerr << "DevIL wrong DLL version" << endl;
         return 1;
     }
+
+    use_mipmaps=mipmaps;
 
     texture_map_file = filename;
 
@@ -401,21 +403,39 @@ void Viewer::drawCube( uint8_t blockID,
     setBlockColor( 0, (face_ID)0);
 }
 
-//Use OpenGL to draw half a solid cube with appropriate textures for blockID
-void Viewer::drawHalfBlock( uint8_t blockID,
-    GLint x, GLint y, GLint z, uint8_t vflags)
+//Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotate)
+void Viewer::drawScaledBlock( uint8_t blockID,
+    GLint x, GLint y, GLint z, uint8_t vflags,
+    GLint scale_x, GLint scale_y, GLint scale_z,
+    bool scale_texture,
+    GLint off_x, GLint off_y, GLint off_z)
 {
+    GLint width, height, depth;
+    
+    width  = scale_x != 0 ? texmap_TILE_LENGTH / scale_x : 0;
+    height = scale_y != 0 ? texmap_TILE_LENGTH / scale_y : 0;
+    depth  = scale_z != 0 ? texmap_TILE_LENGTH / scale_z : 0;
     
     //Face coordinates (in pixels)
-    GLint A = (x << 4) + 0;
-    GLint B = (x << 4) + texmap_TILE_LENGTH;
-    GLint C = (y << 4) + 0;
-    GLint D = (y << 4) + texmap_TILE_LENGTH/2;
-    GLint E = (z << 4) + 0;
-    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    GLint A = (x << 4) + off_x;
+    GLint B = (x << 4) + off_x + width;
+    GLint C = (y << 4) + off_y;
+    GLint D = (y << 4) + off_y + height;
+    GLint E = (z << 4) + off_z;
+    GLint F = (z << 4) + off_z + depth;
 
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
+    
+    //Scaled texture map ratios (1/block length)
+    GLfloat tmr_x, tmr_y, tmr_z;
+    if (scale_texture) {
+        tmr_x  = scale_x != 0 ? 1.0 /(float)scale_x : 0;
+        tmr_y = scale_y != 0 ? 1.0 /(float)scale_y : 0;
+        tmr_z  = scale_z != 0 ? 1.0 /(float)scale_z : 0;
+    } else {
+        tmr_x = tmr_y = tmr_z = tmr;
+    }
 
     //For each face, use the appropriate texture offsets for the block ID
     //       ADE ---- BDE
@@ -519,6 +539,14 @@ void Viewer::drawHalfBlock( uint8_t blockID,
         glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
         glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
     }
+}
+
+//Draw half a block
+void Viewer::drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
+    uint8_t visflags)
+{
+    //TODO: metadata to determine which half!
+    drawScaledBlock( blockID, x, y, z, visflags, 1, 2, 1);
 }
 
 //Draw item blockID which is placed flat on the ground
@@ -678,36 +706,46 @@ void Viewer::drawBlock( const mc__::Block& block,
     //              8=portal, 9=fence, A=door, B=floorplate
     //              C=1/3 block, D=wallsign, E=button, F=plant
 
+//TODO: correct models
     switch ( (blockInfo[block.blockID].properties & 0xF0)>>4 ) {
         case 0x0:
+            //Cube
             drawCube(block.blockID, x, y, z, vflags);
             break;
-        case 0x1:   //TODO: correct models
-        case 0x3:
-        case 0x7:
-        case 0xC:
+        case 0x1:
+            //Stairs
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                1, 2, 2, true, 0, 8, 0);
             drawHalfBlock(block.blockID, x, y, z, vflags);
             break;
-        case 0x4:   //TODO: correct models
+        case 0x3:
+            drawHalfBlock(block.blockID, x, y, z, vflags);
+            break;
+        case 0xC:   //Snow
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                1, 4, 1);
+            break;
+        case 0x4:
         case 0x5:
+        case 0x7:
         case 0x8:
         case 0xA:
         case 0xD:
         case 0xE:
             drawWallItem(block.blockID, x, y, z);
             break;
-        case 0x6:   //TODO: correct models
+        case 0x6:
         case 0x9:
         case 0xB:
             drawGroundItem(block.blockID, x, y, z);
             break;
-        case 0x2:   //TODO: correct models
+        case 0x2:
         case 0xF:
             drawItem(block.blockID, x, y, z);
             break;
         //TODO: test for other shapes
-        default:    //Draw unknown types as a item
-            drawItem(block.blockID, x, y, z);
+        default:    //Draw unknown types as a cube
+            drawCube(block.blockID, x, y, z, vflags);
             break;
     }
 
@@ -868,9 +906,6 @@ void Viewer::startOpenGL() {
     //Save the original viewpoint
     glPushMatrix(); 
 
-    //Create OpenGL texture
-    glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);//Quick mipmaps
-    
     glGenTextures(1, &image);
     glBindTexture(GL_TEXTURE_2D, image);    //bind empty texture
     
@@ -881,13 +916,20 @@ void Viewer::startOpenGL() {
     //Make textures "blocky" when up close
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
-    //Use texture mipmaps when far away
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-        GL_NEAREST_MIPMAP_NEAREST);
-
-    //Generate mipmaps
-    glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
-
+    if (use_mipmaps) {
+        //Create OpenGL texture
+        glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);//Quick mipmaps
+        
+        //Use texture mipmaps when far away
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+            GL_NEAREST_MIPMAP_NEAREST);
+    
+        //Generate mipmaps
+        glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+    } else {
+        //Use nearest texture when far away
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
 
     //No blending
     glDisable(GL_BLEND);
@@ -999,7 +1041,7 @@ void Viewer::setBlockInfo( uint8_t index,
     
     //Assign properties
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=1/4 block
+    //              4=wallsign, 5=ladder, 6=track, 7=fire?,
     //              8=portal, 9=fence, A=door, B=floorplate
     //              C=1/3 block, D=wallsign, E=button, F=plant
     //0x08: Bright: 0=dark, 1=lightsource
@@ -1315,82 +1357,80 @@ void Viewer::outputRGBAData() {
     outfile.close();
 }
 
-
-
-/*
-//Blit from texture map to current OpenGL texture
-ILuint Viewer::blitTexture( ILuint texmap, ILuint SrcX, ILuint SrcY,
-        ILuint Width, ILuint Height) {
-    //Take out a specific block from the texture grid (Blit)
-    ILuint il_blocktex;
-    ilGenImages(1, &il_blocktex);
-    ilBindImage(il_blocktex);
-    ilTexImage( Width, Height, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, NULL);
-
-    //Blit the rectangle from texmap to il_blocktex
-    ilBlit( texmap, 0, 0, 0, SrcX, SrcY, 0, Width, Height, 1);
-
-    //Use single OpenGL "image"
-    glBindTexture(GL_TEXTURE_2D, image);
-
-    //Copy current DevIL image to OpenGL image
-    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-
-    //free memory used by DevIL
-    ilDeleteImages(1, &il_blocktex);  
-    return il_blocktex;
-}
-*/
-
 /*
 //choose OpenGL drawing texture from image list
-ILuint Viewer::chooseTexture( ILuint* ilImages, size_t index) {
+bool Viewer::chooseTexture( size_t index) {
   
-    //ilBind image from list
-    ILuint ilImage = ilImages[index];
-    ilBindImage( ilImage );
-    
     //glBind texture
-    glBindTexture(GL_TEXTURE_2D, image);
-    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-        
-    return ilImage;
+    glBindTexture(GL_TEXTURE_2D, image_array[index]);
+    
+    //TODO: check for GL error
+    return true;
 }
-*//*
+
 //Chop texture map into ilImages array (don't bind anything to GL)
-bool Viewer::splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y,
-    ILuint* ilImages)
+bool Viewer::splitTextureMap( ILuint texmap, ILuint tiles_x, ILuint tiles_y)
 {
-    ILuint SrcX, SrcY, Width, Height;
-    Width = texmap_TILE_LENGTH;
-    Height = texmap_TILE_LENGTH;
+    ILuint SrcX, SrcY, Width, Height, bytePerPixel, ilFormat;
     
-    //User should have allocated ilImages array
-    if (ilImages == NULL) {
-        return false;
-    }
+    //Get information from texture map
+    ilBindImage(texmap);
+    Width = ilGetInteger(IL_IMAGE_WIDTH)/tiles_x;
+    Height = ilGetInteger(IL_IMAGE_HEIGHT)/tiles_y;
+    bytePerPixel = ilGetInteger(IL_IMAGE_BPP);
+    ilFormat = ilGetInteger(IL_IMAGE_FORMAT);
     
-    //Create blank images in the array
-    ilGenImages(tiles_x * tiles_y, ilImages);
+    cout << "Split Texture: " << Width << ", " << Height << ", "
+        << bytePerPixel << " 0x" << hex << ilFormat << endl << dec;
     
     //Copy alpha channel when blitting, don't blend it.
     ilDisable(IL_BLIT_BLEND);
 
     //For each tile...
-    size_t x, y, index;
-    for (y = 0, index=0; y < tiles_y; y++) {
-        for (x = 0; x < tiles_x; x++, index++) {
-            //Bind the image
-            ilBindImage(ilImages[index]);
-            ilTexImage( Width, Height, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, NULL);
+    size_t x=0, y=0;
+    ILuint index=0;
+    for (y = 0; y < tiles_y; y++) {
+        for (x = 0; x < tiles_x; x++) {
 
-            //Blit the rectangle from texmap to il_blocktex
-            SrcX = x * Width; SrcY = y * Height;
+            //Blit the rectangle from texture map ID to texture array ID
+            SrcX = x * Width;
+            SrcY = y * Height;
+
+            //Take out a specific block from the texture grid (Blit)
+            ILuint il_blocktex;
+            ilGenImages(1, &il_blocktex);
+            ilBindImage(il_blocktex);
+            ilTexImage( Width, Height, 1, bytePerPixel,
+                ilFormat, IL_UNSIGNED_BYTE, NULL);
+
             ilBlit( texmap, 0, 0, 0, SrcX, SrcY, 0, Width, Height, 1);
+
+            //Use single OpenGL "image"
+            glBindTexture(GL_TEXTURE_2D, image_array[index]);
+            
+            //Copy current DevIL image to OpenGL image
+            glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+                ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+                ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+
+            //Set out-of-range texture coordinates
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        
+            //Make textures "blocky" when up close
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            
+            //Use texture mipmaps when far away
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                GL_NEAREST_MIPMAP_NEAREST);
+        
+            //Generate mipmaps when calling glTexImage2D
+            glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+
+            //free memory used by DevIL for texture
+            ilDeleteImages(1, &il_blocktex);
+    
+            index++;
         }
     }
     

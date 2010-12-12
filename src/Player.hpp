@@ -51,6 +51,8 @@ namespace mc__ {
             Player( const std::string& entity_name);
             
             //Movement and looking
+            bool setPosition( double x, double y, double z, double h);
+            bool setLook( float yaw_, float pitch_);
             bool setPosLook( double x, double y, double z, double h,
                 float yaw_, float pitch_);
             
