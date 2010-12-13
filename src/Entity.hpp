@@ -48,6 +48,8 @@ namespace mc__ {
             //Looking in this direction
             float yaw, pitch;
             
+            uint8_t on_ground;
+            
             //Velocity vector
             int16_t dX, dY, dZ;
             

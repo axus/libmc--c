@@ -795,7 +795,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
                 << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
         }
         //Unzip the chunk
-        if (!myChunk.unzip()) {
+        if (!myChunk.unzip(true)) {
             cerr << "ERROR UNZIPPING" << endl;
             return;
         }
@@ -1220,8 +1220,8 @@ bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename) const
     //Unzip if needed
     if (chunk->byte_array == NULL && chunk->zipped != NULL) {
         cerr << "Unzipped chunk before writing" << endl;
-        chunk->unzip();
-        chunk->unpackBlocks();
+        chunk->unzip(false);
+        chunk->unpackBlocks(false);
     }
     
     //Open binary file for output

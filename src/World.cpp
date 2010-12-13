@@ -81,8 +81,8 @@ bool World::addChunkZip(int32_t X, int8_t Y, int32_t Z,
         
         //byte_array and block_array are still NULL!
         if (unzip) {
-            result = chunk->unzip();
-            chunk->unpackBlocks();
+            result = chunk->unzip(false);
+            chunk->unpackBlocks(false);
         } else {
             result=true;
         }
@@ -249,7 +249,7 @@ bool World::updateMapChunks(bool cleanup)
             
             //Unzip chunk if needed
             if (! chunk->isUnzipped ) {
-                chunk->unzip();
+                chunk->unzip(true);
             }
             
             //Add chunk to map (uncompresses if needed)

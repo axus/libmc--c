@@ -89,7 +89,7 @@ UserInterface::UserInterface(
     }
 
     //Load terrain.png
-    viewer.init(texture_map_filename, true);   //DEBUG: no mipmaps
+    viewer.init(texture_map_filename, true);   //TODO: configurable
 
     //Reset camera
     resetCamera();

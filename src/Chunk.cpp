@@ -68,10 +68,7 @@ Chunk::Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z,
 //Deallocate chunk space
 Chunk::~Chunk()
 {
-    if (byte_array != NULL) {
-        delete byte_array;
-        byte_array = NULL;
-    }
+    deleteByteArray();
     if (block_array != NULL) {
         delete block_array;
         block_array = NULL;
@@ -130,8 +127,12 @@ void  Chunk::packBlocks()
 }
 
 //Load byte_array to block_array
-void  Chunk::unpackBlocks()
+bool Chunk::unpackBlocks(bool free_packed)
 {
+    if (byte_array == NULL) {
+        return false;
+    }
+  
     uint32_t index;
     mc__::Block* block;
     bool half_byte=false;
@@ -176,6 +177,13 @@ void  Chunk::unpackBlocks()
         //Toggle half-byte status, go to next block
         half_byte = !half_byte;
     }
+    
+    //Reclaim memory if asked to
+    if (free_packed) {
+        deleteByteArray();
+    }
+    
+    return true;
 }
 
 
@@ -220,6 +228,7 @@ uint8_t* Chunk::allocByteArray()
 
 //Free memory
 void Chunk::deleteByteArray() {
+
     if (byte_array != NULL) {
         delete byte_array;
         byte_array = NULL;
@@ -281,7 +290,7 @@ bool Chunk::zip()
 
 //Uncompress *compressed to packed byte_array
 //  byte_length must be preset, and will be updated after unzip
-bool Chunk::unzip()
+bool Chunk::unzip(bool free_zip)
 {
     //Re-allocate byte array
     allocByteArray();
@@ -300,7 +309,11 @@ bool Chunk::unzip()
     }
     
     //Now, copy the byte array to the block array
-    unpackBlocks();
+    unpackBlocks(free_zip);
+    if (free_zip) {
+        deleteZip();
+    }
+    
     isUnzipped=true;
     
     return true;

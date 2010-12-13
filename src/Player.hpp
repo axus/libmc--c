@@ -72,7 +72,7 @@ namespace mc__ {
             uint32_t VID;
             
             //Entity name
-            std::string name;            
+            std::string name;
     };
 }
 
