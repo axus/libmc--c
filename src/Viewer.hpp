@@ -101,14 +101,14 @@ namespace mc__ {
             void drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
                 uint8_t visflags=0);
             void drawItem( uint8_t blockID, GLint x, GLint y, GLint z);
-            void drawGroundItem( uint8_t blockID, GLint x, GLint y, GLint z);
+            void drawTrack( uint8_t blockID, GLint x, GLint y, GLint z);
             void drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z);
 
             //Draw a cube with dimensions scaled and location offset
-            //  scale factor is the divisor, blocks only get smaller. 
+            //  scale factor is multiplier, use 0 - 1
             void drawScaledBlock( uint8_t blockID,
                 GLint x, GLint y, GLint z, uint8_t visflags=0,
-                GLint scale_x=1, GLint scale_y=1, GLint scale_z=1,
+                GLfloat scale_x=1, GLfloat scale_y=1, GLfloat scale_z=1,
                 bool scale_textures=true,
                 GLint off_x=0, GLint off_y=0, GLint off_z=0);
     

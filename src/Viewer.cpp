@@ -232,7 +232,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, aspectRatio, 1.0f, drawDistance);
+    gluPerspective(60, aspectRatio, 8.0f, drawDistance);
     
     //Reload matrix mode
     glPushAttrib(GL_TRANSFORM_BIT);
@@ -241,7 +241,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
 //Resize far draw distance
 void Viewer::setDrawDistance( GLdouble d)
 {
-    gluPerspective(60, aspectRatio, 1.0f, d);
+    gluPerspective(60, aspectRatio, 8.0f, d);
 }
 
 //Set glColor if needed by block type and face
@@ -406,15 +406,15 @@ void Viewer::drawCube( uint8_t blockID,
 //Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotate)
 void Viewer::drawScaledBlock( uint8_t blockID,
     GLint x, GLint y, GLint z, uint8_t vflags,
-    GLint scale_x, GLint scale_y, GLint scale_z,
+    GLfloat scale_x, GLfloat scale_y, GLfloat scale_z,
     bool scale_texture,
     GLint off_x, GLint off_y, GLint off_z)
 {
     GLint width, height, depth;
     
-    width  = scale_x != 0 ? texmap_TILE_LENGTH / scale_x : 0;
-    height = scale_y != 0 ? texmap_TILE_LENGTH / scale_y : 0;
-    depth  = scale_z != 0 ? texmap_TILE_LENGTH / scale_z : 0;
+    width  = texmap_TILE_LENGTH * scale_x;
+    height = texmap_TILE_LENGTH * scale_y;
+    depth  = texmap_TILE_LENGTH * scale_z;
     
     //Face coordinates (in pixels)
     GLint A = (x << 4) + off_x;
@@ -430,9 +430,9 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     //Scaled texture map ratios (1/block length)
     GLfloat tmr_x, tmr_y, tmr_z;
     if (scale_texture) {
-        tmr_x  = scale_x != 0 ? 1.0 /(float)scale_x : 0;
-        tmr_y = scale_y != 0 ? 1.0 /(float)scale_y : 0;
-        tmr_z  = scale_z != 0 ? 1.0 /(float)scale_z : 0;
+        tmr_x  = scale_x * tmr;
+        tmr_y = scale_y * tmr;
+        tmr_z  = scale_z * tmr;
     } else {
         tmr_x = tmr_y = tmr_z = tmr;
     }
@@ -463,7 +463,7 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     // (tx_0, ty_0)      (tx_1, ty_0)
 
     //A
-    if (!(vflags & 0x80)) {
+    if (!(vflags & 0x80) && (scale_y != 0.0 && scale_z != 0.0) ) {
         tx_0 = blockInfo[blockID].tx[WEST];
         tx_1 = blockInfo[blockID].tx[WEST] + tmr;
         ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
@@ -476,7 +476,7 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     }
 
     //B
-    if (!(vflags & 0x40)) {
+    if (!(vflags & 0x40) && (scale_y != 0.0 && scale_z != 0.0) ) {
         tx_0 = blockInfo[blockID].tx[EAST];
         tx_1 = blockInfo[blockID].tx[EAST] + tmr;
         ty_0 = blockInfo[blockID].ty[EAST] + tmr;
@@ -489,7 +489,7 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     }
     
     //C
-    if (!(vflags & 0x20)) {
+    if (!(vflags & 0x20) && (scale_x != 0.0 && scale_z != 0.0) ) {
         tx_0 = blockInfo[blockID].tx[DOWN];
         tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
         ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
@@ -502,7 +502,7 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     }
     
     //D
-    if (!(vflags & 0x10)) {
+    if (!(vflags & 0x10) && (scale_x != 0.0 && scale_z != 0.0) ) {
         tx_0 = blockInfo[blockID].tx[UP];
         tx_1 = blockInfo[blockID].tx[UP] + tmr;
         ty_0 = blockInfo[blockID].ty[UP] + tmr;
@@ -515,7 +515,7 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     }
     
     //E
-    if (!(vflags & 0x08)) {
+    if (!(vflags & 0x08) && (scale_x != 0.0 && scale_y != 0.0) ) {
         tx_0 = blockInfo[blockID].tx[NORTH];
         tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
         ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
@@ -528,7 +528,7 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     }
     
     //F
-    if (!(vflags & 0x04)) {
+    if (!(vflags & 0x04) && (scale_x != 0.0 && scale_y != 0.0) ) {
         tx_0 = blockInfo[blockID].tx[SOUTH];
         tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
         ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
@@ -546,11 +546,11 @@ void Viewer::drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
     uint8_t visflags)
 {
     //TODO: metadata to determine which half!
-    drawScaledBlock( blockID, x, y, z, visflags, 1, 2, 1);
+    drawScaledBlock( blockID, x, y, z, visflags, 1, 0.5, 1);
 }
 
 //Draw item blockID which is placed flat on the ground
-void Viewer::drawGroundItem( uint8_t blockID, GLint x, GLint y, GLint z)
+void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z)
 {
     //TODO: metadata
 
@@ -702,7 +702,7 @@ void Viewer::drawBlock( const mc__::Block& block,
 
     //Drawing function depends on shape (as determined from properties)
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=1/4 block
+    //              4=wallsign, 5=ladder, 6=track, 7=fire
     //              8=portal, 9=fence, A=door, B=floorplate
     //              C=1/3 block, D=wallsign, E=button, F=plant
 
@@ -715,33 +715,57 @@ void Viewer::drawBlock( const mc__::Block& block,
         case 0x1:
             //Stairs
             drawScaledBlock(block.blockID, x, y, z, vflags,
-                1, 2, 2, true, 0, 8, 0);
+                1, 0.5, 0.5, true, 0, 8, 0);
             drawHalfBlock(block.blockID, x, y, z, vflags);
             break;
-        case 0x3:
+        case 0x2:   //Lever
+            drawItem(block.blockID, x, y, z);
+            
+            //Cobblestone base
+            drawScaledBlock(4, x, y, z, 0,
+                0.25, 0.25, 0.5, true, 6, 0, 4);
+            break;
+        case 0xF:   //Plant
+            drawItem(block.blockID, x, y, z);
+            break;
+        case 0x3:   //half-block
             drawHalfBlock(block.blockID, x, y, z, vflags);
             break;
         case 0xC:   //Snow
             drawScaledBlock(block.blockID, x, y, z, vflags,
-                1, 4, 1);
+                1, 0.25, 1);
             break;
-        case 0x4:
-        case 0x5:
-        case 0x7:
-        case 0x8:
-        case 0xA:
-        case 0xD:
-        case 0xE:
+        case 0x8:   //Portal
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                1.0, 1.0, 0.25, true, 0, 0, 8);
+            break;
+        case 0xE:   //Button
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                0.25, 0.25, 0.125, true, 0, 8, 0);
+            break;
+        case 0x4:   //Wallsign
+        case 0x5:   //Ladder
+        case 0x7:   //fire
+        case 0xA:   //Door
+        case 0xD:   //Wallsign
             drawWallItem(block.blockID, x, y, z);
             break;
-        case 0x6:
-        case 0x9:
-        case 0xB:
-            drawGroundItem(block.blockID, x, y, z);
+        case 0x6:   //Track
+            drawTrack(block.blockID, x, y, z);
             break;
-        case 0x2:
-        case 0xF:
-            drawItem(block.blockID, x, y, z);
+        case 0x9:   //Fence
+            //Top of fence
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                1, 0.25, 0.25, true, 0, 6, 6);
+            //Fence legs
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                0.25, 0.375, 0.25, true, 2, 0, 6);
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                0.25, 0.375, 0.25, true, 10, 0, 6);
+            break;
+        case 0xB:   //Floorplate
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                0.75, 0.125, 0.75, true, 2, 0, 2);
             break;
         //TODO: test for other shapes
         default:    //Draw unknown types as a cube
@@ -1130,7 +1154,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 52, 65, 65, 65, 65, 65, 65, 0x04);    //Spawner
     setBlockInfo( 53, 4,  4,  4,  4,  4,  4,  0x10);    //WoodStairs
     setBlockInfo( 54, 26, 26, 25, 25, 26, 27, 0x00);    //Chest (*)
-    setBlockInfo( 55, 84, 100,85, 101,84, 100,0x2F);    //Wire (*)
+    setBlockInfo( 55, 84, 85, 84, 100,100,101,0x6F);    //Wire (*)
     setBlockInfo( 56, 50, 50, 50, 50, 50, 50, 0x00);    //DiamondOre
     setBlockInfo( 57, 40, 40, 56, 24, 40, 40, 0x00);    //DiamondBlock
     setBlockInfo( 58, 60, 60, 43, 43, 59, 59, 0x00);    //Workbench
@@ -1144,7 +1168,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 66, 112,112,128,128,128,128,0x67);    //Track (*)
     setBlockInfo( 67, 16, 16, 16, 16, 16, 16, 0x10);    //CobbleStairs
     setBlockInfo( 68, 4,  4,  4,  4,  4,  4,  0xD7);    //WallSign (*)
-    setBlockInfo( 69, 96, 16, 96, 16, 96, 16, 0x27);    //Lever
+    setBlockInfo( 69, 96, 96, 96, 96, 96, 16, 0x27);    //Lever
     setBlockInfo( 70, 1,  1,  1,  1,  1,  1,  0xB7);    //StonePlate
     setBlockInfo( 71, 98, 82, 98, 82, 98, 82, 0xA7);    //IronDoor (*)
     setBlockInfo( 72, 4,  4,  4,  4,  4,  4,  0xB7);    //WoodPlate
