@@ -47,9 +47,12 @@ namespace mc__ {
 
             //Update with (mini)-chunk
             bool addChunk( const mc__::Chunk *update);
-            
-            //Neighbors
-            mc__::MapChunk *neighbors[6]; //Adjacent mapchunks to A, B, C, D, E, F
+
+            //Recalculate visibility for all blocks
+            bool recalcVis();
+
+            //Neighbors: Adjacent map chunks on -X, +X, -Y, +Y, -Z, +Z
+            mc__::MapChunk *neighbors[6];
             
             //8 bits: [ A | B | C | D | E | F | invisible | self ] (1=opaque)
             // IF A BIT IS SET, THAT FACE IS NOT DRAWN
@@ -58,12 +61,17 @@ namespace mc__ {
             //Ordered list of block indices to draw
             indexList_t visibleIndices;
             
-            //flags used  by Viewer
-            enum FLAGS { INVISIBLE=0x1, UPDATED=0x2};
+            //flags used by Viewer:
+            //  VISIBLE     = draw this chunk
+            //  UPDATED     = recalculate visible faces, update adjacent, redraw
+            //  LOADED      = received complete map chunk from server
+            enum FLAGS { VISIBLE=0x1, UPDATED=0x2, LOADED=0x4, DRAWABLE=0x5, ADJ_UPDATED=0x8};
             uint32_t flags;
         protected:
-            bool updateVisFlags( uint16_t i, bool adj[6], indexList_t& changes);
-
+            bool updateVisFlags(uint16_t i, bool adj[6], indexList_t& changes);
+            bool updateVisRange(const mc__::Chunk *chunk,
+                uint8_t off_x, uint8_t off_y, uint8_t off_z,
+                uint8_t max_x, uint8_t max_y, uint8_t max_z);
     };
 }
 

@@ -777,13 +777,13 @@ void Viewer::drawBlock( const mc__::Block& block,
 
 using mc__::chunkSet_t;
 
-//Create gl list for mapchunk, if needed
+//Create GL display list for mapchunk, if needed
 void Viewer::drawMapChunk(MapChunk* mapchunk)
 {
     MapChunk& myChunk = *mapchunk;
 
-    //Don't draw invisible mapchunks
-    if (myChunk.flags & MapChunk::INVISIBLE) {
+    //Don't draw invisible or unloaded mapchunks
+    if ( (myChunk.flags & MapChunk::DRAWABLE) != MapChunk::DRAWABLE ) {
         return;
     }
 
@@ -818,7 +818,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         glListMap[mapchunk] = gl_list;
         myChunk.flags |= MapChunk::UPDATED;
     }
-    
+
     
     //Compile GL list if needed (drawing to screen happens elsewhere)
     if (myChunk.flags & MapChunk::UPDATED) {
@@ -878,20 +878,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
 //Draw the megachunks in mc__::World
 void Viewer::drawMapChunks( const World& world)
 {
-/*
-    //Reference to world MapChunks data structure
-    const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
-
-    //Variables to iterate through list of chunks
-    XZMapChunk_t::const_iterator iter_xz;
-    //For all megachunks
-    for (iter_xz = coordMapChunks.begin();
-        iter_xz != coordMapChunks.end(); iter_xz++)
-    {
-        MapChunk *mapchunk = iter_xz->second;
-        drawMapChunk(mapchunk);
-    }
-*/
+    //Use the mapChunkList of all map chunks to draw them
     const mapChunkList_t& mapChunks = world.mapChunks;
     mapChunkList_t::const_iterator iter;
     for (iter = mapChunks.begin(); iter != mapChunks.end(); iter++)
@@ -1008,25 +995,17 @@ bool Viewer::drawWorld(const World& world)
     
     //Bring the world to the camera, not the camera to the world
     glTranslatef( -cam_X, -cam_Y, -cam_Z );
-
-    //Start putting quads in memory
-    //glBegin(GL_QUADS);
-
-    //Draw the loaded mini-chunks
-    //drawChunks(world);
     
     //Draw the mega-chunks
     drawMapChunks(world);
 
     //Debug :)    
-    mc__::Block block1 = {58, 0, 0};   //Workbench
-    drawBlock( block1, 0, 0, 2);
-
-    //Finish putting quads in memory, and draw
-    //glEnd();
+    //mc__::Block block1 = {58, 0, 0};   //Workbench
+    //drawBlock( block1, 0, 0, 2);
     
     return true;
 }
+
 
 //Copy block info to struct
 void Viewer::setBlockInfo( uint8_t index,

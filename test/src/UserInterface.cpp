@@ -483,8 +483,13 @@ bool UserInterface::handleKeys()
             case sf::Key::Back:
                 resetCamera();
                 break;
-            //Debugging output
+            case sf::Key::F5:
+                //Redraw everything
+                cout << "Recalculating visibility of all chunks" << endl;
+                world.redraw();
+                break;
             case sf::Key::Tilde:
+                //Write chunk data to files
                 viewer.saveChunks(world);
                 break;
             case sf::Key::BackSlash:

@@ -71,7 +71,6 @@ bool MapChunk::addChunk( const Chunk *chunk)
     if (chunk->block_array == NULL) {
         return false;
     }
-    bool updateNeighbors=false;
     
     //DEBUG
     //cout << "addChunk " << chunk->X << "," << (int)chunk->Y << ","
@@ -90,27 +89,51 @@ bool MapChunk::addChunk( const Chunk *chunk)
             << (int)max_x << "," << (int)max_y << "," << (int)max_z << endl;
         //The person adding chunk should have dissected it
     }
+
+    //Get changes in the chunk range, and flag neighbors as updated
+    updateVisRange(chunk, in_x, in_y, in_z, max_x, max_y, max_z);
+
+    return true;
+}
+
+//update the visflags without a new chunk
+bool MapChunk::recalcVis()
+{
+    return updateVisRange(NULL, 0, 0, 0, 15, 127, 15);
     
+}
+
+//Update the visflags for a range of blocks in the mapchunk
+bool MapChunk::updateVisRange(const Chunk *chunk,
+    uint8_t off_x, uint8_t off_y, uint8_t off_z,
+    uint8_t max_x, uint8_t max_y, uint8_t max_z)
+{
+    //internal chunk offsets
+    uint16_t x_, y_, z_;
+
     //Track adjacency to neighbor MapChunk
-    bool adj_N[6] = { false, false, false, false, false, false};      //A, B, C, D, E, F
+    bool adj_N[6] = { false, false, false, false, false, false};
+    bool update_N[6] = { false, false, false, false, false, false};
+
+    //external chunk index
+    uint16_t c_index=0;
     
-    uint16_t x_, y_, z_;             //internal chunk offsets
-    uint16_t index;                 //internal chunk index
-    uint16_t c_index=0;                //external chunk index
+    //internal chunk index
+    uint16_t index;
     
-    //Track changed blocks
+    //List of changes
     indexList_t changes;
     
     // 3D range: x_ to max_x, z_ to max_z, y_ to max_y
     //For X...
-    for (x_ = in_x; x_ <= max_x; x_++) {
+    for (x_ = off_x; x_ <= max_x; x_++) {
         //Check X neighbor chunk adjacency
         if (x_ == 0) { adj_N[0]=true; adj_N[1]=false; }
         else if (x_ < 15) { adj_N[0]=false; }
         else { adj_N[1]=true; }
             
     //For X,Z...
-    for(z_ = in_z; z_ <= max_z; z_++) {
+    for(z_ = off_z; z_ <= max_z; z_++) {
         //Check Z neighbor chunk adjacency
         if (z_ == 0) { adj_N[4]=true; adj_N[5]=false;}
         else if (z_ < 15) { adj_N[4]=false; }
@@ -119,12 +142,14 @@ bool MapChunk::addChunk( const Chunk *chunk)
     //For X,Y,Z
     adj_N[2] = false;
     adj_N[3] = false;
-    for(y_ = in_y; y_ <= max_y; y_++, c_index++) {
+    for(y_ = off_y; y_ <= max_y; y_++, c_index++) {
         index = (x_<<11)|(z_<<7)|y_;
         
-        //Copy the block
-        Block& block=chunk->block_array[c_index];
-        block_array[index] = block;
+        //Copy the block (IF THERE IS ONE!)
+        if (chunk) {
+            Block& block=chunk->block_array[c_index];
+            block_array[index] = block;
+        }
 
         //Determine Y-adjacency (to mapchunks that don't exist!)
         switch (y_) {
@@ -133,10 +158,13 @@ bool MapChunk::addChunk( const Chunk *chunk)
             case 127: adj_N[3] = true; break;
             default: adj_N[2] = false; adj_N[3] = false;
         }
-                
+
         //Update visflags, get list of updated block indices
         if (updateVisFlags(index, adj_N, changes)) {
-            updateNeighbors=true;
+            if (adj_N[0]) { update_N[0] = true; }
+            if (adj_N[1]) { update_N[1] = true; }
+            if (adj_N[4]) { update_N[4] = true; }
+            if (adj_N[5]) { update_N[5] = true; }
         }
     }}}
 
@@ -153,28 +181,29 @@ bool MapChunk::addChunk( const Chunk *chunk)
             visibleIndices.erase(index);
         }
     }
+
     if (changes.size() > 0) {
         flags |= MapChunk::UPDATED;
     }
-    
+
+    /*
     //Mark neighor chunks as UPDATED, if needed
-    if (updateNeighbors && false) {
-        if (neighbors[0] != NULL) {
-            neighbors[0]->flags |= MapChunk::UPDATED;
-        }
-        if (neighbors[1] != NULL) {
-            neighbors[1]->flags |= MapChunk::UPDATED;
-        }
-        if (neighbors[4] != NULL) {
-            neighbors[4]->flags |= MapChunk::UPDATED;
-        }
-        if (neighbors[5] != NULL) {
-            neighbors[5]->flags |= MapChunk::UPDATED;
-        }
+    if (update_N[0] && neighbors[0] != NULL) {
+        neighbors[0]->flags |= MapChunk::ADJ_UPDATED;
     }
+    if (update_N[1] && neighbors[1] != NULL) {
+        neighbors[1]->flags |= MapChunk::ADJ_UPDATED;
+    }
+    if (update_N[4] && neighbors[4] != NULL) {
+        neighbors[4]->flags |= MapChunk::ADJ_UPDATED;
+    }
+    if (update_N[5] && neighbors[5] != NULL) {
+        neighbors[5]->flags |= MapChunk::ADJ_UPDATED;
+    }*/
     
     return true;
 }
+
 
 //update local and neighbor visflags array for opacity at x,y,z
 //Return true if changes were made to neighbor outside of MapChunk
@@ -254,7 +283,7 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
             flags_p = &(visflags[index_n]);
             flags_v = *flags_p;
             blockid_n = block_array[index_n].blockID;
-        } else if ( neighbor != NULL) {
+        } else if ( neighbor != NULL && (neighbor->flags & DRAWABLE)==DRAWABLE) {
             //Index inside neighbor
             flags_p = &(neighbor->visflags[index_n]);
             flags_v = *flags_p;
@@ -303,14 +332,19 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
             flags_v &= ~neighborMask;
         }
         
-        //Update neighbor block flags
+        //Update adjacent block flags
         if ((flags_p != NULL) && (flags_v != *flags_p)) {
             *flags_p = flags_v;
             
             //Mark change
             if (adj_N[i]) {
+              
                 //Change outside this mapchunk
                 result=true;
+                if ( neighbor != NULL) {
+                    //TODO: tell neighbor it can draw
+                }
+                
             } else {
                 //Change inside this mapchunk
                 changes.insert(index_n);

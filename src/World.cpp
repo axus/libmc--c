@@ -231,6 +231,67 @@ bool World::addMapChunk( const Chunk* chunk)
     return result;
 }
 
+//Set map chunk flags at X/Z (create one if needed)
+void World::setChunkFlags( int32_t X, int32_t Z, uint32_t setflags)
+{
+    MapChunk *chunk = getChunk(X, Z);
+    if (chunk == NULL) {
+        //Create the new chunk, with no data in it
+        mc__::Chunk* newChunk = new Chunk(0, 0, 0, X, 0, Z, false);
+            
+        //Create mapchunk for the (empty) chunk
+        addMapChunk( newChunk );
+        
+        //Point to the new mapchunk
+        chunk = getChunk(X, Z);
+    }
+    
+    //Set the flags
+    chunk->flags |= setflags;
+}
+
+//Clear map chunk flags at X/Z (create one if needed)
+void World::unsetChunkFlags( int32_t X, int32_t Z, uint32_t unsetflags)
+{
+    MapChunk *chunk = getChunk(X, Z);
+    if (chunk == NULL) {
+        //Create the new chunk, with no data in it
+        mc__::Chunk* newChunk = new Chunk(0, 0, 0, X, 0, Z, false);
+            
+        //Create mapchunk for the (empty) chunk
+        addMapChunk( newChunk );
+        
+        //Point to the new mapchunk
+        chunk = getChunk(X, Z);
+    }
+    
+    //Unset the flags
+    chunk->flags &= ~unsetflags;
+}
+
+//Get map chunk flags at X/Z
+uint32_t World::getChunkFlags( int32_t X, int32_t Z)
+{
+    uint32_t result=0;
+    
+    MapChunk *chunk = getChunk(X, Z);
+    if (chunk != NULL) {
+        result = chunk->flags;
+    }
+    return result;
+}
+
+//Mark all mapchunks as needing redrawing
+void World::redraw()
+{
+    //Use the mapChunkList of all map chunks to draw them
+    mapChunkList_t::const_iterator iter;
+    for (iter = mapChunks.begin(); iter != mapChunks.end(); iter++)
+    {
+        (*iter)->recalcVis();
+    }
+
+}
 
 //Unzip all mini-chunks into MapChunks
 bool World::updateMapChunks(bool cleanup)
@@ -254,9 +315,17 @@ bool World::updateMapChunks(bool cleanup)
             
             //Add chunk to map (uncompresses if needed)
             if (addMapChunk(chunk)) {
-              //DEBUG
-              //cout << "Updated chunk to map @ " << chunk->X
-              //  << "," << (int)chunk->Y << "," << chunk->Z << endl;
+              
+                //Mark "LOADED" if this was a full size map chunk
+                if (chunk->size_Y > 126) {
+                    setChunkFlags(chunk->X, chunk->Z, MapChunk::LOADED);
+                }
+                
+                //DEBUG
+                if (debugging) {
+                  cout << "Updated chunk to map @ " << chunk->X
+                      << "," << (int)chunk->Y << "," << chunk->Z << endl;
+                }
             } else {
                 cerr << "Error updating chunk to map @ X=" << chunk->X
                 << " Y=" << (int)chunk->Y << "Z=" << chunk->Z << endl;
@@ -386,6 +455,9 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
 
     //Map (X | Z | Y) -> Chunk*
     bool result=addMapChunk(flatChunk );
+    
+    //Set map chunk to draw
+    setChunkFlags(chunkX, chunkZ, MapChunk::DRAWABLE);
     
     return result;
 }

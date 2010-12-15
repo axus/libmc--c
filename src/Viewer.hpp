@@ -123,7 +123,7 @@ namespace mc__ {
             
             //Draw everything
             bool drawWorld(const mc__::World& world);
-
+            
             //Camera functions
             void move( GLfloat side, GLfloat up, GLfloat forward);
             void turn( GLfloat degrees);  //Change current yaw by "degrees"

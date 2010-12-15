@@ -67,9 +67,17 @@ namespace mc__ {
             
             //Unzip all new chunks into MapChunks
             bool updateMapChunks(bool cleanup=true);
+            
+            //Mark all mapchunks as "updated", will be redrawn
+            void redraw();
 
             //Add one mini-chunk to the map
             bool addMapChunk( const mc__::Chunk *chunk);
+            
+            //Map chunk flags at X/Z
+            void setChunkFlags( int32_t X, int32_t Z, uint32_t setflags=0);
+            void unsetChunkFlags( int32_t X, int32_t Z, uint32_t unsetflags=0);
+            uint32_t getChunkFlags( int32_t X, int32_t Z);
             
             //Generate chunk 16x13x1 containing block ID 0 - 96
             bool genChunkTest(int32_t X, int8_t Y, int32_t Z);

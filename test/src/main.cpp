@@ -110,6 +110,8 @@ void genWorld(World& world)
     world.spawn_Y = 64;
     world.spawn_Z = 16;
 
+    //Mark every chunk as updated
+    world.redraw();
 }
 
 
@@ -140,6 +142,7 @@ int main(int argc, char** argv)
     Events events;
 
     //Generate a test world
+    cout << "Generating test world..." << endl;
     genWorld(world);
 
     //Set player initial position and viewpoint (height, yaw, pitch)
@@ -147,30 +150,16 @@ int main(int argc, char** argv)
         world.spawn_Y + 1, 180, 0);
 
     //Create user interface to world
+    cout << "Creating user interface..." << endl;
     mc__::UserInterface ui("libmc--c example", world, player, events);
         
     //Run until user exits
-    /*
-    uint32_t frames=0;
-    sf::Clock clock;
-    while (ui.run() && (!run_limit || (frames < max_frames) )) {
-
-        //Sleep some to decrease CPU usage in between UI updates
-        sf::Sleep(0.015f - clock.GetElapsedTime() );
-        frames++;
-        
-        //Reset clock before running UI and game logic
-        clock.Reset();
-    }*/
-    
-    
-    //faster running...
     while (ui.run()) {
-        Sleep(10);   //100FPS
+        Sleep(10);   //100FPS - draw time
     }
     
     //Send disconnect message
-    
+    cout << "Exiting..." << endl;
     
     //Sleep 5 seconds if run to max frames
     if (run_limit) {
