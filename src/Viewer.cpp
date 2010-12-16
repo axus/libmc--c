@@ -810,10 +810,11 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
     if (iter != glListMap.end()) {
         gl_list = iter->second;
 
-        //Draw the precompiled list
+        //Draw the precompiled list (might be recalculated after)
         glCallList(gl_list);
 
     } else {
+        //Create new list to be calculated
         gl_list = glGenLists(1);
         glListMap[mapchunk] = gl_list;
         myChunk.flags |= MapChunk::UPDATED;

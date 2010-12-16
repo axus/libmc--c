@@ -247,34 +247,41 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
         switch (i) {
             case 0:  //X-1
                 neighborMask = 0x40;
-                index_n = index - (1<<11);
+                //index_n = index - (1<<11);
+                index_n = (index & 0x07FF)|((index - (1<<11))&0x7800);
                 break;
             case 1:  //X+1
                 neighborMask = 0x80;
-                index_n = index + (1<<11);
+                //index_n = index + (1<<11);
+                index_n = (index & 0x07FF)|((index + (1<<11))&0x7800);
                 break;
             case 2:        //Y-1
                 neighborMask = 0x10;
-                index_n = index - 1;
+                //index_n = index - 1;
+                index_n = (index & 0x7F80)|((index - 1)&0x007F);
                 break;
             case 3:   //Y+1
                 neighborMask = 0x20;
-                index_n = index + 1;
+                //index_n = index + 1;
+                index_n = (index & 0x7F80)|((index + 1)&0x007F);
                 break;
             case 4:   //Z-1
                 neighborMask = 0x04;
-                index_n = index - (1<<7);
+                //index_n = index - (1<<7);
+                index_n = (index & 0x787F)|((index - (1<<7))&0x0780);
                 break;
             case 5:   //Z+1
                 neighborMask = 0x08;
-                index_n = index + (1<<7);
+                //index_n = index + (1<<7);
+                index_n = (index & 0x787F)|((index + (1<<7))&0x0780);
                 break;
             default:  //me
                 neighborMask = 0x01;
                 index_n = index;
         }
-        index_n = index_n % uint16_t(1<<15);
-        //assert( index_n < 32768);
+        
+        //index_n % 32768
+        index_n &= ((1<<15) - 1);
 
         //Copy from this MapChunk, or neighbor, or NULL
         MapChunk *neighbor = neighbors[i];
@@ -285,7 +292,7 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
             blockid_n = block_array[index_n].blockID;
         } else if ( neighbor != NULL && (neighbor->flags & DRAWABLE)==DRAWABLE) {
             //Index inside neighbor
-            flags_p = &(neighbor->visflags[index_n]);
+            flags_p = (neighbor->visflags + index_n);
             flags_v = *flags_p;
             blockid_n = neighbor->block_array[index_n].blockID;
         } else {
@@ -342,8 +349,18 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
                 //Change outside this mapchunk
                 result=true;
                 if ( neighbor != NULL) {
-                    //TODO: tell neighbor it can draw
+                    //Update neighbor visible index list in neighbor
+                    if ( (flags_v & 0x02) != 0x02 &&
+                         (flags_v & 0xFC) != 0xFC )
+                    {
+                        neighbor->visibleIndices.insert(index_n);
+                    } else {
+                        //Index is unseen, remove it
+                        neighbor->visibleIndices.erase(index_n);
+                    }
+                    neighbor->flags |= UPDATED;
                 }
+                
                 
             } else {
                 //Change inside this mapchunk
