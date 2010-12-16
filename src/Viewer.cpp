@@ -99,7 +99,7 @@ Viewer::Viewer(unsigned short width, unsigned short height):
     cam_X(0), cam_Y(0), cam_Z(0), drawDistance(4096.f),
     view_width(width), view_height(height), aspectRatio((GLfloat)width/height),
     cam_yaw(0), cam_pitch(0),
-    cam_vecX(0), cam_vecY(0), cam_vecZ(0), debugging(false)
+    cam_vecX(0), cam_vecY(0), cam_vecZ(0), use_mipmaps(true), debugging(false)
 {
     //Dark green tree leaves
     leaf_color[0] = 0x00;    //Red
@@ -116,7 +116,7 @@ Viewer::Viewer(unsigned short width, unsigned short height):
 }
 
 //Start up OpenGL
-bool Viewer::init(const std::string &filename)
+bool Viewer::init(const std::string &filename, bool mipmaps)
 {
 
     //Compare devIL DLL version to header version
@@ -124,6 +124,8 @@ bool Viewer::init(const std::string &filename)
         cerr << "DevIL wrong DLL version" << endl;
         return 1;
     }
+
+    use_mipmaps=mipmaps;
 
     texture_map_file = filename;
 
@@ -230,7 +232,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, aspectRatio, 0.01f, drawDistance);
+    gluPerspective(60, aspectRatio, 8.0f, drawDistance);
     
     //Reload matrix mode
     glPushAttrib(GL_TRANSFORM_BIT);
@@ -239,7 +241,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
 //Resize far draw distance
 void Viewer::setDrawDistance( GLdouble d)
 {
-    gluPerspective(60, aspectRatio, 0.01f, d);
+    gluPerspective(60, aspectRatio, 8.0f, d);
 }
 
 //Set glColor if needed by block type and face
@@ -252,7 +254,7 @@ void Viewer::setBlockColor(uint8_t blockID, face_ID face)
         case 0:
             glColor3ub( 255, 255, 255);
             break;
-        case 2:
+        case 2:     //Grass
             if (face == mc__::UP) {
                 red=grass_color[0]; green=grass_color[1]; blue=grass_color[2];
             } else {
@@ -260,7 +262,7 @@ void Viewer::setBlockColor(uint8_t blockID, face_ID face)
             }
             glColor3ub( red, green, blue);
             break;
-        case 18:
+        case 18:    //Leaves
             red=leaf_color[0]; green=leaf_color[1]; blue=leaf_color[2];
             glColor3ub( red, green, blue);
             break;
@@ -286,7 +288,7 @@ void Viewer::drawCube( uint8_t blockID,
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
 
-    //For each face, load the appropriate texture for the block ID, and draw square
+    //For each face, use the appropriate texture offsets for the block ID
     //       ADE ---- BDE
     //       /.       /|
     //      / .      / |
@@ -401,11 +403,244 @@ void Viewer::drawCube( uint8_t blockID,
     setBlockColor( 0, (face_ID)0);
 }
 
+//Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotate)
+void Viewer::drawScaledBlock( uint8_t blockID,
+    GLint x, GLint y, GLint z, uint8_t vflags,
+    GLfloat scale_x, GLfloat scale_y, GLfloat scale_z,
+    bool scale_texture,
+    GLint off_x, GLint off_y, GLint off_z)
+{
+    GLint width, height, depth;
+    
+    width  = texmap_TILE_LENGTH * scale_x;
+    height = texmap_TILE_LENGTH * scale_y;
+    depth  = texmap_TILE_LENGTH * scale_z;
+    
+    //Face coordinates (in pixels)
+    GLint A = (x << 4) + off_x;
+    GLint B = (x << 4) + off_x + width;
+    GLint C = (y << 4) + off_y;
+    GLint D = (y << 4) + off_y + height;
+    GLint E = (z << 4) + off_z;
+    GLint F = (z << 4) + off_z + depth;
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+    
+    //Scaled texture map ratios (1/block length)
+    GLfloat tmr_x, tmr_y, tmr_z;
+    if (scale_texture) {
+        tmr_x  = scale_x * tmr;
+        tmr_y = scale_y * tmr;
+        tmr_z  = scale_z * tmr;
+    } else {
+        tmr_x = tmr_y = tmr_z = tmr;
+    }
+
+    //For each face, use the appropriate texture offsets for the block ID
+    //       ADE ---- BDE
+    //       /|       /|
+    //      /ACE . ./BCE
+    //    ADF ---- BDF/
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //   Texture map was loaded upside down...
+    // 0.0 -------------> 1.0 (X)
+    // |
+    // |
+    // |
+    // |
+    // |
+    // |
+    // v
+    // 1.0
+    // (Y)
+    
+    //
+    // (tx_0, ty_1)      (tx_1, ty_1)
+    //
+    // (tx_0, ty_0)      (tx_1, ty_0)
+
+    //A
+    if (!(vflags & 0x80) && (scale_y != 0.0 && scale_z != 0.0) ) {
+        tx_0 = blockInfo[blockID].tx[WEST];
+        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
+        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
+        ty_1 = blockInfo[blockID].ty[WEST];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+
+    //B
+    if (!(vflags & 0x40) && (scale_y != 0.0 && scale_z != 0.0) ) {
+        tx_0 = blockInfo[blockID].tx[EAST];
+        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
+        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
+        ty_1 = blockInfo[blockID].ty[EAST];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
+    }
+    
+    //C
+    if (!(vflags & 0x20) && (scale_x != 0.0 && scale_z != 0.0) ) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    }
+    
+    //D
+    if (!(vflags & 0x10) && (scale_x != 0.0 && scale_z != 0.0) ) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = blockInfo[blockID].tx[UP] + tmr;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+    
+    //E
+    if (!(vflags & 0x08) && (scale_x != 0.0 && scale_y != 0.0) ) {
+        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[NORTH];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    }
+    
+    //F
+    if (!(vflags & 0x04) && (scale_x != 0.0 && scale_y != 0.0) ) {
+        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[SOUTH];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    }
+}
+
+//Draw half a block
+void Viewer::drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
+    uint8_t visflags)
+{
+    //TODO: metadata to determine which half!
+    drawScaledBlock( blockID, x, y, z, visflags, 1, 0.5, 1);
+}
+
+//Draw item blockID which is placed flat on the ground
+void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z)
+{
+    //TODO: metadata
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Object boundaries... flat square 1 pixel off the ground
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + 1;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //C
+    //if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    //}
+    //D
+    //if (!(vflags & 0x10)) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = blockInfo[blockID].tx[UP] + tmr;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    //}
+
+}
+
+//Draw item blockID which is placed flat on the wall
+void Viewer::drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z)
+{
+    //TODO: metadata
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Object boundaries... flat square 1 pixel off the wall
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + 1;
+
+    //E
+    //if (!(vflags & 0x08)) {
+        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[NORTH];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    //}
+    
+    //F
+    //if (!(vflags & 0x04)) {
+        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[SOUTH];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    //}
+}
+
 //Draw item blockID which is placed as a block
 void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 {
 
     //TODO: quad always faces player somehow
+
 
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
@@ -453,6 +688,8 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 
 }
 
+
+
 //Draw a placed mc__::Block in openGL
 void Viewer::drawBlock( const mc__::Block& block,
     GLint x, GLint y, GLint z, uint8_t vflags)
@@ -465,20 +702,74 @@ void Viewer::drawBlock( const mc__::Block& block,
 
     //Drawing function depends on shape (as determined from properties)
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=1/4 block
+    //              4=wallsign, 5=ladder, 6=track, 7=fire
     //              8=portal, 9=fence, A=door, B=floorplate
     //              C=1/3 block, D=wallsign, E=button, F=plant
 
+//TODO: correct models
     switch ( (blockInfo[block.blockID].properties & 0xF0)>>4 ) {
         case 0x0:
+            //Cube
             drawCube(block.blockID, x, y, z, vflags);
             break;
-        case 0xF:
+        case 0x1:
+            //Stairs
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                1, 0.5, 0.5, true, 0, 8, 0);
+            drawHalfBlock(block.blockID, x, y, z, vflags);
+            break;
+        case 0x2:   //Lever
+            drawItem(block.blockID, x, y, z);
+            
+            //Cobblestone base
+            drawScaledBlock(4, x, y, z, 0,
+                0.25, 0.25, 0.5, true, 6, 0, 4);
+            break;
+        case 0xF:   //Plant
             drawItem(block.blockID, x, y, z);
             break;
+        case 0x3:   //half-block
+            drawHalfBlock(block.blockID, x, y, z, vflags);
+            break;
+        case 0xC:   //Snow
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                1, 0.25, 1);
+            break;
+        case 0x8:   //Portal
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                1.0, 1.0, 0.25, true, 0, 0, 8);
+            break;
+        case 0xE:   //Button
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                0.25, 0.25, 0.125, true, 0, 8, 0);
+            break;
+        case 0x4:   //Wallsign
+        case 0x5:   //Ladder
+        case 0x7:   //fire
+        case 0xA:   //Door
+        case 0xD:   //Wallsign
+            drawWallItem(block.blockID, x, y, z);
+            break;
+        case 0x6:   //Track
+            drawTrack(block.blockID, x, y, z);
+            break;
+        case 0x9:   //Fence
+            //Top of fence
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                1, 0.25, 0.25, true, 0, 6, 6);
+            //Fence legs
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                0.25, 0.375, 0.25, true, 2, 0, 6);
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                0.25, 0.375, 0.25, true, 10, 0, 6);
+            break;
+        case 0xB:   //Floorplate
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                0.75, 0.125, 0.75, true, 2, 0, 2);
+            break;
         //TODO: test for other shapes
-        default:    //Draw unknown types as a item
-            drawItem(block.blockID, x, y, z);
+        default:    //Draw unknown types as a cube
+            drawCube(block.blockID, x, y, z, vflags);
             break;
     }
 
@@ -486,66 +777,13 @@ void Viewer::drawBlock( const mc__::Block& block,
 
 using mc__::chunkSet_t;
 
-/*
-//Draw the minichunks in mc__::World
-//  DEBUGGING ONLY!
-void Viewer::drawChunks( const World& world)
-{
-    //Reference to world mini-chunks data structure
-    const chunkSet_t& chunkUpdates = world.chunkUpdates;
-    
-    //Variables to iterate through list of chunks
-    chunkSet_t::const_iterator iter_chunk;
-
-    
-    //For all chunks in set
-    for (iter_chunk =  chunkUpdates.begin();
-         iter_chunk != chunkUpdates.end(); iter_chunk++)
-    {
-        Chunk *chunk = *iter_chunk;
-        //Crash here if they screwed up :)
-        mc__::Chunk& myChunk = *chunk;
-
-        //If the chunk has not uncompressed it's data, do so now
-        if (! myChunk.isUnzipped) {
-            
-            //Debug output
-            if (debugging) {
-                cout << "Unzipping chunk @ " << (int)myChunk.X << ","
-                    << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
-            }
-            
-            //Unzip the chunk
-            if (!myChunk.unzip()) {
-                cerr << "ERROR UNZIPPING" << endl;
-                continue;
-            }
-        }
-        
-        //When indexing block in chunk array,
-        //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
-
-        //Draw every block in chunk.  x,y,z determined by position in array.
-        size_t index=0;
-        GLint off_x, off_y, off_z;
-        GLint X, Y, Z;
-        for (off_x=0, X=myChunk.X; off_x <= myChunk.size_X; off_x++, X++) {
-        for (off_z=0, Z=myChunk.Z; off_z <= myChunk.size_Z; off_z++, Z++) {
-        for (off_y=0, Y=myChunk.Y; off_y <= myChunk.size_Y; off_y++, Y++) {
-            drawBlock( myChunk.block_array[index], X, Y, Z);
-            index++;
-        }}}
-    }
-}
-*/
-
-//Create gl list for mapchunk, if needed
+//Create GL display list for mapchunk, if needed
 void Viewer::drawMapChunk(MapChunk* mapchunk)
 {
     MapChunk& myChunk = *mapchunk;
 
-    //Don't draw invisible mapchunks
-    if (myChunk.flags & MapChunk::INVISIBLE) {
+    //Don't draw invisible or unloaded mapchunks
+    if ( (myChunk.flags & MapChunk::DRAWABLE) != MapChunk::DRAWABLE ) {
         return;
     }
 
@@ -557,7 +795,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
                 << (int)myChunk.Y << "," << (int)myChunk.Z << endl;
         }
         //Unzip the chunk
-        if (!myChunk.unzip()) {
+        if (!myChunk.unzip(true)) {
             cerr << "ERROR UNZIPPING" << endl;
             return;
         }
@@ -572,24 +810,19 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
     if (iter != glListMap.end()) {
         gl_list = iter->second;
 
-        //Draw the precompiled list
+        //Draw the precompiled list (might be recalculated after)
         glCallList(gl_list);
 
     } else {
-        glEnd();    //Halt the drawing in progress
-        
+        //Create new list to be calculated
         gl_list = glGenLists(1);
         glListMap[mapchunk] = gl_list;
         myChunk.flags |= MapChunk::UPDATED;
-        glBegin(GL_QUADS);  //Proceed.
     }
-    
+
     
     //Compile GL list if needed (drawing to screen happens elsewhere)
     if (myChunk.flags & MapChunk::UPDATED) {
-
-        //Halt the drawing in progress
-        glEnd();    
 
         //DEBUG updates
         //cout << "MapChunk UPDATED flag: " << (int)myChunk.X << ","
@@ -614,8 +847,9 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
                 
         //Start the GL_COMPILING! Don't execute.
         glNewList(gl_list, GL_COMPILE);
+        glBegin(GL_QUADS);
         
-        //Draw the visible chunks
+        //Draw the visible blocks
         for (iter = visibleIndices.begin(); iter != visibleIndices.end(); iter++)
         {
             //When indexing block in chunk array,
@@ -629,12 +863,12 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
             uint8_t vflags = myChunk.visflags[index];
             
             //Draw the block (based on block type)
-            drawBlock( myChunk.block_array[index], X, Y, Z, pvflags | vflags );
+            drawBlock(myChunk.block_array[index], X, Y, Z, vflags/*pvflags|*/);
+            //Uncomment pvflags to hide faces player can't see
         }
         //End the list
+        glEnd();
         glEndList();
-        
-        glBegin(GL_QUADS);  //Proceed.
 
         //Finished drawing chunk, no longer "updated"
         myChunk.flags &= ~(MapChunk::UPDATED);
@@ -645,20 +879,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
 //Draw the megachunks in mc__::World
 void Viewer::drawMapChunks( const World& world)
 {
-/*
-    //Reference to world MapChunks data structure
-    const XZMapChunk_t& coordMapChunks = world.coordMapChunks;
-
-    //Variables to iterate through list of chunks
-    XZMapChunk_t::const_iterator iter_xz;
-    //For all megachunks
-    for (iter_xz = coordMapChunks.begin();
-        iter_xz != coordMapChunks.end(); iter_xz++)
-    {
-        MapChunk *mapchunk = iter_xz->second;
-        drawMapChunk(mapchunk);
-    }
-*/
+    //Use the mapChunkList of all map chunks to draw them
     const mapChunkList_t& mapChunks = world.mapChunks;
     mapChunkList_t::const_iterator iter;
     for (iter = mapChunks.begin(); iter != mapChunks.end(); iter++)
@@ -697,9 +918,6 @@ void Viewer::startOpenGL() {
     //Save the original viewpoint
     glPushMatrix(); 
 
-    //Create OpenGL texture
-    glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);//Quick mipmaps
-    
     glGenTextures(1, &image);
     glBindTexture(GL_TEXTURE_2D, image);    //bind empty texture
     
@@ -710,13 +928,20 @@ void Viewer::startOpenGL() {
     //Make textures "blocky" when up close
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
-    //Use texture mipmaps when far away
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-        GL_NEAREST_MIPMAP_NEAREST);
-
-    //Generate mipmaps
-    glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
-
+    if (use_mipmaps) {
+        //Create OpenGL texture
+        glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);//Quick mipmaps
+        
+        //Use texture mipmaps when far away
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+            GL_NEAREST_MIPMAP_NEAREST);
+    
+        //Generate mipmaps
+        glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+    } else {
+        //Use nearest texture when far away
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
 
     //No blending
     glDisable(GL_BLEND);
@@ -771,25 +996,17 @@ bool Viewer::drawWorld(const World& world)
     
     //Bring the world to the camera, not the camera to the world
     glTranslatef( -cam_X, -cam_Y, -cam_Z );
-
-    //Start putting quads in memory
-    glBegin(GL_QUADS);
-
-    //Draw the loaded mini-chunks
-    //drawChunks(world);
     
     //Draw the mega-chunks
     drawMapChunks(world);
 
     //Debug :)    
-    mc__::Block block1 = {58, 0, 0};   //Workbench
-    drawBlock( block1, 0, 0, 2);
-
-    //Finish putting quads in memory, and draw
-    glEnd();
+    //mc__::Block block1 = {58, 0, 0};   //Workbench
+    //drawBlock( block1, 0, 0, 2);
     
     return true;
 }
+
 
 //Copy block info to struct
 void Viewer::setBlockInfo( uint8_t index,
@@ -828,7 +1045,7 @@ void Viewer::setBlockInfo( uint8_t index,
     
     //Assign properties
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=1/4 block
+    //              4=wallsign, 5=ladder, 6=track, 7=fire?,
     //              8=portal, 9=fence, A=door, B=floorplate
     //              C=1/3 block, D=wallsign, E=button, F=plant
     //0x08: Bright: 0=dark, 1=lightsource
@@ -906,7 +1123,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 41, 39, 39, 55, 23, 39, 39, 0x00);    //GoldBlock
     setBlockInfo( 42, 38, 38, 54, 22, 38, 38, 0x00);    //IronBlock
     setBlockInfo( 43, 5,  5,  6,  6,  5,  5,  0x00);    //DoubleStep
-    setBlockInfo( 44, 5,  5,  6,  6,  5,  5,  0x20);    //Step
+    setBlockInfo( 44, 5,  5,  6,  6,  5,  5,  0x30);    //Step
     setBlockInfo( 45, 7,  7,  7,  7,  7,  7,  0x00);    //Brick
     setBlockInfo( 46, 8,  8, 10,  9,  8,  8,  0x00);    //TNT
     setBlockInfo( 47, 35, 35, 4,  4,  35, 35, 0x00);    //Bookshelf
@@ -917,7 +1134,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 52, 65, 65, 65, 65, 65, 65, 0x04);    //Spawner
     setBlockInfo( 53, 4,  4,  4,  4,  4,  4,  0x10);    //WoodStairs
     setBlockInfo( 54, 26, 26, 25, 25, 26, 27, 0x00);    //Chest (*)
-    setBlockInfo( 55, 84, 100,85, 101,84, 100,0x2F);    //Wire (*)
+    setBlockInfo( 55, 84, 85, 84, 100,100,101,0x6F);    //Wire (*)
     setBlockInfo( 56, 50, 50, 50, 50, 50, 50, 0x00);    //DiamondOre
     setBlockInfo( 57, 40, 40, 56, 24, 40, 40, 0x00);    //DiamondBlock
     setBlockInfo( 58, 60, 60, 43, 43, 59, 59, 0x00);    //Workbench
@@ -928,10 +1145,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 63, 4,  4,  4,  4,  4,  4,  0x47);    //SignPost (*)
     setBlockInfo( 64, 97, 81, 97, 81, 97, 81, 0xA7);    //WoodDoor (*)
     setBlockInfo( 65, 83, 83, 83, 83, 83, 83, 0x57);    //Ladder (*)
-    setBlockInfo( 66, 128,112,128,112,112,112,0x57);    //Track (*)
+    setBlockInfo( 66, 112,112,128,128,128,128,0x67);    //Track (*)
     setBlockInfo( 67, 16, 16, 16, 16, 16, 16, 0x10);    //CobbleStairs
     setBlockInfo( 68, 4,  4,  4,  4,  4,  4,  0xD7);    //WallSign (*)
-    setBlockInfo( 69, 96, 16, 96, 16, 96, 16, 0x27);    //Lever
+    setBlockInfo( 69, 96, 96, 96, 96, 96, 16, 0x27);    //Lever
     setBlockInfo( 70, 1,  1,  1,  1,  1,  1,  0xB7);    //StonePlate
     setBlockInfo( 71, 98, 82, 98, 82, 98, 82, 0xA7);    //IronDoor (*)
     setBlockInfo( 72, 4,  4,  4,  4,  4,  4,  0xB7);    //WoodPlate
@@ -940,7 +1157,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 75, 115,115,115,115,115,115,0xF7);    //RedstoneTorch
     setBlockInfo( 76, 99, 99, 99, 99, 99, 99, 0xFF);    //RedstoneTorchLit
     setBlockInfo( 77, 1,  1,  1,  1,  1,  1,  0xE7);    //StoneButton
-    setBlockInfo( 78, 66, 66, 66, 66, 66, 66, 0x00);    //SnowLayer(*)
+    setBlockInfo( 78, 66, 66, 66, 66, 66, 66, 0xC0);    //SnowLayer(*)
         //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
     setBlockInfo( 79, 67, 67, 67, 67, 67, 67, 0x04);    //Ice
     setBlockInfo( 80, 66, 66, 66, 66, 66, 66, 0x00);    //SnowBlock
@@ -983,8 +1200,8 @@ bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename) const
     //Unzip if needed
     if (chunk->byte_array == NULL && chunk->zipped != NULL) {
         cerr << "Unzipped chunk before writing" << endl;
-        chunk->unzip();
-        chunk->unpackBlocks();
+        chunk->unzip(false);
+        chunk->unpackBlocks(false);
     }
     
     //Open binary file for output
@@ -1144,82 +1361,80 @@ void Viewer::outputRGBAData() {
     outfile.close();
 }
 
-
-
-/*
-//Blit from texture map to current OpenGL texture
-ILuint Viewer::blitTexture( ILuint texmap, ILuint SrcX, ILuint SrcY,
-        ILuint Width, ILuint Height) {
-    //Take out a specific block from the texture grid (Blit)
-    ILuint il_blocktex;
-    ilGenImages(1, &il_blocktex);
-    ilBindImage(il_blocktex);
-    ilTexImage( Width, Height, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, NULL);
-
-    //Blit the rectangle from texmap to il_blocktex
-    ilBlit( texmap, 0, 0, 0, SrcX, SrcY, 0, Width, Height, 1);
-
-    //Use single OpenGL "image"
-    glBindTexture(GL_TEXTURE_2D, image);
-
-    //Copy current DevIL image to OpenGL image
-    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-
-    //free memory used by DevIL
-    ilDeleteImages(1, &il_blocktex);  
-    return il_blocktex;
-}
-*/
-
 /*
 //choose OpenGL drawing texture from image list
-ILuint Viewer::chooseTexture( ILuint* ilImages, size_t index) {
+bool Viewer::chooseTexture( size_t index) {
   
-    //ilBind image from list
-    ILuint ilImage = ilImages[index];
-    ilBindImage( ilImage );
-    
     //glBind texture
-    glBindTexture(GL_TEXTURE_2D, image);
-    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-        
-    return ilImage;
+    glBindTexture(GL_TEXTURE_2D, image_array[index]);
+    
+    //TODO: check for GL error
+    return true;
 }
-*//*
+
 //Chop texture map into ilImages array (don't bind anything to GL)
-bool Viewer::splitTextureMap( ILuint texmap, size_t tiles_x, size_t tiles_y,
-    ILuint* ilImages)
+bool Viewer::splitTextureMap( ILuint texmap, ILuint tiles_x, ILuint tiles_y)
 {
-    ILuint SrcX, SrcY, Width, Height;
-    Width = texmap_TILE_LENGTH;
-    Height = texmap_TILE_LENGTH;
+    ILuint SrcX, SrcY, Width, Height, bytePerPixel, ilFormat;
     
-    //User should have allocated ilImages array
-    if (ilImages == NULL) {
-        return false;
-    }
+    //Get information from texture map
+    ilBindImage(texmap);
+    Width = ilGetInteger(IL_IMAGE_WIDTH)/tiles_x;
+    Height = ilGetInteger(IL_IMAGE_HEIGHT)/tiles_y;
+    bytePerPixel = ilGetInteger(IL_IMAGE_BPP);
+    ilFormat = ilGetInteger(IL_IMAGE_FORMAT);
     
-    //Create blank images in the array
-    ilGenImages(tiles_x * tiles_y, ilImages);
+    cout << "Split Texture: " << Width << ", " << Height << ", "
+        << bytePerPixel << " 0x" << hex << ilFormat << endl << dec;
     
     //Copy alpha channel when blitting, don't blend it.
     ilDisable(IL_BLIT_BLEND);
 
     //For each tile...
-    size_t x, y, index;
-    for (y = 0, index=0; y < tiles_y; y++) {
-        for (x = 0; x < tiles_x; x++, index++) {
-            //Bind the image
-            ilBindImage(ilImages[index]);
-            ilTexImage( Width, Height, 1, 4, IL_RGBA, IL_UNSIGNED_BYTE, NULL);
+    size_t x=0, y=0;
+    ILuint index=0;
+    for (y = 0; y < tiles_y; y++) {
+        for (x = 0; x < tiles_x; x++) {
 
-            //Blit the rectangle from texmap to il_blocktex
-            SrcX = x * Width; SrcY = y * Height;
+            //Blit the rectangle from texture map ID to texture array ID
+            SrcX = x * Width;
+            SrcY = y * Height;
+
+            //Take out a specific block from the texture grid (Blit)
+            ILuint il_blocktex;
+            ilGenImages(1, &il_blocktex);
+            ilBindImage(il_blocktex);
+            ilTexImage( Width, Height, 1, bytePerPixel,
+                ilFormat, IL_UNSIGNED_BYTE, NULL);
+
             ilBlit( texmap, 0, 0, 0, SrcX, SrcY, 0, Width, Height, 1);
+
+            //Use single OpenGL "image"
+            glBindTexture(GL_TEXTURE_2D, image_array[index]);
+            
+            //Copy current DevIL image to OpenGL image
+            glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+                ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+                ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+
+            //Set out-of-range texture coordinates
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+        
+            //Make textures "blocky" when up close
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            
+            //Use texture mipmaps when far away
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+                GL_NEAREST_MIPMAP_NEAREST);
+        
+            //Generate mipmaps when calling glTexImage2D
+            glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+
+            //free memory used by DevIL for texture
+            ilDeleteImages(1, &il_blocktex);
+    
+            index++;
         }
     }
     

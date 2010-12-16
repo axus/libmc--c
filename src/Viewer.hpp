@@ -22,8 +22,8 @@
 #ifndef MC__VIEWER_H
 #define MC__VIEWER_H
 
-//Version 0.0.40
-#define MC__VIEWER_VERSION 0x0028
+//Version 0.1.0
+#define MC__VIEWER_VERSION 0x0100
 
 //mc__
 #include "World.hpp"
@@ -86,7 +86,7 @@ namespace mc__ {
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
 
-            bool init(const std::string &texture_map_file);
+            bool init(const std::string &texture_map_file, bool mipmaps=true);
 
             //Load texture map
             ILuint loadImageFile( const std::string &imageFilename);
@@ -96,9 +96,22 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0);
 
             //Specific block drawing functions
-            void drawCube( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t visflags=0);
+            void drawCube( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t visflags=0);
+            void drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t visflags=0);
             void drawItem( uint8_t blockID, GLint x, GLint y, GLint z);
-            
+            void drawTrack( uint8_t blockID, GLint x, GLint y, GLint z);
+            void drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z);
+
+            //Draw a cube with dimensions scaled and location offset
+            //  scale factor is multiplier, use 0 - 1
+            void drawScaledBlock( uint8_t blockID,
+                GLint x, GLint y, GLint z, uint8_t visflags=0,
+                GLfloat scale_x=1, GLfloat scale_y=1, GLfloat scale_z=1,
+                bool scale_textures=true,
+                GLint off_x=0, GLint off_y=0, GLint off_z=0);
+    
             //Draw minichunks only
             void drawChunks( const mc__::World& world);
             
@@ -110,7 +123,7 @@ namespace mc__ {
             
             //Draw everything
             bool drawWorld(const mc__::World& world);
-
+            
             //Camera functions
             void move( GLfloat side, GLfloat up, GLfloat forward);
             void turn( GLfloat degrees);  //Change current yaw by "degrees"
@@ -174,7 +187,9 @@ namespace mc__ {
             //Debugging functions
             void outputRGBAData();
 
-        public:                    
+        public:
+            bool use_mipmaps;
+            
             //Debugging flag
             bool debugging;
 

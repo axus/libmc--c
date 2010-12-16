@@ -105,7 +105,7 @@ namespace mc__ {
             void packBlocks();
             
             //Unpack byte_array to block_array
-            void unpackBlocks();
+            bool unpackBlocks(bool free_packed=false);
 
             //Allocate space for copying zipped data
             uint8_t* allocZip( uint32_t length);
@@ -128,7 +128,7 @@ namespace mc__ {
             bool zip();
                         
             //Uncompress *compressed to packed byte_array
-            bool unzip();
+            bool unzip(bool free_zip=false);
 
 
             //Dimension size - 1

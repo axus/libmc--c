@@ -50,26 +50,30 @@ Using:
     to draw the blocks.
     
 Keyboard Controls:
-    Forward             Up-arrow, W
-    Back                Down-arrow, S
-    Side-left           Left-arrow, A
-    Side-right          Right-arrow, D
+    Forward             W, Up-arrow
+    Back                S, Down-arrow
+    Side-left           A, Left-arrow
+    Side-right          D, Right-arrow
     Sink                X, Home
     Rise                Space, PageUp
-    Toggle Mouselook    Right-click
     Turn left           End, Q
     Turn right          PageDown, E
-    Return camera       Middle-click
-    Tree color          R, G, B
+    Return camera       Backspace
+    Current cam coords  '
+    Tree color          R, G, B (Not working)
     Quit                Esc
 
 Mouse controls:
     Toggle Mouselook    Right-click
     Look around         Move mouse (mouselook)
     Forward/Back        Mousewheel
-    Drag camera         Left-drag
-    Return camera       Middle-click
+    Drag cam up/side    Left-drag
+    Drag cam fwd/side   Middle-drag
+    Return camera       4th mouse button
     
 
 Thanks to the following people who tested:
     vLK
+    Zaneo
+    Koitenshin
+    
