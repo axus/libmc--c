@@ -4,30 +4,29 @@ C++ compiler supporting STL, C++0x
     http://gcc.gnu.org/install/build.html
 DevIL 1.7.8
     http://openil.sourceforge.net/
-GLEW 1.5.7
-    http://glew.sourceforge.net/
 Zlib 1.2.5
     http://zlib.net/zlib125-dll.zip
     http://zlib.net/zlib-1.2.5.tar.gz
-    
+
+(Soon to be required)
+GLEW 1.5.7
+    http://glew.sourceforge.net/
+
 See https://sites.google.com/site/axusdev/builds/buildgcc/ for instructions on
 obtaining MinGW source and building libgcc and libstdc++ (as required by LGPL!)
 
-vLK has built an earlier version of libmc--c using MSVC, but he had to create a
-new project.  If you're as smart as him, it should be easy ;p
+############################### 
+# Example program requirements
+###############################
+SFML 1.6
+    http://www.sfml-dev.org/
 
+###############
+#   Headers
+###############
 
-A program using libmc--c and MinGW requires these shared libraries:
-ILU.dll
-ILUT.dll
-libgcc_s_dw2-1.dll
-libstdc++-6.dll
-zlib1.dll
-
-
-If rebuilding libmc--c with MinGW, these headers are required on INCLUDE path:
+The library requires these headers on INCLUDE path:
 <IL/il.h>
-<IL/ilu.h>
 <zlib.h>
 <iostream>
 <string>
@@ -38,18 +37,39 @@ If rebuilding libmc--c with MinGW, these headers are required on INCLUDE path:
 <cstdlib>
 <cstdint>
 
+The example program requires these headers, which require other SFML headers:
+<SFML/Graphics.hpp>
 
-*SFML*
-I've only tested libmc--c with SFML as the OpenGL framework, so it might be
-required.
+###############
+#   Windows
+###############
+A Windows program using libmc--c and MinGW requires these shared libraries:
+ILU.dll
+ILUT.dll
+libgcc_s_dw2-1.dll
+libstdc++-6.dll
+zlib1.dll
 
-SFML 1.6
-    http://www.sfml-dev.org/
-
-You would need these DLLs:
+The Windows version of the example program needs these DLLs:
 SFML-system.dll
 SFML-graphics.dll
 SFML-window.dll
 
-You would need to include this:
-<SFML/Graphics.hpp>
+###############
+#   Linux x64
+###############
+
+I was able to install these with "yum"
+gcc44
+gcc44-c++
+libtool
+zlib
+mesa-libGL-devel
+mesa-libGLU-devel
+libXrandr
+
+These needed to be compiled from source and installed to $HOME/include and $HOME/lib:
+wget http://downloads.sourceforge.net/openil/DevIL-1.7.8.tar.gz
+wget http://sourceforge.net/projects/sfml/files/sfml/1.6/SFML-1.6-dev-linux-64.tar.gz
+
+

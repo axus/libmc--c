@@ -18,19 +18,30 @@ test:  Minecraft libmc--c test program
 **********************************************************************    
 
 Building with MinGW/MSYS:
-    Build libmc--c:
+  Build libmc--c:
     set HOME environment variable to your development home directory
     extract libmc--c to $HOME/
     cd libmc--c
     make
     make install
     
-    Build test app:
+  Build test app:
     cd test
     make
 
+Building with Linux x64:
+  Build libmc--c:
+    extract libmc--c to $HOME/
+    cd libmc--c
+    make
+    make install
+    
+  Build test app:
+    cd test
+    make -f Makefile.linux-x64
 
-Using:
+
+Windows:
     Copy "terrain.png" to $HOME/libmc--c/bin.
     Copy shared libraries to $HOME/libmc--c/bin:
         DevIL.dll
@@ -48,6 +59,9 @@ Using:
     
     This test program will create a very small world, using terrain.png
     to draw the blocks.
+
+Linux:
+   TODO :)
     
 Keyboard Controls:
     Forward             W, Up-arrow

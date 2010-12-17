@@ -33,14 +33,14 @@
 #include <map>
 
 //OpenGL
-#include <GL/glew.h>
+//#include <GL/glew.h>
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glext.h>
 
 //DevIL
 #include <IL/il.h>
-#include <IL/ilu.h>
+//#include <IL/ilu.h>
 
 namespace mc__ {
 
