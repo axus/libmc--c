@@ -74,6 +74,9 @@ void genWorld(World& world)
             debugKey(world, 0,0,16);
         }
     }}
+    
+    //Create empty void
+    world.genClosedVoid(64, 64);
 
     //Draw all block IDs
     if (!world.genChunkTest(0, 64, 0)) {
