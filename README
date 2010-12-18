@@ -26,7 +26,18 @@ Building with MinGW/MSYS:
     cd libmc--c
     make
     make install
-    
+ 
+Building with Red Hat Linux
+   #You must have sudo permission to install libraries to /usr/local/lib
+   ./README.linux
+   git clone git://github.com/axus/libmc--c.git
+   cd libmc--c
+   make -f Makefile.linux-x64
+   make install
+   cd test
+   make -f Makefile.linux-x64
+   run
+
 
 Thanks to the following people who tested:
 vLK
