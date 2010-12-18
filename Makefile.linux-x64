@@ -1,4 +1,4 @@
-# MultiCube-- client library functions
+# MultiCube-- Client Library
 
 BIN         = libmc--c.a
 SRCFILES    = Events.cpp Chunk.cpp MapChunk.cpp Player.cpp World.cpp Viewer.cpp
@@ -14,5 +14,5 @@ MOREFLAGS   = -std=c++0x -march=native
 INSTALL_LIB = $(HOME)/lib
 INSTALL_INC = $(HOME)/include/mc--
 
-#Generic MinGW build rules for a library
-include lib.MinGW.mak
+#Generic Linux x64 build rules for a library
+include lib.linux-x64.mak

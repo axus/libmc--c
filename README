@@ -1,4 +1,4 @@
-libmc--c: Minecraft Client Library
+libmc--c: MultiCube-- Client Library
 
 Provides world representation data structures and OpenGL drawing functions.
 
