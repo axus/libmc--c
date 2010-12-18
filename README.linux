@@ -9,36 +9,51 @@ sudo yum install gcc44 gcc44-c++ libtool zlib-devel \
 	mesa-libGL-devel mesa-libGLU-devel libXrandr
 
 #Install DevIL
-wget http://downloads.sourceforge.net/openil/DevIL-1.7.8.tar.gz
-gunzip DevIL-1.7.8.tar.gz
-tar xvf DevIL-1.7.8.tar
-cd devil-1.7.8
-./configure
-make
-make install
+if [ ! -d devil-1.7.8 ]; then
+    wget http://downloads.sourceforge.net/openil/DevIL-1.7.8.tar.gz
+    gunzip DevIL-1.7.8.tar.gz
+    tar xvf DevIL-1.7.8.tar
+    cd devil-1.7.8
+    CXXFLAGS='-O3 -march=native'
+    ./configure
+    make
+    make install
+    cd -
+fi
 
-#Download SFML 64-bit precompiled (use 32-bit if needed)
-wget http://sourceforge.net/projects/sfml/files/sfml/1.6/SFML-1.6-dev-linux-64.tar.gz
-gunzip SFML-1.6-dev-linux-64.tar.gz
-tar xvf SFML-1.6-dev-linux-64.tar
+#Download SFML 64-bit precompiled (Remove this if 32-bit is needed)
+if [ ! -d SFML-1.6 ]; then
+    wget http://sourceforge.net/projects/sfml/files/sfml/1.6/SFML-1.6-dev-linux-64.tar.gz
+    gunzip SFML-1.6-dev-linux-64.tar.gz
+    tar xvf SFML-1.6-dev-linux-64.tar
+fi
 
 #Download SFML 32-bit precompiled 
-wget http://sourceforge.net/projects/sfml/files/sfml/1.6/SFML-1.6-sdk-linux-32.tar.gz
-gunzip SFML-1.6-dev-linux-32.tar.gz
-tar xvf SFML-1.6-dev-linux-32.tar
+if [ ! -d SFML-1.6 ]; then
+    wget http://sourceforge.net/projects/sfml/files/sfml/1.6/SFML-1.6-dev-linux-32.tar.gz
+    gunzip SFML-1.6-dev-linux-32.tar.gz
+    tar xvf SFML-1.6-dev-linux-32.tar
+fi
 
 #Install SFML precompiled
-cd SFML-1.6
-sudo cp -pr lib include /usr/local/
-cd /usr/local/lib/
-sudo ln -s libsfml-audio.so.1.6 libsfml-audio.so
-sudo ln -s libsfml-graphics.so.1.6 libsfml-graphics.so
-sudo ln -s libsfml-network.so.1.6 libsfml-network.so
-sudo ln -s libsfml-system.so.1.6 libsfml-system.so
-sudo ln -s libsfml-window.so.1.6 libsfml-window.so
+if [ ! -d /usr/local/include/SFML ]; then
+    sudo cp -pr SFML-1.6/lib SFML-1.6/include /usr/local/
+    cd /usr/local/lib/
+    sudo ln -s libsfml-audio.so.1.6 libsfml-audio.so
+    sudo ln -s libsfml-graphics.so.1.6 libsfml-graphics.so
+    sudo ln -s libsfml-network.so.1.6 libsfml-network.so
+    sudo ln -s libsfml-system.so.1.6 libsfml-system.so
+    sudo ln -s libsfml-window.so.1.6 libsfml-window.so
+    cd -
+fi
 
 #Add /usr/local/lib to search path
 sudo bash -c "echo /usr/local/lib >> /etc/ld.so.conf.d/user.conf; ldconfig"
+
+#Build libmc--c
+make -f Makefile.linux-x64 clean
+make -f Makefile.linux-x64
+make -f Makefile.linux-x64 install
 
 
 ##Thanks to these people who tested Linux builds:
