@@ -14,5 +14,5 @@ MOREFLAGS   = -std=c++0x
 INSTALL_BIN = $(HOME)/bin
 
 #Generic MinGW build rules for a binary
-#include bin.MinGW.mak
-include bin.linux-x64.mak
+include bin.MinGW.mak
+#include bin.linux-x64.mak
