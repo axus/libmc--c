@@ -124,6 +124,7 @@ namespace mc__ {
             
             //Frame counter and status message
             size_t frames_elapsed;
+            float maxFrameTime;
             char status_string[128];
 
     };

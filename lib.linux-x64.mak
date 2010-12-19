@@ -10,6 +10,9 @@ BUILD=build
 # Superuser command
 SUDO=sudo
 
+# Remove command
+RM=rm -f
+
 #No LDFLAGS needed for Linux
 LDFLAGS=
 
@@ -64,16 +67,15 @@ $(INSTALL_INC):
 UNINSTALL_HPP = $(addprefix $(INSTALL_INC)/, $(HEADERS))
 
 install: $(INSTALL_LIB) $(INSTALL_INC)
-	$(SUDO) "cp $(BBIN) $(INSTALL_LIB)/"
-	$(SUDO) "cp $(HPP) $(INSTALL_INC)/"
+	$(SUDO) "cp -p $(BBIN) $(INSTALL_LIB)/"
+	$(SUDO) "cp -p $(HPP) $(INSTALL_INC)/"
 
 #How to uninstall
 uninstall:
-	-rm $(INSTALL_LIB)/$(BIN)
-	-rm $(UNINSTALL_HPP)
+	-$(RM) $(INSTALL_LIB)/$(BIN)
+	-$(RM) $(UNINSTALL_HPP)
 
 # Remove object files and core files with "clean" (- prevents errors from exiting)
-RM=rm -f
 .clean: clean
 clean:
 	-$(RM) $(BBIN) $(OBJ) core $(LOGFILES)

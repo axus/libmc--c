@@ -67,7 +67,8 @@ UserInterface::UserInterface(
     world(w), player(p), events(ev), debugging(dbg),
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window
-    keys_typed(0), frames_elapsed(0)    //Empty keypress buffer
+    keys_typed(0),                                //Empty keypress buffer
+    frames_elapsed(0), maxFrameTime(0)            //Keep track of frames/second
 {
 
     //TODO: Init window settings from configuration file
@@ -164,15 +165,18 @@ bool UserInterface::run()
     //Redraw the world       
     viewer.drawWorld(world);
 
-    //Draw frame counter every 100 frames
+    //Draw minimum FPS every 100 frames
     frames_elapsed++;
+    float appFrameTime(App.GetFrameTime());
+    maxFrameTime = (maxFrameTime < appFrameTime ? appFrameTime : maxFrameTime);
     if (frames_elapsed > 100) {
       
         //Update status string
-        sprintf(status_string, "FPS: %.3f", 1.f / App.GetFrameTime());
+        sprintf(status_string, "FPS: %.3f", 1.f / maxFrameTime);
         
         //Start over
         frames_elapsed = 0;
+        maxFrameTime = 0;
     }
     sf::String fps(status_string);
     fps.Move(10.f, 10.f);

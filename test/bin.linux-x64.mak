@@ -10,6 +10,9 @@ BUILD=build
 # Superuser command
 SUDO=sudo
 
+# Remove command
+RM=rm -f
+
 #   Your makefile that includes bin.MinGW.mak must define these:
 # BIN           binary name
 # SRCFILES      .cpp source file names
@@ -73,10 +76,9 @@ install: $(INSTALL_BIN)
 
 #How to uninstall
 uninstall:
-	-rm $(INSTALL_BIN)/$(BIN)
+	-$(RM) $(INSTALL_BIN)/$(BIN)
 
 # Remove object files and core files with "clean" (- prevents errors from exiting)
-RM=rm -f
 .clean: clean
 clean:
 	-$(RM) $(BBIN) $(OBJ) core $(LOGFILES)
