@@ -152,13 +152,6 @@ int main(int argc, char** argv)
     player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
         world.spawn_Y + 1, 180, 0);
 
-    //Exit if there is no desktop display
-    sf::VideoMode video_mode = sf::VideoMode::GetDesktopMode();
-    if (!video_mode.IsValid()) {
-        cout << "Invalid video mode, exiting!" << endl;
-        return 3; 
-    }
-
     //Create user interface to world
     cout << "Creating user interface..." << endl;
     mc__::UserInterface ui("libmc--c example", world, player, events);
