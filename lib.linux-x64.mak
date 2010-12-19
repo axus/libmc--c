@@ -55,16 +55,16 @@ rebuild: $(OBJ)
 
 #Create install directories if needed
 $(INSTALL_LIB): 
-	@[ -d $@ ] || sudo mkdir -p $@
+	@[ -d $@ ] || su -c "mkdir -p $@"
 	
 $(INSTALL_INC):
-	@[ -d $@ ] || sudo mkdir -p $@
+	@[ -d $@ ] || su -c "mkdir -p $@"
 
 UNINSTALL_HPP = $(addprefix $(INSTALL_INC)/, $(HEADERS))
 
 install: $(INSTALL_LIB) $(INSTALL_INC)
-	sudo cp $(BBIN) $(INSTALL_LIB)/
-	sudo cp $(HPP) $(INSTALL_INC)/
+	su -c "cp $(BBIN) $(INSTALL_LIB)/"
+	su -c "cp $(HPP) $(INSTALL_INC)/"
 
 #How to uninstall
 uninstall:

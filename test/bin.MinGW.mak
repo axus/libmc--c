@@ -22,7 +22,7 @@ BUILD=build
 # -mconsole: Create a console application
 # -mwindows: Create a GUI only application
 # -Wl,--enable-auto-import: Let the ld.exe linker automatically import from libraries
-LDFLAGS=-Wl,--enable-auto-import -mconsole
+LDFLAGS=-Wl,--enable-auto-import -mconsole -L/usr/local/lib
 
 #Minimum Windows version: Windows XP, IE 6.01
 #CPPFLAGS=-D_WIN32_WINNT=0x0500 -DWINVER=0x0500 -D_WIN32_IE=0x0601 $(MOREFLAGS)

@@ -7,6 +7,9 @@ CC=g++
 SRCDIR=src
 BUILD=build
 
+# Superuser command
+SUDO=su -c
+
 # -mconsole: Create a console application
 # -mwindows: Create a GUI application
 # -Wl,--enable-auto-import: Let the ld.exe linker automatically import from libraries
@@ -55,16 +58,16 @@ rebuild: $(OBJ)
 
 #Create install directories if needed
 $(INSTALL_LIB): 
-	@[ -d $@ ] || mkdir -p $@
+	@[ -d $@ ] || $(SUDO) "mkdir -p $@"
 	
 $(INSTALL_INC):
-	@[ -d $@ ] || mkdir -p $@
+	@[ -d $@ ] || $(SUDO) "mkdir -p $@"
 
 UNINSTALL_HPP = $(addprefix $(INSTALL_INC)/, $(HEADERS))
 
 install: $(INSTALL_LIB) $(INSTALL_INC)
-	cp $(BBIN) $(INSTALL_LIB)/
-	cp $(HPP) $(INSTALL_INC)/
+	$(SUDO) "cp $(BBIN) $(INSTALL_LIB)/"
+	$(SUDO) "cp $(HPP) $(INSTALL_INC)/"
 
 #How to uninstall
 uninstall:
