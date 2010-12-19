@@ -8,7 +8,7 @@ SRCDIR=src
 BUILD=build
 
 # Superuser command
-SUDO=sudo
+SUDO=
 
 # Remove command
 RM=rm -f

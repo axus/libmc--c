@@ -8,7 +8,7 @@ SRCDIR=src
 BUILD=build
 
 # Superuser command
-SUDO=su -c
+SUDO=
 
 # Remove command
 RM=rm -f
@@ -61,16 +61,16 @@ rebuild: $(OBJ)
 
 #Create install directories if needed
 $(INSTALL_LIB): 
-	@[ -d $@ ] || $(SUDO) "mkdir -p $@"
+	@[ -d $@ ] || $(SUDO) mkdir -p $@
 	
 $(INSTALL_INC):
-	@[ -d $@ ] || $(SUDO) "mkdir -p $@"
+	@[ -d $@ ] || $(SUDO) mkdir -p $@
 
 UNINSTALL_HPP = $(addprefix $(INSTALL_INC)/, $(HEADERS))
 
 install: $(INSTALL_LIB) $(INSTALL_INC)
-	$(SUDO) "cp -p $(BBIN) $(INSTALL_LIB)/"
-	$(SUDO) "cp -p $(HPP) $(INSTALL_INC)/"
+	$(SUDO) cp -p $(BBIN) $(INSTALL_LIB)/
+	$(SUDO) cp -p $(HPP) $(INSTALL_INC)/
 
 #How to uninstall
 uninstall:
