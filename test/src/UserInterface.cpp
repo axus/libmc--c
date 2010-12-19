@@ -67,7 +67,7 @@ UserInterface::UserInterface(
     world(w), player(p), events(ev), debugging(dbg),
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window
-    keys_typed(0)                           //Empty keypress buffer
+    keys_typed(0), frames_elapsed(0)    //Empty keypress buffer
 {
 
     //TODO: Init window settings from configuration file
@@ -88,6 +88,9 @@ UserInterface::UserInterface(
         key_held[i]=false;
     }
 
+    //Set initial status message
+    sprintf( status_string, "libmc--c test program");
+
     //Load terrain.png
     viewer.init(texture_map_filename, true);   //TODO: configurable
 
@@ -103,9 +106,13 @@ UserInterface::UserInterface(
     //Turn off key repeat
     App.EnableKeyRepeat(false);
 
+    // Preserve OpenGL States
+    App.PreserveOpenGLStates(true);
+
     //Draw the world once
     App.SetActive();
     viewer.drawWorld(world);
+
     App.Display();
 }
 
@@ -156,6 +163,20 @@ bool UserInterface::run()
 
     //Redraw the world       
     viewer.drawWorld(world);
+
+    //Draw frame counter every 100 frames
+    frames_elapsed++;
+    if (frames_elapsed > 100) {
+      
+        //Update status string
+        sprintf(status_string, "FPS: %.3f", 1.f / App.GetFrameTime());
+        
+        //Start over
+        frames_elapsed = 0;
+    }
+    sf::String fps(status_string);
+    fps.Move(10.f, 10.f);
+    App.Draw(fps);
     
     //Update the window
     App.Display();

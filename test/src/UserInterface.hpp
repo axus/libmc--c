@@ -30,6 +30,7 @@
 
 //SFML
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 
 //STL
 #include <iostream>
@@ -120,6 +121,11 @@ namespace mc__ {
             //Remember order keys were typed in
             sf::Key::Code key_buffer[1024];
             size_t keys_typed;
+            
+            //Frame counter and status message
+            size_t frames_elapsed;
+            char status_string[128];
+
     };
 }
 
