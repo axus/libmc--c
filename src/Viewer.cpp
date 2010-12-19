@@ -98,8 +98,8 @@ unsigned long mc__::getVersion() { return MC__VIEWER_VERSION; }
 Viewer::Viewer(unsigned short width, unsigned short height):
     cam_X(0), cam_Y(0), cam_Z(0), drawDistance(4096.f),
     view_width(width), view_height(height), aspectRatio((GLfloat)width/height),
-    cam_yaw(0), cam_pitch(0),
-    cam_vecX(0), cam_vecY(0), cam_vecZ(0), use_mipmaps(true), debugging(false)
+    cam_yaw(0), cam_pitch(0), cam_vecX(0), cam_vecY(0), cam_vecZ(0),
+    use_mipmaps(true), use_blending(false), debugging(false)
 {
     //Dark green tree leaves
     leaf_color[0] = 0x00;    //Red
@@ -145,7 +145,7 @@ bool Viewer::init(const std::string &filename, bool mipmaps)
     }
 
     //glBind texture before assigning it
-    glBindTexture(GL_TEXTURE_2D, image);
+    glBindTexture(GL_TEXTURE_2D, terrain_tex);
     
     //Copy current DevIL image to OpenGL image.
     glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
@@ -157,6 +157,13 @@ bool Viewer::init(const std::string &filename, bool mipmaps)
     glLoadIdentity();
 
     return true;
+}
+
+//change back to texture if needed
+void Viewer::rebindTerrain()
+{
+    //glBind texture before assigning it
+    glBindTexture(GL_TEXTURE_2D, terrain_tex);
 }
 
 //
@@ -232,16 +239,16 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(60, aspectRatio, 8.0f, drawDistance);
+    gluPerspective(90, aspectRatio, 1.0f, drawDistance);
     
     //Reload matrix mode
-    glPushAttrib(GL_TRANSFORM_BIT);
+    glPopAttrib();
 }
 
 //Resize far draw distance
 void Viewer::setDrawDistance( GLdouble d)
 {
-    gluPerspective(60, aspectRatio, 8.0f, d);
+    gluPerspective(90, aspectRatio, 1.0f, d);
 }
 
 //Set glColor if needed by block type and face
@@ -918,8 +925,8 @@ void Viewer::startOpenGL() {
     //Save the original viewpoint
     glPushMatrix(); 
 
-    glGenTextures(1, &image);
-    glBindTexture(GL_TEXTURE_2D, image);    //bind empty texture
+    glGenTextures(1, &terrain_tex);
+    glBindTexture(GL_TEXTURE_2D, terrain_tex);    //bind empty texture
     
     //Set out-of-range texture coordinates
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -928,6 +935,7 @@ void Viewer::startOpenGL() {
     //Make textures "blocky" when up close
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
+    //MipMap setting
     if (use_mipmaps) {
         //Create OpenGL texture
         glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);//Quick mipmaps
@@ -943,8 +951,12 @@ void Viewer::startOpenGL() {
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     }
 
-    //No blending
-    glDisable(GL_BLEND);
+    //Blending setting
+    if (!use_blending) {
+        glDisable(GL_BLEND);
+    } else {
+        glEnable(GL_BLEND);
+    }
 
 }
 

@@ -61,14 +61,14 @@ UserInterface::UserInterface(
     texture_map_filename("terrain.png"),    //block textures
     mouseSensitivity(UI_mouse_sensitivity), //Mouselook sensitivity
     Settings(UI_bpp, 0, 0),                 //32bpp, 0 stencil, 0 anti-aliasing
-    App(sf::VideoMode(UI_width, UI_height, UI_bpp), 
-        name, sf::Style::Close, Settings),  //860x480, 32-bit color window
+    App(sf::VideoMode(UI_width, UI_height, UI_bpp), //860x480, 32-bit color
+        name, sf::Style::Resize|sf::Style::Close, Settings),    //Resizable
     viewer(UI_width, UI_height),
     world(w), player(p), events(ev), debugging(dbg),
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window
     keys_typed(0),                                //Empty keypress buffer
-    frames_elapsed(0), maxFrameTime(0)            //Keep track of frames/second
+    showStatus(true), frames_elapsed(0), totalFrameTime(0) //FPS
 {
 
     //TODO: Init window settings from configuration file
@@ -90,7 +90,9 @@ UserInterface::UserInterface(
     }
 
     //Set initial status message
-    sprintf( status_string, "libmc--c test program");
+    status_string.SetText("libmc--c test program");
+    status_string.SetSize(20);
+    status_string.Move(10.f, 10.f);
 
     //Load terrain.png
     viewer.init(texture_map_filename, true);   //TODO: configurable
@@ -107,8 +109,8 @@ UserInterface::UserInterface(
     //Turn off key repeat
     App.EnableKeyRepeat(false);
 
-    // Preserve OpenGL States
-    App.PreserveOpenGLStates(true);
+    // Do you want to live forever?
+    //App.PreserveOpenGLStates(true);
 
     //Draw the world once
     App.SetActive();
@@ -165,27 +167,67 @@ bool UserInterface::run()
     //Redraw the world       
     viewer.drawWorld(world);
 
-    //Draw minimum FPS every 100 frames
-    frames_elapsed++;
-    float appFrameTime(App.GetFrameTime());
-    maxFrameTime = (maxFrameTime < appFrameTime ? appFrameTime : maxFrameTime);
-    if (frames_elapsed > 100) {
-      
-        //Update status string
-        sprintf(status_string, "FPS: %.3f", 1.f / maxFrameTime);
+    //2D overlay
+    //Update status display
+    if (showStatus) {
+        setDebug();
+
+        //Save attribute bits
+        glPushAttrib( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
         
-        //Start over
-        frames_elapsed = 0;
-        maxFrameTime = 0;
+        //Save MODEL_VIEW state
+        glPushMatrix();
+        
+        //Save PROJECTION state
+        glMatrixMode(GL_PROJECTION); glPushMatrix();
+        glDisable(GL_DEPTH_TEST);
+
+        //Draw status text to screen
+        App.Draw(status_string);
+        
+        //Reload PROJECTION, MODEL_VIEW states
+        glMatrixMode(GL_PROJECTION); glPopMatrix();
+        glMatrixMode(GL_MODELVIEW); glPopMatrix();
+        
+        //Reload attribute bits
+        glPopAttrib( );
+        
+        //Rebind texture
+        viewer.rebindTerrain();
     }
-    sf::String fps(status_string);
-    fps.Move(10.f, 10.f);
-    App.Draw(fps);
+
     
     //Update the window
     App.Display();
 
     return Running;
+}
+
+//Draw FPS and other status to screen
+void UserInterface::setDebug()
+{
+    static const float pixratio = texmap_TILE_LENGTH;
+    
+    //Track number of frames since last update
+    frames_elapsed++;
+    
+    //Track longest frame draw time
+    totalFrameTime += App.GetFrameTime();
+    
+    //Every 100 frames, update the status message
+    if (frames_elapsed > 100) {
+      
+        //Update status string
+        char buf[128];
+        sprintf(buf, "%3d chunks  Camera @ %3.3f, %3.3f, %3.3f   FPS %3.3f",
+            viewer.glListMap.size(), viewer.cam_X/pixratio,
+            viewer.cam_Y/pixratio, viewer.cam_Z/pixratio, 100.f / totalFrameTime);
+        status_string.SetText(buf);
+        
+        //Start over
+        frames_elapsed = 0;
+        totalFrameTime = 0;
+    }
 }
 
 //Handle mc__::Events
@@ -214,20 +256,11 @@ bool UserInterface::actions()
         }
     }
     
-      /*
-    //Create some acknowledgement if chunk received?
+    /*
+    //Update values when chunk received?
     if (chunk_received) {
-      
-        //Allocate event data, remember to delete it after receiving it
-        Events::dataLook *data = new Events::dataLook;
-        
-        data->yaw = player.yaw;
-        data->pitch = player.pitch;
-        data->animation = player.animation;
-
-        events.put(Events::ACTION_LOOK, NULL);
     }
-      */
+    */
   
     return running;
 }
@@ -260,7 +293,7 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
     
     switch( Event.Type) {
       
-        //Window resize
+        //Window resize (DISABLED) or restore
         case sf::Event::Resized:
             viewer.viewport(0,0, Event.Size.Width, Event.Size.Height);
             break;
@@ -505,11 +538,16 @@ bool UserInterface::handleKeys()
             case sf::Key::PageDown:
                 movement[TURN_RIGHT] = true;
                 break;
+            //Return camera to player
             case sf::Key::Back:
                 resetCamera();
                 break;
+            //Toggle status display
+            case sf::Key::F3:
+                showStatus = !showStatus;
+                break;
+            //Redraw everything
             case sf::Key::F5:
-                //Redraw everything
                 cout << "Recalculating visibility of all chunks" << endl;
                 world.redraw();
                 break;

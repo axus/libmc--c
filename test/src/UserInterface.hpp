@@ -81,6 +81,9 @@ namespace mc__ {
             
             //Process mouse movement
             bool handleMouse();
+            
+            //Draw debugging info to screen
+            void setDebug();
 
             //SFML
             sf::WindowSettings Settings;
@@ -123,9 +126,10 @@ namespace mc__ {
             size_t keys_typed;
             
             //Frame counter and status message
+            bool showStatus;
             size_t frames_elapsed;
-            float maxFrameTime;
-            char status_string[128];
+            float totalFrameTime;
+            sf::String status_string;
 
     };
 }

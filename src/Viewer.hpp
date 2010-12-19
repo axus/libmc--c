@@ -90,6 +90,7 @@ namespace mc__ {
 
             //Load texture map
             ILuint loadImageFile( const std::string &imageFilename);
+            void rebindTerrain();   //change back to texture if needed
 
             //Single block drawing functions
             void drawBlock(const mc__::Block& block,
@@ -145,9 +146,13 @@ namespace mc__ {
             GLubyte leaf_color[4];
             GLubyte grass_color[4];
 
+            //Relate world mapchunks to GL lists
+            mapChunkUintMap_t glListMap;
+            mapChunkUintMap_t glListMapOccluded;
+            
         protected:
             
-            //Draw distance
+            //View settings: draw distance, width x height, aspect ratio
             GLdouble drawDistance;
             unsigned short view_width, view_height;
             GLfloat aspectRatio;
@@ -163,11 +168,7 @@ namespace mc__ {
             ILuint ilTextureList[texmap_TILE_MAX];
             
             //openGL image (for texture)
-            GLuint image;
-            
-            //Relate world mapchunks to GL lists
-            mapChunkUintMap_t glListMap;
-            mapChunkUintMap_t glListMapOccluded;
+            GLuint terrain_tex;
             
             //GL display lists of display lists that player can see
             GLuint glListPlayer;
@@ -188,7 +189,8 @@ namespace mc__ {
             void outputRGBAData();
 
         public:
-            bool use_mipmaps;
+            //Graphics options
+            bool use_mipmaps, use_blending;
             
             //Debugging flag
             bool debugging;
