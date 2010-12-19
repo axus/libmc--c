@@ -1,4 +1,4 @@
-# Example MineCraft client for libmc--c
+# Example game client for libmc--c
 #    MinGW makefile
 
 BIN         = mc--c.exe
@@ -10,6 +10,7 @@ LIBS        = -lmc--c -lopengl32 -lglu32 -lDevIL -lILU \
 INCLUDES    = -I/usr/local/include
 ###DEBUG       = on
 MOREFLAGS   = -std=c++0x
+
 
 #Where to install or uninstall
 INSTALL_BIN = $(HOME)/bin

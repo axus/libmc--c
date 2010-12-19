@@ -109,7 +109,7 @@ namespace mc__ {
                 KEY_QUIT,
                 
                 //Max event ID
-                EVENT_MAX
+                MC__EVENTS_MAX
             };
             
             //Generic data for event callback
