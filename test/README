@@ -61,7 +61,8 @@ Windows:
     to draw the blocks.
 
 Linux:
-   TODO :)
+   See ../README.linux 
+   unzip -e ~/.minecraft/bin/minecraft.jar terrain.png
     
 Keyboard Controls:
     Forward             W, Up-arrow
@@ -90,4 +91,8 @@ Thanks to the following people who tested:
     vLK
     Zaneo
     Koitenshin
+    KyleXY
+    ReDucTor
+    AndrewPH
+
     

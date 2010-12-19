@@ -4,4 +4,5 @@
 *.lib
 SFML-1.6
 devil-1.7.8
+*.tar
 

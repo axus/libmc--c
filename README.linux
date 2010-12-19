@@ -6,7 +6,7 @@
 
 # Install packages 
 sudo yum install gcc44 gcc44-c++ libtool zlib-devel \
-	mesa-libGL-devel mesa-libGLU-devel libXrandr
+	mesa-libGL-devel mesa-libGLU-devel libXrandr libpng
 
 #Install DevIL
 if [ ! -d devil-1.7.8 ]; then
@@ -22,7 +22,7 @@ if [ ! -d devil-1.7.8 ]; then
 fi
 
 #Download SFML 64-bit precompiled (Remove this if 32-bit is needed)
-if [ ! -d SFML-1.6 ]; then
+if [ ! -d SFML-1.6 -a `uname -m` == x86_64 ]; then
     wget http://sourceforge.net/projects/sfml/files/sfml/1.6/SFML-1.6-dev-linux-64.tar.gz
     gunzip SFML-1.6-dev-linux-64.tar.gz
     tar xvf SFML-1.6-dev-linux-64.tar
@@ -48,14 +48,19 @@ if [ ! -d /usr/local/include/SFML ]; then
 fi
 
 #Add /usr/local/lib to search path
-sudo bash -c "echo /usr/local/lib >> /etc/ld.so.conf.d/user.conf; ldconfig"
+sudo bash -c "echo /usr/local/lib > /etc/ld.so.conf.d/usr_local_lib.conf; ldconfig"
 
 #Build libmc--c
 make -f Makefile.linux-x64 clean
 make -f Makefile.linux-x64
 make -f Makefile.linux-x64 install
 
+# Build test program
+#  cd test
+#  make -f Makefile.linux-x64
+#  ./run
 
 ##Thanks to these people who tested Linux builds:
 #	KyleXY
+#	ReDucTor
 
