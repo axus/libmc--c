@@ -1,14 +1,13 @@
-# Test MineCraft client for libmc--c.
+# Example MineCraft client for libmc--c
 #    MinGW makefile
 
-BIN         = bin/mc--c.exe
+BIN         = mc--c.exe
 SRCFILES    = UserInterface.cpp main.cpp
 LIBS        = -lmc--c -lopengl32 -lglu32 -lDevIL -lILU \
 -lsfml-system -lsfml-window -lsfml-graphics -lz
 
 
 INCLUDES    = -I/usr/local/include
-LOGFILES    = network.log
 ###DEBUG       = on
 MOREFLAGS   = -std=c++0x
 

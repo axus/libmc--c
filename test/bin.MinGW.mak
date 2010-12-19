@@ -7,6 +7,9 @@ CC=g++
 SRCDIR=src
 BUILD=build
 
+# Superuser command
+SUDO=su -c
+
 #   Your makefile that includes bin.MinGW.mak must define these:
 # BIN           binary name
 # SRCFILES      .cpp source file names
@@ -22,11 +25,11 @@ BUILD=build
 # -mconsole: Create a console application
 # -mwindows: Create a GUI only application
 # -Wl,--enable-auto-import: Let the ld.exe linker automatically import from libraries
+# -L/usr/local/lib : use non-standard MinGW /usr/local/lib
 LDFLAGS=-Wl,--enable-auto-import -mconsole -L/usr/local/lib
 
 #Minimum Windows version: Windows XP, IE 6.01
-#CPPFLAGS=-D_WIN32_WINNT=0x0500 -DWINVER=0x0500 -D_WIN32_IE=0x0601 $(MOREFLAGS)
-CPPFLAGS=$(MOREFLAGS) -Wno-deprecated
+CPPFLAGS=-D_WIN32_WINNT=0x0500 -DWINVER=0x0500 -D_WIN32_IE=0x0601 $(MOREFLAGS) -Wno-deprecated
 
 #SRC files in SRCDIR directory
 SRC=$(addprefix $(SRCDIR)/, $(SRCFILES))
@@ -34,6 +37,7 @@ SRC=$(addprefix $(SRCDIR)/, $(SRCFILES))
 # Choose object file names from source file names
 OBJFILES=$(SRCFILES:.cpp=.o)
 OBJ=$(addprefix $(BUILD)/, $(OBJFILES))
+BBIN=$(addprefix bin/, $(BIN))
 
 # Debug, or optimize
 ifeq ($(DEBUG),on)
@@ -46,7 +50,7 @@ endif
 
 # Default target of make is "all"
 .all: all      
-all: $(BUILD) $(BIN)
+all: $(BUILD) $(BBIN)
 
 #Create build directories if needed
 $(BUILD): 
@@ -57,19 +61,19 @@ $(BUILD)/%.o: $(SRCDIR)/%.cpp
 	$(CC) $(CFLAGS) $(CPPFLAGS) $(INCLUDES) -o $@ -c $<
 
 # Build executable from objects and libraries to current directory
-$(BIN): $(OBJ)
+$(BBIN): $(OBJ)
 	$(CC) $^ $(CFLAGS) $(LDFLAGS) $(LIBS) -o $@
 
 #Build again, don't care why
 rebuild: 
-	$(CC) $(OBJ) $(CFLAGS) $(LDFLAGS) $(LIBS) -o $(BIN)
+	$(CC) $(OBJ) $(CFLAGS) $(LDFLAGS) $(LIBS) -o $(BBIN)
 	
 #Create install directories if needed
 $(INSTALL_BIN): 
 	@[ -d $@ ] || mkdir -p $@
 
 install: $(INSTALL_BIN)
-	cp $(BIN) $(INSTALL_BIN)/
+	cp $(BBIN) $(INSTALL_BIN)/
 
 #How to uninstall
 uninstall:
@@ -79,4 +83,4 @@ uninstall:
 RM=rm -f
 .clean: clean
 clean:
-	-$(RM) $(BIN) $(OBJ) core $(LOGFILES)
+	-$(RM) $(BBIN) $(OBJ) core $(LOGFILES)

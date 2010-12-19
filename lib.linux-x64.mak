@@ -1,5 +1,5 @@
 ############################
-# Makefile for MSYS + MinGW
+# Makefile for Linux (Red Hat, ...)
 ############################
 # GNU C++ Compiler
 CC=g++
@@ -7,12 +7,13 @@ CC=g++
 SRCDIR=src
 BUILD=build
 
-# -mconsole: Create a console application
-# -mwindows: Create a GUI application
-# -Wl,--enable-auto-import: Let the ld.exe linker automatically import from libraries
-LDFLAGS=-mwindows -Wl,--enable-auto-import
+# Superuser command
+SUDO=sudo
 
-#Minimum Windows version: Windows XP, IE 6.01
+#No LDFLAGS needed for Linux
+LDFLAGS=
+
+#Other flags, if any
 CPPFLAGS=$(MOREFLAGS)
 
 #SRC files in SRCDIR directory
@@ -55,16 +56,16 @@ rebuild: $(OBJ)
 
 #Create install directories if needed
 $(INSTALL_LIB): 
-	@[ -d $@ ] || su -c "mkdir -p $@"
+	@[ -d $@ ] || $(SUDO) "mkdir -p $@"
 	
 $(INSTALL_INC):
-	@[ -d $@ ] || su -c "mkdir -p $@"
+	@[ -d $@ ] || $(SUDO) "mkdir -p $@"
 
 UNINSTALL_HPP = $(addprefix $(INSTALL_INC)/, $(HEADERS))
 
 install: $(INSTALL_LIB) $(INSTALL_INC)
-	su -c "cp $(BBIN) $(INSTALL_LIB)/"
-	su -c "cp $(HPP) $(INSTALL_INC)/"
+	$(SUDO) "cp $(BBIN) $(INSTALL_LIB)/"
+	$(SUDO) "cp $(HPP) $(INSTALL_INC)/"
 
 #How to uninstall
 uninstall:
