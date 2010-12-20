@@ -155,7 +155,7 @@ namespace mc__ {
             //View settings: draw distance, width x height, aspect ratio
             GLdouble drawDistance;
             unsigned short view_width, view_height;
-            GLfloat aspectRatio;
+            GLfloat aspectRatio, fieldOfViewY;
             
             //Current camera angle
             GLfloat cam_yaw, cam_pitch, cam_vecX, cam_vecY, cam_vecZ;

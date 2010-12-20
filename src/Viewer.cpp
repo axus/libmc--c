@@ -97,10 +97,13 @@ unsigned long mc__::getVersion() { return MC__VIEWER_VERSION; }
 
 Viewer::Viewer(unsigned short width, unsigned short height):
     cam_X(0), cam_Y(0), cam_Z(0), drawDistance(4096.f),
-    view_width(width), view_height(height), aspectRatio((GLfloat)width/height),
+    view_width(width), view_height(height),
+    aspectRatio((GLfloat)width/height), fieldOfViewY(70),
     cam_yaw(0), cam_pitch(0), cam_vecX(0), cam_vecY(0), cam_vecZ(0),
     use_mipmaps(true), use_blending(false), debugging(false)
 {
+  
+    //TODO: depends on mapchunk biome setting
     //Dark green tree leaves
     leaf_color[0] = 0x00;    //Red
     leaf_color[1] = 0xFF;    //Green
@@ -239,7 +242,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
     glViewport( x, y, width, height);
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
-    gluPerspective(90, aspectRatio, 1.0f, drawDistance);
+    gluPerspective(fieldOfViewY, aspectRatio, 1.0f, drawDistance);
     
     //Reload matrix mode
     glPopAttrib();
@@ -248,7 +251,7 @@ void Viewer::viewport( GLint x, GLint y, GLsizei width, GLsizei height)
 //Resize far draw distance
 void Viewer::setDrawDistance( GLdouble d)
 {
-    gluPerspective(90, aspectRatio, 1.0f, d);
+    gluPerspective(fieldOfViewY, aspectRatio, 1.0f, d);
 }
 
 //Set glColor if needed by block type and face
