@@ -20,14 +20,18 @@ Provides world representation data structures and OpenGL drawing functions.
     <http://www.gnu.org/licenses/>.
 **********************************************************************    
 
+See LIBRARIES for description of required libraries
+
 Prerequisites for MinGW/MSYS:
     MSYS + MinGW with GCC 4.5+
     git
        
 Prerequisites for Linux (tested on RedHat variants):
    #You must have permission to install libraries to /usr/local/lib
+    Package manager
+    git and other development tools
    
-   #Install the prerequisites
+   #Install the prerequisite libraries
    ./README.linux
    
 Build and test instructions
