@@ -562,7 +562,7 @@ void Viewer::drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
 //Draw item blockID which is placed flat on the ground
 void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z)
 {
-    //TODO: metadata
+    //TODO: metadata to determine track type and orientation
 
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
@@ -576,29 +576,26 @@ void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z)
     GLint F = (z << 4) + texmap_TILE_LENGTH;
 
     //C
-    //if (!(vflags & 0x20)) {
-        tx_0 = blockInfo[blockID].tx[DOWN];
-        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-        ty_1 = blockInfo[blockID].ty[DOWN];
-        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
-    //}
-    //D
-    //if (!(vflags & 0x10)) {
-        tx_0 = blockInfo[blockID].tx[UP];
-        tx_1 = blockInfo[blockID].tx[UP] + tmr;
-        ty_0 = blockInfo[blockID].ty[UP] + tmr;
-        ty_1 = blockInfo[blockID].ty[UP];
+    tx_0 = blockInfo[blockID].tx[DOWN];
+    tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+    ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+    ty_1 = blockInfo[blockID].ty[DOWN];
     
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
-    //}
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+
+    //D
+    tx_0 = blockInfo[blockID].tx[UP];
+    tx_1 = blockInfo[blockID].tx[UP] + tmr;
+    ty_0 = blockInfo[blockID].ty[UP] + tmr;
+    ty_1 = blockInfo[blockID].ty[UP];
+
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
 
 }
 
@@ -650,7 +647,6 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 {
 
     //TODO: quad always faces player somehow
-
 
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;

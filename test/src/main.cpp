@@ -54,7 +54,7 @@ void genWorld(World& world)
 {
     
     //Single workbench made from block
-    mc__::Block block1 = {58, 0, 0};
+    mc__::Block block1 = {58, 0, 64, 0};
     mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 8, 2, 8);
     chunk1->block_array[0] = block1;
     

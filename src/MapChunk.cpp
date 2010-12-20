@@ -187,21 +187,6 @@ bool MapChunk::updateVisRange(const Chunk *chunk,
         flags |= MapChunk::UPDATED;
     }
 
-    /*
-    //Mark neighor chunks as UPDATED, if needed
-    if (update_N[0] && neighbors[0] != NULL) {
-        neighbors[0]->flags |= MapChunk::ADJ_UPDATED;
-    }
-    if (update_N[1] && neighbors[1] != NULL) {
-        neighbors[1]->flags |= MapChunk::ADJ_UPDATED;
-    }
-    if (update_N[4] && neighbors[4] != NULL) {
-        neighbors[4]->flags |= MapChunk::ADJ_UPDATED;
-    }
-    if (update_N[5] && neighbors[5] != NULL) {
-        neighbors[5]->flags |= MapChunk::ADJ_UPDATED;
-    }*/
-    
     return true;
 }
 

@@ -40,10 +40,10 @@ BBIN=$(addprefix bin/, $(BIN))
 
 # Debug, or optimize
 ifeq ($(DEBUG),on)
-  CFLAGS=-Wall -O1 -g -pg -DDEBUG
+  CFLAGS=-Wall -Wextra -O1 -g -pg -DDEBUG
 else
   # All warnings, optimization level 3
-  CFLAGS=-Wall -O3
+  CFLAGS=-Wall -Wextra -O3
 endif
 
 
