@@ -220,7 +220,7 @@ void UserInterface::setDebug()
         //Update status string
         char buf[128];
         sprintf(buf, "%3u chunks  Camera @ %3.3f, %3.3f, %3.3f   FPS %3.3f",
-            viewer.glListMap.size(), viewer.cam_X/pixratio,
+            (unsigned int)viewer.glListMap.size(), viewer.cam_X/pixratio,
             viewer.cam_Y/pixratio, viewer.cam_Z/pixratio, 100.f / totalFrameTime);
         status_string.SetText(buf);
         
