@@ -18,19 +18,30 @@ test:  Minecraft libmc--c test program
 **********************************************************************    
 
 Building with MinGW/MSYS:
-    Build libmc--c:
+  Build libmc--c:
     set HOME environment variable to your development home directory
     extract libmc--c to $HOME/
     cd libmc--c
     make
     make install
     
-    Build test app:
+  Build test app:
     cd test
     make
 
+Building with Linux x64:
+  Build libmc--c:
+    extract libmc--c to $HOME/
+    cd libmc--c
+    make
+    make install
+    
+  Build test app:
+    cd test
+    make -f Makefile.linux-x64
 
-Using:
+
+Windows:
     Copy "terrain.png" to $HOME/libmc--c/bin.
     Copy shared libraries to $HOME/libmc--c/bin:
         DevIL.dll
@@ -48,6 +59,10 @@ Using:
     
     This test program will create a very small world, using terrain.png
     to draw the blocks.
+
+Linux:
+   See ../README.linux 
+   unzip -e ~/.minecraft/bin/minecraft.jar terrain.png
     
 Keyboard Controls:
     Forward             W, Up-arrow
@@ -71,9 +86,15 @@ Mouse controls:
     Drag cam fwd/side   Middle-drag
     Return camera       4th mouse button
     
+Thanks for patch contributions:
+    ReDucTor
 
 Thanks to the following people who tested:
     vLK
     Zaneo
     Koitenshin
+    KyleXY
+    ReDucTor
+    AndrewPH
+
     

@@ -409,7 +409,7 @@ Chunk* World::makeFlatGrass(uint8_t size_X, uint8_t size_Y, uint8_t size_Z,
     for (index=0; index < flatChunk->array_length; index++ ) {
 
         //Bedrock, stone, dirt, or grass
-        uint8_t gen_y = (index & ((1<<7)-1) );
+        uint8_t gen_y = (index % size_Y );
         if (gen_y < 2) {
             firstBlockArray[index].blockID = 7; //Bedrock
         } else if (gen_y < size_Y - 4) {
@@ -461,6 +461,48 @@ bool World::genFlatGrass(int32_t X, int8_t Y, int32_t Z, uint8_t height) {
     
     return result;
 }
+
+//Generate a flat chunk and insert to MapChunks (reuse if possible)
+bool World::genClosedVoid(int32_t X, int32_t Z) {
+    
+    const uint8_t size_X=16, size_Z=16, size_Y=128;
+    
+    //Align grass to MapChunk grid
+    int32_t chunkX = X & 0xFFFFFFF0;
+    int32_t chunkZ = Z & 0xFFFFFFF0;
+
+    static Chunk *voidChunk = NULL;
+    
+    //Allocate mini-chunk if different from previous chunk
+    if (voidChunk == NULL) {
+        //Allocate the new chunk space
+        voidChunk = new Chunk(size_X-1, size_Y-1, size_Z-1, chunkX, 0, chunkZ);
+    
+        //Assign blocks from bottom right to top right.
+        for (size_t index=0; index < voidChunk->array_length; index++ ) {
+    
+            //Bedrock on top and bottom
+            uint8_t gen_y = (index & 127 );
+            if (gen_y < 2 || gen_y > 125) {
+                voidChunk->block_array[index].blockID = 7; //Bedrock
+            }
+        }
+     } else {
+        //Same chunk, different location
+        voidChunk->X = chunkX;
+        voidChunk->Y = 0;
+        voidChunk->Z = chunkZ;
+    }
+
+    //Map (X | Z | Y) -> Chunk*
+    bool result=addMapChunk(voidChunk );
+    
+    //Set map chunk to draw
+    setChunkFlags(chunkX, chunkZ, MapChunk::DRAWABLE);
+    
+    return result;
+}
+
 
 //Generate brick of block ID @ x,y,z size_X*size_Y*size_Z
 bool World::genWall(int32_t X, int8_t Y, int32_t Z,

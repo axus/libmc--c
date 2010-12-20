@@ -53,17 +53,6 @@ void debugKey(const World& world, int32_t X, int8_t Y, int32_t Z)
 void genWorld(World& world)
 {
     
-    //Single workbench made from block
-    mc__::Block block1 = {58, 0, 0};
-    mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 8, 2, 8);
-    chunk1->block_array[0] = block1;
-    
-    //Add the single chunk to 0,0 MapChunk
-    world.addMapChunk(chunk1);
-    
-    //Free memory used by block, because it's copied
-    delete chunk1;
-    
     //Create a square mile of solid terrain
     int32_t gen_X, gen_Z;
     for (gen_X = -160; gen_X <= 160; gen_X += 16) {
@@ -74,6 +63,9 @@ void genWorld(World& world)
             debugKey(world, 0,0,16);
         }
     }}
+    
+    //Create empty void
+    world.genClosedVoid(64, 64);
 
     //Draw all block IDs
     if (!world.genChunkTest(0, 64, 0)) {
@@ -104,6 +96,17 @@ void genWorld(World& world)
         cout << "Error: genWall ";
         debugKey(world, 3, 64, 6);
     }
+    
+    //Single workbench made from block put in chunk
+    mc__::Block block1 = {58, 0, 0, 0};
+    mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 8, 64, 8);
+    chunk1->block_array[0] = block1;
+    
+    //Add the single chunk to 0,0 MapChunk
+    world.addMapChunk(chunk1);
+    
+    //Free memory used by block, because it's copied
+    delete chunk1;
     
     //Move the world in these directions at start
     world.spawn_X = 8;
@@ -155,7 +158,7 @@ int main(int argc, char** argv)
         
     //Run until user exits
     while (ui.run()) {
-        Sleep(10);   //100FPS - draw time
+        sf::Sleep(0.010);   //100FPS - draw time
     }
     
     //Send disconnect message

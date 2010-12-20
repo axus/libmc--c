@@ -1,5 +1,5 @@
 ############################
-# Makefile for MSYS + MinGW
+# Makefile for Linux (Red Hat, ...)
 ############################
 # GNU C++ Compiler
 CC=g++
@@ -8,18 +8,16 @@ SRCDIR=src
 BUILD=build
 
 # Superuser command
-SUDO=
+SUDO=sudo
 
 # Remove command
 RM=rm -f
 
-# -mconsole: Create a console application
-# -mwindows: Create a GUI application
-# -Wl,--enable-auto-import: Let the ld.exe linker automatically import from libraries
-LDFLAGS=-mwindows -Wl,--enable-auto-import
+#No LDFLAGS needed for Linux
+LDFLAGS=
 
-#Minimum Windows version: Windows XP, IE 6.01
-CPPFLAGS=-D_WIN32_WINNT=0x0500 -DWINVER=0x0500 -D_WIN32_IE=0x0601 $(MOREFLAGS)
+#Other flags, if any
+CPPFLAGS=$(MOREFLAGS)
 
 #SRC files in SRCDIR directory
 SRC=$(addprefix $(SRCDIR)/, $(SRCFILES))

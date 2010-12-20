@@ -1,17 +1,11 @@
-# Test MineCraft client for libmc--c.
+UNAME := $(shell uname -o)
 
-BIN         = bin/mc--c.exe
-SRCFILES    = UserInterface.cpp main.cpp
-LIBS        = -L$(HOME)/lib -lnet-- -lwsock32 -lmc--c -lopengl32 -lglu32 -lDevIL -lILU \
--lsfml-system -lsfml-window -lsfml-graphics -lz
+#Make based on operating system
 
-INCLUDES    = -I$(HOME)/include
-LOGFILES    = network.log
-###DEBUG       = on
-MOREFLAGS   = -std=c++0x
+ifeq ($(UNAME), GNU/Linux)
+include Makefile.linux-x64
+endif
 
-#Where to install or uninstall
-INSTALL_BIN = $(HOME)/bin
-
-#Generic MinGW build rules for a binary
-include bin.MinGW.mak
+ifeq ($(UNAME), Msys)
+include Makefile.MinGW
+endif

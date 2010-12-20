@@ -117,7 +117,7 @@ namespace mc__ {
             uint8_t* allocByteArray();
             
             //Free allocated memory
-            void deleteZip();
+            void deleteZipArray();
             void deleteBlockArray();
             void deleteByteArray();
 

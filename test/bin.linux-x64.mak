@@ -1,5 +1,5 @@
 ############################
-# Makefile for MSYS + MinGW
+# Makefile for Linux (Red Hat, ...)
 ############################
 # GNU C++ Compiler
 CC=g++
@@ -24,15 +24,11 @@ RM=rm -f
 # DEBUG         "on" to turn on debugging
 # MOREFLAGS     Add custom flags to object compile phase
 
+#No LDFLAGS needed for Linux
+LDFLAGS=
 
-# -mconsole: Create a console application
-# -mwindows: Create a GUI only application
-# -Wl,--enable-auto-import: Let the ld.exe linker automatically import from libraries
-# -L/usr/local/lib : use non-standard MinGW /usr/local/lib
-LDFLAGS=-Wl,--enable-auto-import -mconsole -L/usr/local/lib
-
-#Minimum Windows version: Windows XP, IE 6.01
-CPPFLAGS=-D_WIN32_WINNT=0x0500 -DWINVER=0x0500 -D_WIN32_IE=0x0601 $(MOREFLAGS) -Wno-deprecated
+#More flags for Linux
+CPPFLAGS=$(MOREFLAGS) -Wno-deprecated
 
 #SRC files in SRCDIR directory
 SRC=$(addprefix $(SRCDIR)/, $(SRCFILES))
@@ -44,7 +40,7 @@ BBIN=$(addprefix bin/, $(BIN))
 
 # Debug, or optimize
 ifeq ($(DEBUG),on)
-  CFLAGS=-Wall -Wextra -fno-omit-frame-pointer -O0 -ggdb3 -pg -DDEBUG
+  CFLAGS=-Wall -Wextra -O0 -fno-omit-frame-pointer -ggdb3 -pg -DDEBUG
 else
   # All warnings, optimization level 3
   CFLAGS=-Wall -Wextra -O3
@@ -83,7 +79,6 @@ uninstall:
 	-$(RM) $(INSTALL_BIN)/$(BIN)
 
 # Remove object files and core files with "clean" (- prevents errors from exiting)
-RM=rm -f
 .clean: clean
 clean:
 	-$(RM) $(BBIN) $(OBJ) core $(LOGFILES)

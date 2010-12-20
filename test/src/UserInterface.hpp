@@ -30,6 +30,7 @@
 
 //SFML
 #include <SFML/Graphics.hpp>
+#include <SFML/System.hpp>
 
 //STL
 #include <iostream>
@@ -80,6 +81,9 @@ namespace mc__ {
             
             //Process mouse movement
             bool handleMouse();
+            
+            //Draw debugging info to screen
+            void setDebug();
 
             //SFML
             sf::WindowSettings Settings;
@@ -120,6 +124,13 @@ namespace mc__ {
             //Remember order keys were typed in
             sf::Key::Code key_buffer[1024];
             size_t keys_typed;
+            
+            //Frame counter and status message
+            bool showStatus;
+            size_t frames_elapsed;
+            float totalFrameTime;
+            sf::String status_string;
+
     };
 }
 

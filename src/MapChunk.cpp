@@ -152,11 +152,12 @@ bool MapChunk::updateVisRange(const Chunk *chunk,
         }
 
         //Determine Y-adjacency (to mapchunks that don't exist!)
-        switch (y_) {
-            case 0: adj_N[2] = true; adj_N[3] = false; break;
-            case 1: adj_N[2] = false; break;
-            case 127: adj_N[3] = true; break;
-            default: adj_N[2] = false; adj_N[3] = false;
+        if (y_ == 0) {
+            adj_N[2] = true; adj_N[3] = false;
+        } else if (y_ == 127) {
+            adj_N[2] = false; adj_N[3] = true;
+        } else {
+            adj_N[2] = false; adj_N[3] = false;
         }
 
         //Update visflags, get list of updated block indices
@@ -186,21 +187,6 @@ bool MapChunk::updateVisRange(const Chunk *chunk,
         flags |= MapChunk::UPDATED;
     }
 
-    /*
-    //Mark neighor chunks as UPDATED, if needed
-    if (update_N[0] && neighbors[0] != NULL) {
-        neighbors[0]->flags |= MapChunk::ADJ_UPDATED;
-    }
-    if (update_N[1] && neighbors[1] != NULL) {
-        neighbors[1]->flags |= MapChunk::ADJ_UPDATED;
-    }
-    if (update_N[4] && neighbors[4] != NULL) {
-        neighbors[4]->flags |= MapChunk::ADJ_UPDATED;
-    }
-    if (update_N[5] && neighbors[5] != NULL) {
-        neighbors[5]->flags |= MapChunk::ADJ_UPDATED;
-    }*/
-    
     return true;
 }
 
@@ -298,8 +284,10 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
         } else {
             //Index inside unloaded MapChunk
             flags_p = NULL;
-            flags_v = 0xFD;
-            blockid_n = 1;
+            flags_v = ( i != 3 ? 0xFD : 0x02);
+            
+            //Bedrock block except on top of world (air up there)
+            blockid_n = ( i != 3 ? 7 : 0);
         }
         
         //vismask for this face depends on which face
@@ -360,8 +348,6 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
                     }
                     neighbor->flags |= UPDATED;
                 }
-                
-                
             } else {
                 //Change inside this mapchunk
                 changes.insert(index_n);

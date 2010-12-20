@@ -1,4 +1,4 @@
-libmc--c: Minecraft Client Library
+libmc--c: MultiCube-- Client Library
 
 Provides world representation data structures and OpenGL drawing functions.
 
@@ -20,15 +20,39 @@ Provides world representation data structures and OpenGL drawing functions.
     <http://www.gnu.org/licenses/>.
 **********************************************************************    
 
-Building with MinGW/MSYS:
-    set HOME environment variable to your development home directory
-    extract libmc--c to $HOME/
-    cd libmc--c
-    make
-    make install
-    
+See LIBRARIES for description of required libraries
+
+Prerequisites for MinGW/MSYS:
+    MSYS + MinGW with GCC 4.5+
+    git
+       
+Prerequisites for Linux (tested on RedHat variants):
+   #You must have permission to install libraries to /usr/local/lib
+    Package manager
+    git and other development tools
+   
+   #Install the prerequisite libraries
+   ./README.linux
+   
+Build and test instructions
+   #Clone the git repository from github
+   git clone git://github.com/axus/libmc--c.git
+   
+   #Build the library and install
+   cd libmc--c
+   make
+   make install
+   
+   #Build the test program and run
+   cd test
+   make
+   run
+
 
 Thanks to the following people who tested:
-vLK
-Zaneo
-Koitenshin
+    vLK
+    Zaneo
+    Koitenshin
+    KyleXY
+    ReDucTor
+    AndrewPH

@@ -7,3 +7,7 @@
 *.out
 *.bin_zip
 *.log
+*.ini
+*.INI
+mc--c
+

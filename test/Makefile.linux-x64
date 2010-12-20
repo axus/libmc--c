@@ -1,0 +1,18 @@
+# Example MineCraft client for libmc--c.
+#    Linux Makefile
+
+BIN         = mc--c
+SRCFILES    = UserInterface.cpp main.cpp
+LIBS        = -lmc--c -lGL -lGLU -lIL \
+-lsfml-system -lsfml-window -lsfml-graphics -lz -lpthread
+
+
+INCLUDES    = -I/usr/local/include
+###DEBUG       = on
+MOREFLAGS   = -std=c++0x
+
+#Where to install or uninstall
+INSTALL_BIN = $(HOME)/bin
+
+#Generic MinGW build rules for a binary
+include bin.linux-x64.mak

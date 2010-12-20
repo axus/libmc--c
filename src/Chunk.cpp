@@ -69,14 +69,8 @@ Chunk::Chunk(uint8_t size_x, uint8_t size_y, uint8_t size_z,
 Chunk::~Chunk()
 {
     deleteByteArray();
-    if (block_array != NULL) {
-        delete block_array;
-        block_array = NULL;
-    }
-    if (zipped != NULL) {
-        delete zipped;
-        zipped = NULL;
-    }
+    deleteBlockArray();
+    deleteZipArray();
 }
 
 //Copy block_array to byte_array
@@ -210,7 +204,7 @@ Block* Chunk::allocBlockArray()
 //Free memory
 void Chunk::deleteBlockArray() {
     if (block_array != NULL) {
-        delete block_array;
+        delete[] block_array;
         block_array = NULL;
     }
 }
@@ -230,7 +224,7 @@ uint8_t* Chunk::allocByteArray()
 void Chunk::deleteByteArray() {
 
     if (byte_array != NULL) {
-        delete byte_array;
+        delete[] byte_array;
         byte_array = NULL;
     }
 }
@@ -238,7 +232,7 @@ void Chunk::deleteByteArray() {
 //Allocate space for zipped data
 uint8_t* Chunk::allocZip( uint32_t size)
 {
-    deleteZip();
+    deleteZipArray();
     zipped_length = size;
     zipped = new uint8_t[zipped_length];
     
@@ -246,9 +240,9 @@ uint8_t* Chunk::allocZip( uint32_t size)
 }
 
 //Free memory
-void Chunk::deleteZip() {
+void Chunk::deleteZipArray() {
     if (zipped != NULL) {
-        delete zipped;
+        delete[] zipped;
         zipped = NULL;
     }
 }
@@ -279,7 +273,7 @@ bool Chunk::zip()
     //Problem?
     if (result != Z_OK)
     {
-        if (zipped != NULL) { delete zipped; }
+        if (zipped != NULL) { deleteZipArray(); }
         zipped = NULL;
         zipped_length = 0;
         return false;
@@ -302,7 +296,7 @@ bool Chunk::unzip(bool free_zip)
     //Problem?
     if (result != Z_OK)
     {
-        if (byte_array != NULL) { delete byte_array; }
+        if (byte_array != NULL) { deleteByteArray(); }
         byte_array = NULL;
         byte_length = 0;
         return false;
@@ -311,7 +305,7 @@ bool Chunk::unzip(bool free_zip)
     //Now, copy the byte array to the block array
     unpackBlocks(free_zip);
     if (free_zip) {
-        deleteZip();
+        deleteZipArray();
     }
     
     isUnzipped=true;
