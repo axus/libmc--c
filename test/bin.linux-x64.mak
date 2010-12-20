@@ -40,7 +40,7 @@ BBIN=$(addprefix bin/, $(BIN))
 
 # Debug, or optimize
 ifeq ($(DEBUG),on)
-  CFLAGS=-Wall -Wextra -O1 -g -pg -DDEBUG
+  CFLAGS=-Wall -Wextra -O0 -fno-omit-frame-pointer -ggdb3 -pg -DDEBUG
 else
   # All warnings, optimization level 3
   CFLAGS=-Wall -Wextra -O3
