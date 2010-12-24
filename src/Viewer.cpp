@@ -413,7 +413,133 @@ void Viewer::drawCube( uint8_t blockID,
     setBlockColor( 0, (face_ID)0);
 }
 
-//Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotate)
+//Draw cactus... almost like a cube, but A, B, E, F are inset 1 pixel
+void Viewer::drawCactus( uint8_t blockID,
+    GLint x, GLint y, GLint z, uint8_t vflags)
+{
+    
+    //Face coordinates (in pixels)
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //For each face, use the appropriate texture offsets for the block ID
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //   Texture map was loaded upside down...
+    // 0.0 -------------> 1.0 (X)
+    // |
+    // |
+    // |
+    // |
+    // |
+    // |
+    // v
+    // 1.0
+    // (Y)
+    
+    //
+    // (tx_0, ty_1)      (tx_1, ty_1)
+    //
+    // (tx_0, ty_0)      (tx_1, ty_0)
+
+    // For cactus, the face coordinates are inset from the face
+
+    //A always visible
+        tx_0 = blockInfo[blockID].tx[WEST];
+        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
+        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
+        ty_1 = blockInfo[blockID].ty[WEST];
+        setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A+1, C, E);
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A+1, C, F);
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A+1, D, F);
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A+1, D, E);
+
+    //B
+        tx_0 = blockInfo[blockID].tx[EAST];
+        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
+        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
+        ty_1 = blockInfo[blockID].ty[EAST];
+        setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B-1, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B-1, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B-1, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B-1, D, F);  //Top left:    BDF
+    
+    //C not always visible
+    if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    }
+    
+    //D
+    if (!(vflags & 0x10)) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = blockInfo[blockID].tx[UP] + tmr;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+        setBlockColor(blockID, UP);  //Set leaf/grass color if needed
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+    
+    //E always visible
+        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[NORTH];
+        setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E+1);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E+1);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E+1);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E+1);  //Top left:    BDE
+    
+    //F
+        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[SOUTH];
+        setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F-1);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F-1);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F-1);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F-1);  //Top left:    ADF
+    
+    //Return color to normal
+    setBlockColor( 0, (face_ID)0);
+}
+
+
+//Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotation)
 void Viewer::drawScaledBlock( uint8_t blockID,
     GLint x, GLint y, GLint z, uint8_t vflags,
     GLfloat scale_x, GLfloat scale_y, GLfloat scale_z,
@@ -438,7 +564,7 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     GLfloat tx_0, tx_1, ty_0, ty_1;
     
     //Scaled texture map ratios (1/block length)
-    GLfloat tmr_x, tmr_y, tmr_z;
+    GLfloat tmr_x, tmr_y, tmr_z, tmr_off_x, tmr_off_y, tmr_off_z;
     if (scale_texture) {
         tmr_x  = scale_x * tmr;
         tmr_y = scale_y * tmr;
@@ -446,6 +572,9 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     } else {
         tmr_x = tmr_y = tmr_z = tmr;
     }
+    tmr_off_x = tmr*off_x/texmap_TILE_LENGTH;
+    tmr_off_y = tmr*off_y/texmap_TILE_LENGTH;
+    tmr_off_z = tmr*off_z/texmap_TILE_LENGTH;
 
     //For each face, use the appropriate texture offsets for the block ID
     //       ADE ---- BDE
@@ -526,10 +655,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     
     //E
     if (!(vflags & 0x08) && (scale_x != 0.0 && scale_y != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[NORTH];
-        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
-        ty_1 = blockInfo[blockID].ty[NORTH];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[NORTH] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[NORTH] + tmr_off_y;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
@@ -539,10 +669,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     
     //F
     if (!(vflags & 0x04) && (scale_x != 0.0 && scale_y != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[SOUTH];
-        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
-        ty_1 = blockInfo[blockID].ty[SOUTH];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[SOUTH] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[SOUTH] + tmr_off_y;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
@@ -710,9 +841,9 @@ void Viewer::drawBlock( const mc__::Block& block,
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
     //              4=wallsign, 5=ladder, 6=track, 7=fire
     //              8=portal, 9=fence, A=door, B=floorplate
-    //              C=1/3 block, D=wallsign, E=button, F=plant
+    //              C=snow cover, D=wallsign, E=button, F=plant
 
-//TODO: correct models
+    //Use different drawing function for different model types
     switch ( (blockInfo[block.blockID].properties & 0xF0)>>4 ) {
         case 0x0:
             //Cube
@@ -731,23 +862,8 @@ void Viewer::drawBlock( const mc__::Block& block,
             drawScaledBlock(4, x, y, z, 0,
                 0.25, 0.25, 0.5, true, 6, 0, 4);
             break;
-        case 0xF:   //Plant
-            drawItem(block.blockID, x, y, z);
-            break;
         case 0x3:   //half-block
             drawHalfBlock(block.blockID, x, y, z, vflags);
-            break;
-        case 0xC:   //Snow
-            drawScaledBlock(block.blockID, x, y, z, vflags,
-                1, 0.25, 1);
-            break;
-        case 0x8:   //Portal
-            drawScaledBlock(block.blockID, x, y, z, 0,
-                1.0, 1.0, 0.25, true, 0, 0, 8);
-            break;
-        case 0xE:   //Button
-            drawScaledBlock(block.blockID, x, y, z, 0,
-                0.25, 0.25, 0.125, true, 0, 8, 0);
             break;
         case 0x4:   //Wallsign
         case 0x5:   //Ladder
@@ -758,6 +874,10 @@ void Viewer::drawBlock( const mc__::Block& block,
             break;
         case 0x6:   //Track
             drawTrack(block.blockID, x, y, z);
+            break;
+        case 0x8:   //Portal
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                1.0, 1.0, 0.25, true, 0, 0, 8);
             break;
         case 0x9:   //Fence
             //Top of fence
@@ -773,7 +893,21 @@ void Viewer::drawBlock( const mc__::Block& block,
             drawScaledBlock(block.blockID, x, y, z, 0,
                 0.75, 0.125, 0.75, true, 2, 0, 2);
             break;
-        //TODO: test for other shapes
+        case 0xC:   //Snow
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                1, 0.25, 1);
+            break;
+        case 0xE:   //Button
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                0.25, 0.25, 0.125, true, 8, 8, 0);
+            break;
+        case 0xF:   //Plant
+            if (block.blockID != 0x51) {
+                drawItem(block.blockID, x, y, z);
+            } else {    //Special case cactus
+                drawCactus(block.blockID, x, y, z, vflags);
+            }
+            break;
         default:    //Draw unknown types as a cube
             drawCube(block.blockID, x, y, z, vflags);
             break;
@@ -995,7 +1129,7 @@ ILuint Viewer::loadImageFile( const string &imageFilename) {
 //OpenGL rendering of cubes.  No update to camera.
 bool Viewer::drawWorld(const World& world)
 {
-    //Erase openGL world
+    //Erase polygons
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
     //Reset camera
@@ -1008,12 +1142,8 @@ bool Viewer::drawWorld(const World& world)
     //Bring the world to the camera, not the camera to the world
     glTranslatef( -cam_X, -cam_Y, -cam_Z );
     
-    //Draw the mega-chunks
+    //Draw the map-chunks
     drawMapChunks(world);
-
-    //Debug :)    
-    //mc__::Block block1 = {58, 0, 0};   //Workbench
-    //drawBlock( block1, 0, 0, 2);
     
     return true;
 }
@@ -1172,7 +1302,7 @@ Normal block = 0x00: cube, dark, opaque, solid
         //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
     setBlockInfo( 79, 67, 67, 67, 67, 67, 67, 0x04);    //Ice
     setBlockInfo( 80, 66, 66, 66, 66, 66, 66, 0x00);    //SnowBlock
-    setBlockInfo( 81, 70, 70, 71, 69, 70, 70, 0x00);    //Cactus
+    setBlockInfo( 81, 70, 70, 71, 69, 70, 70, 0xF0);    //Cactus
     setBlockInfo( 82, 72, 72, 72, 72, 72, 72, 0x00);    //Clay
     setBlockInfo( 83, 73, 73, 73, 73, 73, 73, 0xF7);    //Reed (*)
     setBlockInfo( 84, 74, 74, 43, 75, 74, 74, 0x00);    //Jukebox
@@ -1429,8 +1559,8 @@ bool Viewer::splitTextureMap( ILuint texmap, ILuint tiles_x, ILuint tiles_y)
                 ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
 
             //Set out-of-range texture coordinates
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         
             //Make textures "blocky" when up close
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

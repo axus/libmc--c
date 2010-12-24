@@ -104,6 +104,8 @@ namespace mc__ {
             void drawItem( uint8_t blockID, GLint x, GLint y, GLint z);
             void drawTrack( uint8_t blockID, GLint x, GLint y, GLint z);
             void drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z);
+            void drawCactus( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t visflags=0);
 
             //Draw a cube with dimensions scaled and location offset
             //  scale factor is multiplier, use 0 - 1

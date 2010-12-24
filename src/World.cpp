@@ -378,11 +378,13 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
             firstBlockArray[index].blockID = (ID_y|ID_x);
         }
     }
+    
+    //Add top to doors
+    firstBlockArray[3].blockID = 64;
+    firstBlockArray[3 + size_Y*7].blockID = 71;
+    
 
-    //Pack blocks in chunk and zip
-    //testChunk->packBlocks();
-    //testChunk->zip();
-
+    //Add chunk to map
     bool result=addMapChunk(testChunk );
 
     return result;
