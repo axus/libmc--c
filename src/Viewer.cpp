@@ -603,10 +603,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
 
     //A
     if (!(vflags & 0x80) && (scale_y != 0.0 && scale_z != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[WEST];
-        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
-        ty_1 = blockInfo[blockID].ty[WEST];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[WEST] + tmr_off_z;
+        tx_1 = blockInfo[blockID].tx[WEST] + tmr_off_z + tmr_z;
+        ty_0 = blockInfo[blockID].ty[WEST] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[WEST] + tmr_off_y;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
@@ -616,10 +617,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
 
     //B
     if (!(vflags & 0x40) && (scale_y != 0.0 && scale_z != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[EAST];
-        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
-        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
-        ty_1 = blockInfo[blockID].ty[EAST];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[EAST] + tmr_off_z;
+        tx_1 = blockInfo[blockID].tx[EAST] + tmr_off_z + tmr_z;
+        ty_0 = blockInfo[blockID].ty[EAST] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[EAST] + tmr_off_y;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -629,10 +631,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     
     //C
     if (!(vflags & 0x20) && (scale_x != 0.0 && scale_z != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[DOWN];
-        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-        ty_1 = blockInfo[blockID].ty[DOWN];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[DOWN] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr_off_z + tmr_z;
+        ty_1 = blockInfo[blockID].ty[DOWN] + tmr_off_z;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -642,10 +645,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     
     //D
     if (!(vflags & 0x10) && (scale_x != 0.0 && scale_z != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[UP];
-        tx_1 = blockInfo[blockID].tx[UP] + tmr;
-        ty_0 = blockInfo[blockID].ty[UP] + tmr;
-        ty_1 = blockInfo[blockID].ty[UP];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[UP] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[UP] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr_off_z + tmr_z;
+        ty_1 = blockInfo[blockID].ty[UP] + tmr_off_z;
     
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
@@ -839,7 +843,7 @@ void Viewer::drawBlock( const mc__::Block& block,
 
     //Drawing function depends on shape (as determined from properties)
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=fire
+    //              4=signpost, 5=ladder, 6=track, 7=fire
     //              8=portal, 9=fence, A=door, B=floorplate
     //              C=snow cover, D=wallsign, E=button, F=plant
 
@@ -865,11 +869,20 @@ void Viewer::drawBlock( const mc__::Block& block,
         case 0x3:   //half-block
             drawHalfBlock(block.blockID, x, y, z, vflags);
             break;
-        case 0x4:   //Wallsign
+        case 0x4:   //Signpost
+            //TODO: drawSignpost();
+            
+            //Sign
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                0.75, 0.5, 0.125, true, 2, 7, 8);
+                
+            //Post
+            drawScaledBlock(block.blockID, x, y, z, (vflags&0x30)|0x10,
+                0.125, 0.4375, 0.125, true, 7, 0, 8);
+            break;
         case 0x5:   //Ladder
         case 0x7:   //fire
         case 0xA:   //Door
-        case 0xD:   //Wallsign
             drawWallItem(block.blockID, x, y, z);
             break;
         case 0x6:   //Track
@@ -881,12 +894,12 @@ void Viewer::drawBlock( const mc__::Block& block,
             break;
         case 0x9:   //Fence
             //Top of fence
-            drawScaledBlock(block.blockID, x, y, z, vflags,
+            drawScaledBlock(block.blockID, x, y, z, vflags&0xC0,
                 1, 0.25, 0.25, true, 0, 6, 6);
             //Fence legs
-            drawScaledBlock(block.blockID, x, y, z, vflags,
+            drawScaledBlock(block.blockID, x, y, z, (vflags&0x30)|0x10,
                 0.25, 0.375, 0.25, true, 2, 0, 6);
-            drawScaledBlock(block.blockID, x, y, z, vflags,
+            drawScaledBlock(block.blockID, x, y, z, (vflags&0x30)|0x10,
                 0.25, 0.375, 0.25, true, 10, 0, 6);
             break;
         case 0xB:   //Floorplate
@@ -896,6 +909,10 @@ void Viewer::drawBlock( const mc__::Block& block,
         case 0xC:   //Snow
             drawScaledBlock(block.blockID, x, y, z, vflags,
                 1, 0.25, 1);
+            break;
+        case 0xD:   //Wallsign
+            drawScaledBlock(block.blockID, x, y, z, (vflags&0x08),
+                0.75, 0.5, 0.125, true, 2, 7, 0);
             break;
         case 0xE:   //Button
             drawScaledBlock(block.blockID, x, y, z, 0,
@@ -1186,7 +1203,7 @@ void Viewer::setBlockInfo( uint8_t index,
     
     //Assign properties
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=fire?,
+    //              4=signpost, 5=ladder, 6=track, 7=fire?,
     //              8=portal, 9=fence, A=door, B=floorplate
     //              C=1/3 block, D=wallsign, E=button, F=plant
     //0x08: Bright: 0=dark, 1=lightsource
@@ -1218,7 +1235,7 @@ ADF ---- BDF |
 ACF ---- BCF
 
 //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-//              4=wallsign, 5=ladder, 6=track, 7=1/4 block
+//              4=signpost, 5=ladder, 6=track, 7=1/4 block
 //              8=portal, 9=fence, A=door, B=floorplate
 //              C=snow?, D=wallsign, E=button, F=planted
 //0x08: Bright: 0=dark, 1=lightsource

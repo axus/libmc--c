@@ -87,25 +87,32 @@ void genWorld(World& world)
         debugKey(world, 3, 64, 6);
     }
 
-    //Glass obelisk
+    //Glass pillar
     if (!world.genWall(24, 64, 2, 2, 17, 2, 20)) {
         cout << "Error: genWall ";
         debugKey(world, 3, 64, 6);
     }
+    //Brick pillar next to glass
     if (!world.genWall(26, 64, 2, 1, 17, 2, 45)) {
         cout << "Error: genWall ";
         debugKey(world, 3, 64, 6);
     }
-    
-    //Single workbench made from block put in chunk
-    mc__::Block block1 = {58, 0, 0, 0};
-    mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 8, 64, 8);
-    chunk1->block_array[0] = block1;
+    //Single wallsign embedded in brick wall
+    mc__::Block sign1 = {68, 0, 0, 0}; //wallsign, no metadata
+    mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 26, 65, 3);//location
+    chunk1->block_array[0] = sign1;
     
     //Add the single chunk to 0,0 MapChunk
     world.addMapChunk(chunk1);
+    delete chunk1;
     
-    //Free memory used by block, because it's copied
+    //Single workbench made from block put in chunk
+    mc__::Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
+    chunk1 = new mc__::Chunk(0, 0, 0, 8, 64, 8);    //location
+    chunk1->block_array[0] = workbench1;
+    
+    //Add the single chunk to 0,0 MapChunk
+    world.addMapChunk(chunk1);
     delete chunk1;
     
     //Move the world in these directions at start
