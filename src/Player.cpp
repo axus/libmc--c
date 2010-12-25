@@ -19,9 +19,13 @@
     <http://www.gnu.org/licenses/>.
 */
 
+//mc--
 #include "Player.hpp"
 using mc__::Player;
+using mc__::Entity;
+using mc__::InvItem;
 
+//STL
 using std::string;
 
 //Constructor
@@ -70,14 +74,14 @@ bool Player::setPosLook( double x, double y, double z,
 }
 
 //Add item to inventory (return false if full)
-bool Player::addItem( const Item& item)
+bool Player::addItem( const InvItem& item)
 {
     size_t slot=0;
     bool added=false;
     
     while (slot < invSlots[INVTYPE_MAIN] && !added) {
         //Check for empty slot
-        Item& nextItem = inventory[INVTYPE_MAIN][slot];
+        InvItem& nextItem = inventory[INVTYPE_MAIN][slot];
         if ( nextItem.itemID == 0) {
             nextItem = item;
             added=true;
@@ -94,9 +98,9 @@ bool Player::moveItem( inv_type_t from_type, uint8_t from_slot,
     //TODO: check if item is moving to invalid slot
     
     //Swap items
-    Item& from_item = inventory[from_type][from_slot];
-    Item& to_item = inventory[to_type][to_slot];
-    Item copy_item = to_item;
+    InvItem& from_item = inventory[from_type][from_slot];
+    InvItem& to_item = inventory[to_type][to_slot];
+    InvItem copy_item = to_item;
     to_item = from_item;
     from_item = copy_item;
 
@@ -107,7 +111,7 @@ bool Player::moveItem( inv_type_t from_type, uint8_t from_slot,
 bool Player::removeItem( inv_type_t from_type, uint8_t from_slot)
 {
     //Static empty item
-    static Item empty_item = { 0, 0, 0};
+    static InvItem empty_item = { 0, 0, 0};
 
     //Set inventory slot to empty
     inventory[from_type][from_slot] = empty_item;

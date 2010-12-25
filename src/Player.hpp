@@ -27,9 +27,6 @@
 #include "Entity.hpp"
 #include "Chunk.hpp"
 
-using mc__::Entity;
-using mc__::Item;
-
 //STL
 #include <string>
 
@@ -40,12 +37,18 @@ namespace mc__ {
     //Types
     enum inv_type_t { INVTYPE_MAIN=0, INVTYPE_EQUIPPED=1, INVTYPE_CRAFTING=2,
         INVTYPE_MAX };
-        
+
+    typedef struct {
+        uint16_t itemID;
+        uint8_t count;
+        uint8_t hitpoints;
+    } InvItem;
+    
     //Constants
     const uint8_t invSlotsMax = 36;
     const uint8_t invSlots[INVTYPE_MAX]={ invSlotsMax, 4, 4 };
     
-    class Player : public Entity {
+    class Player : public mc__::Entity {
         public:
             //Constructor
             Player( const std::string& entity_name);
@@ -57,16 +60,13 @@ namespace mc__ {
                 float yaw_, float pitch_);
             
             //Inventory functions
-            bool addItem( const Item& item);
+            bool addItem( const InvItem& item);
             bool moveItem( inv_type_t from_type, uint8_t from_slot,
                 inv_type_t to_type, uint8_t to_slot);
             bool removeItem( inv_type_t from_type, uint8_t from_slot);
             
             //Player inventory... access this directly to read/write inventory
-            Item inventory[INVTYPE_MAX][ invSlotsMax ];
-            
-            //Held item
-            Item held_item;
+            mc__::InvItem inventory[INVTYPE_MAX][ invSlotsMax ];
             
             //Entity ID used as vehicle
             uint32_t VID;

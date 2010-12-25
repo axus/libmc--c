@@ -73,10 +73,12 @@ namespace mc__ {
         uint8_t blockID; uint8_t metadata; uint8_t lighting; uint8_t padding;
     } Block;
 
+/*
     //Item properties, on ground or in inventory
     typedef struct {
         uint16_t itemID; uint8_t  count; uint16_t health;
     } Item;
+*/
 
     class Chunk {
 

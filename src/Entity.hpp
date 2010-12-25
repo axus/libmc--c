@@ -53,6 +53,9 @@ namespace mc__ {
             //Unique entity ID
             uint32_t EID;
             
+            //Type:
+            uint8_t typeID;
+            
             //Absolute position (integer)
             int64_t X, Y, Z;
 
@@ -81,3 +84,26 @@ namespace mc__ {
 }
 
 #endif
+
+//typeID    Description
+//------    -----------
+//0         Player
+            
+//1         Boat
+//10        MineCart
+//11        ChestCart
+//12        FurnaceCart
+
+//50        Creeper
+//51        Skeleton
+//52        Spider
+//53        Giant Zombie
+//54        Zombie
+//55        Slime
+//56        Ghast
+//57        Zombie Pigman
+
+//90        Pig
+//91        Sheep
+//92        Cow
+//93        Chicken

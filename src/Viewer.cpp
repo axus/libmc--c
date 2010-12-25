@@ -1075,8 +1075,9 @@ void Viewer::startOpenGL() {
     //Save the original viewpoint
     glPushMatrix(); 
 
+    //Create memory for openGL texture (for terrain)
     glGenTextures(1, &terrain_tex);
-    glBindTexture(GL_TEXTURE_2D, terrain_tex);    //bind empty texture
+    glBindTexture(GL_TEXTURE_2D, terrain_tex);
     
     //Set out-of-range texture coordinates
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
@@ -1085,10 +1086,10 @@ void Viewer::startOpenGL() {
     //Make textures "blocky" when up close
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
     
-    //MipMap setting
+    //MipMap setting for far away textures
     if (use_mipmaps) {
         //Create OpenGL texture
-        glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);//Quick mipmaps
+        glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST);//Nice mipmaps
         
         //Use texture mipmaps when far away
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,

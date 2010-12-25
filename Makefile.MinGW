@@ -4,7 +4,7 @@ BIN         = libmc--c.a
 SRCFILES    = Events.cpp Chunk.cpp MapChunk.cpp Player.cpp World.cpp Viewer.cpp \
 Item.cpp
 HEADERS     = Events.hpp Chunk.hpp MapChunk.hpp Player.hpp World.hpp Viewer.hpp \
-Item.hpp Entity.hpp 
+Mobiles.hpp Item.hpp Entity.hpp 
 
 LIBS        = -L/usr/local/lib -lopengl32 -lglu32 -lDevIL -lILU -lz
 INCLUDES    = -I/usr/local/include

@@ -22,11 +22,12 @@
 #ifndef MC__VIEWER_H
 #define MC__VIEWER_H
 
-//Version 0.1.1
-#define MC__VIEWER_VERSION 0x0101
+//Version 0.1.2
+#define MC__VIEWER_VERSION 0x0102
 
 //mc__
 #include "World.hpp"
+#include "Mobiles.hpp"
 
 //STL
 #include <string>
@@ -40,7 +41,6 @@
 
 //DevIL
 #include <IL/il.h>
-//#include <IL/ilu.h>
 
 namespace mc__ {
 
@@ -126,8 +126,11 @@ namespace mc__ {
             //Draw all the mapchunks
             void drawMapChunks( const mc__::World& world);
             
-            //Draw everything
+            //Draw all terrain and placed blocks
             bool drawWorld(const mc__::World& world);
+            
+            //Draw all moving objects (entities)
+            bool drawMobiles(const mc__::Mobiles& mobiles);
             
             //Camera functions
             void move( GLfloat side, GLfloat up, GLfloat forward);
