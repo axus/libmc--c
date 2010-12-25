@@ -76,8 +76,10 @@ namespace mc__ {
         public:
 
             //relate MapChunk* -> GL List
-            typedef std::unordered_map< mc__::MapChunk*, GLuint> mapChunkUintMap_t;
+            typedef std::unordered_map< mc__::MapChunk*, GLuint>
+                mapChunkUintMap_t;
 
+            //Constructor
             Viewer(unsigned short width, unsigned short height);
             
             //Map block ID to block information

@@ -25,7 +25,7 @@ using mc__::Player;
 using std::string;
 
 //Constructor
-Player::Player(const std::string& entity_name): Entity(), name(entity_name)
+Player::Player(const std::string& entity_name): Entity(0), name(entity_name)
 {
 }
 

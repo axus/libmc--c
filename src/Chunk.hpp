@@ -72,7 +72,7 @@ namespace mc__ {
     typedef struct {
         uint8_t blockID; uint8_t metadata; uint8_t lighting; uint8_t padding;
     } Block;
-    
+
     //Item properties, on ground or in inventory
     typedef struct {
         uint16_t itemID; uint8_t  count; uint16_t health;
@@ -162,6 +162,7 @@ namespace mc__ {
             static const uint8_t maxBlockID=96;
             static const bool isOpaque[];
             static const bool isCube[]; //item = !cube
+            static const char *Name[];  //block name
     };
 }
 

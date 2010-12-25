@@ -328,7 +328,7 @@ bool World::updateMapChunks(bool cleanup)
                 }
             } else {
                 cerr << "Error updating chunk to map @ X=" << chunk->X
-                << " Y=" << (int)chunk->Y << "Z=" << chunk->Z << endl;
+                << " Y=" << (int)chunk->Y << " Z=" << chunk->Z << endl;
             }
             
             //Delete the mini-chunk

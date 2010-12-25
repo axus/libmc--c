@@ -34,7 +34,21 @@ namespace mc__ {
   
     class Entity {
         public:
-            //Entity();
+        
+            //Default player height
+            static const double humanHeight=1.62;
+        
+            //Constructor with lots of defaults
+            Entity(uint32_t eid, double x=0, double y=0, double z=0,
+                float YAW=0, float PITCH=0):
+                EID(eid), abs_X(x), abs_Y(y), abs_Z(z), yaw(YAW), pitch(PITCH),
+                on_ground(0), dX(0), dY(0), dZ(0), eyes_Y(y + humanHeight),
+                hitpoints(0), animation(0)
+            {
+                X = abs_X*32;
+                Y = abs_Y*32;
+                Z = abs_Z*32;
+            };
             
             //Unique entity ID
             uint32_t EID;
@@ -45,9 +59,11 @@ namespace mc__ {
             //Absolute position (double)
             double abs_X, abs_Y, abs_Z;
             
-            //Looking in this direction
+            //Looking in this direction (or orientation of item)
             float yaw, pitch;
             
+            //Entity on ground (1), or in the air (0)
+            //  Item on ground (1), or in inventory (0)
             uint8_t on_ground;
             
             //Velocity vector
@@ -56,7 +72,7 @@ namespace mc__ {
             //viewpoint Y-value
             double eyes_Y;
             
-            //Health of entity
+            //Health of entity (or times item used)
             uint8_t hitpoints;
             
             //What's it doing
