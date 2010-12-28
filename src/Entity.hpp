@@ -45,9 +45,9 @@ namespace mc__ {
                 on_ground(0), dX(0), dY(0), dZ(0), eyes_Y(y + humanHeight),
                 hitpoints(0), animation(0)
             {
-                X = abs_X*32;
-                Y = abs_Y*32;
-                Z = abs_Z*32;
+                X = abs_X/32.0;
+                Y = abs_Y/32.0;
+                Z = abs_Z/32.0;
             };
             
             //Unique entity ID

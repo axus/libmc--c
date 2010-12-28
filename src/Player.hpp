@@ -35,19 +35,31 @@
 namespace mc__ {
   
     //Types
-    enum inv_type_t { INVTYPE_MAIN=0, INVTYPE_EQUIPPED=1, INVTYPE_CRAFTING=2,
-        INVTYPE_MAX };
-
+    
+    //Window types
+    enum inv_window_t { INV_PLAYER=0, INV_WORKBENCH=1, INV_FURNACE=2,
+        INV_CHEST=3, INV_CHEST_BIG=4, INV_WINDOW_MAX };
+        
+    //Window specific slot enums
+    enum inv_slot_player_t { SLOT_PL_CREATED=0,
+        SLOT_PL_CRAFT1=1, SLOT_PL_CRAFT2=2, SLOT_PL_CRAFT3=3, SLOT_PL_CRAFT4=4,
+        SLOT_PL_HEAD=5, SLOT_PL_TORSO=6, SLOT_PL_LEGS=7, SLOT_PL_FEET=8,
+        SLOT_PL_MAX };
+    
     typedef struct {
         uint16_t itemID;
         uint8_t count;
         uint8_t hitpoints;
     } InvItem;
     
-    //Constants
-    const uint8_t invSlotsMax = 36;
-    const uint8_t invSlots[INVTYPE_MAX]={ invSlotsMax, 4, 4 };
+    //Number of player backpack slots
+    const uint8_t player_backpack_slots=36;
     
+    //Number of window specific slots
+    const uint8_t invWindowSlots[INV_WINDOW_MAX]= {
+        SLOT_PL_MAX, 10, 3, 27, 54};
+    
+    //Player class definition
     class Player : public mc__::Entity {
         public:
             //Constructor
@@ -61,9 +73,8 @@ namespace mc__ {
             
             //Inventory functions
             bool addItem( const InvItem& item);
-            bool moveItem( inv_type_t from_type, uint8_t from_slot,
-                inv_type_t to_type, uint8_t to_slot);
-            bool removeItem( inv_type_t from_type, uint8_t from_slot);
+            bool moveItem( uint8_t from_slot, uint8_t to_slot);
+            bool removeItem( uint8_t from_slot);
             
             //Player inventory... access this directly to read/write inventory
             mc__::InvItem inventory[INVTYPE_MAX][ invSlotsMax ];

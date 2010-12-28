@@ -57,7 +57,7 @@ namespace mc__ {
             mc__::Player* addPlayer(uint32_t eid, const std::string& name,
                 uint32_t X, uint32_t Y, uint32_t Z,
                 uint8_t yaw=0, uint8_t pitch=0);
-            //Set players visible equipment
+            //Set a players visible equipment
             void setPlayerEquip(uint32_t eid, uint16_t slot, uint16_t item);
 
             //Add item to world
