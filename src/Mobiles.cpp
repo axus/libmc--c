@@ -25,13 +25,19 @@ using mc__::Player;
 using mc__::Entity;
 using mc__::Item;
 using mc__::World;
+using mc__::Mobiles;
+
+//STL
+#include <iostream>
+using std::cerr;
+using std::endl;
 
 //Types
 //  playerMap_t;
 //  itemMap_t;
 //  entityMap_t;
 
-Mobiles::Mobiles( mc__::World& w ): world(w)
+Mobiles::Mobiles( mc__::World& w ): world(w), uniqueEID(1)
 {
 }
             
@@ -43,128 +49,224 @@ Mobiles::~Mobiles()
 
 //Add named entity (a player) to mobiles in the world
 Player* Mobiles::addPlayer(uint32_t eid, const std::string& name,
-    uint32_t X, uint32_t Y, uint32_t Z,
+    int32_t X, int32_t Y, int32_t Z,
     uint8_t yaw, uint8_t pitch)
 {
     Player* player = NULL;
     
     //Look up existing player, or create a new one
-    playerMap::const_iterator iter = playerMap.find( eid );
+    playerMap_t::const_iterator iter = playerMap.find( eid );
     if ( iter == playerMap.end()) {
-        player = new Player(name);
+
+        //Create new player
+        player = new Player(eid, name);
+
         //Keep track of the player by entity ID
-        playerMap.insert( eid, player);
+        playerMap.insert( playerMap_t::value_type(eid, player));
+        
+        //Increase EID if needed
+        if (uniqueEID < eid) { uniqueEID = eid + 1; }
     } else {
         player = iter->second;
     }
     
+    //We don't know the other players height, so set default
+    double height = ((double)Y/32.0 + 1.62);
+    
     //Set entity properites of the new player
-    player->setPosLook( (double)X/32.0, double)Y/32.0, double)Z/32.0,
-        yaw * 360.0/255.0, pitch * 360.0/255.0);
+    player->setPosLook( (double)X/32.0, (double)Y/32.0, (double)Z/32.0,
+        height, yaw * 360.0f/255.0f, pitch * 360.0f/255.0f);
 
     return player;
 }
 
-//Set a players visible equipment
-void Mobiles::setPlayerEquip(uint32_t eid, uint16_t slot, uint16_t item)
-{
-}
-
 //Add item to world
-Item* addItem(uint32_t eid, uint16_t item, uint8_t count,
-    uint32_t X, uint32_t Y, uint32_t Z,
-    uint8_t yaw=0, uint8_t pitch=0, uint8_t roll=0)
+Item* Mobiles::addItem(uint32_t eid, uint16_t itemID, uint8_t count,
+    int32_t X, int32_t Y, int32_t Z,
+    uint8_t yaw, uint8_t pitch, uint8_t /*roll*/)
 {
+    Item *item=NULL;
+    //Look up existing item, or create a new one
+    itemMap_t::const_iterator iter = itemMap.find( eid );
+    if ( iter == itemMap.end()) {
+
+        item = new Item(itemID, count, 0, eid);
+        
+        //Keep track of the item by entity ID
+        itemMap.insert( itemMap_t::value_type(eid, item));
+
+        //Increase EID if needed
+        if (uniqueEID < eid) { uniqueEID = eid + 1; }
+    } else {
+        //Already knew about this item
+        item = iter->second;
+        item->EID = eid;
+        item->itemID = itemID;
+        item->count = count;
+        item->hitpoints = 0;
+    }
+    //Values not in the constructor
+    item->X = X;
+    item->Y = Y;
+    item->Z = Z;
+    item->abs_X = X/32.0;
+    item->abs_Y = Y/32.0;
+    item->abs_Z = Z/32.0;
+    item->yaw = yaw * 360.0f/255.0f;
+    item->pitch = pitch * 360.0f/255.0f;
+    
+    return item;
 }
 
 //Add monster/animal/vehicle to world
 Entity* Mobiles::addEntity(uint32_t eid, uint8_t type_id,
-    uint32_t X, uint32_t Y, uint32_t Z,
-    uint8_t yaw=0, uint8_t pitch=0 )
+    int32_t X, int32_t Y, int32_t Z,
+    uint8_t yaw, uint8_t pitch)
 {
+    Entity *entity=NULL;
+    //Look up existing item, or create a new one
+    entityMap_t::const_iterator iter = entityMap.find( eid );
+    if ( iter == entityMap.end()) {
+
+        entity = new Entity(eid, (double)X/32.0, (double)Y/32.0, (double)Z/32.0,
+        yaw * 360.0f/255.0f, pitch * 360.0f/255.0f);
+        
+        //Keep track of the item by entity ID
+        entityMap.insert( entityMap_t::value_type(eid, entity));
+
+        //Increase EID if needed
+        if (uniqueEID < eid) { uniqueEID = eid + 1; }
+    } else {
+        //Re-use item ID, update info
+        entity = iter->second;
+        entity->EID = eid;
+        entity->X = X;
+        entity->Y = Y;
+        entity->Z = Z;
+        entity->abs_X = X/32.0;
+        entity->abs_Y = Y/32.0;
+        entity->abs_Z = Z/32.0;
+        entity->yaw = yaw * 360.0f/255.0f;
+        entity->pitch = pitch * 360.0f/255.0f;
+    }
+    
+    //Copy other values
+    entity->typeID = type_id;
+    entity->hitpoints = 0;
+    
+    return entity;
 }
 
-//Entity changed position
-void Mobiles::movePlayer( uint32_t eid, uint8_t dX, uint8_t dY, uint8_t dZ)
+
+//Find player pointer, insert UNKNOWN if not found
+Player* Mobiles::findPlayer(uint32_t eid)
 {
-    Player* player = NULL;
-    
+    Player *player=NULL;
     //Look up existing player, or create a new one
-    playerMap::const_iterator iter = playerMap.find( eid );
+    playerMap_t::const_iterator iter = playerMap.find( eid );
     if ( iter == playerMap.end()) {
-        player = new Player("UNKNOWN");
+        player = new Player(eid, "UNKNOWN");
         //Keep track of the player by entity ID
-        playerMap.insert( eid, player);
+        playerMap.insert( playerMap_t::value_type(eid, player));
         cerr << "ERROR! Unknown player entity ID " << eid << endl;
     } else {
         player = iter->second;
     }
+    return player;
+}
+
+//Find item pointer, insert default one if not found
+Item* Mobiles::findItem(uint32_t eid)
+{
+    Item *item=NULL;
+    //Look up existing player, or create a new one
+    itemMap_t::const_iterator iter = itemMap.find( eid );
+    if ( iter == itemMap.end()) {
+        item = new Item(eid);
+        //Keep track of the player by entity ID
+        itemMap.insert( itemMap_t::value_type(eid, item));
+        cerr << "ERROR! Unknown item entity ID " << eid << endl;
+    } else {
+        item = iter->second;
+    }
     
+    return item;
+}
+
+
+//Find entity pointer, insert default one if not found
+Entity* Mobiles::findEntity(uint32_t eid)
+{
+    Entity *entity=NULL;
+    //Look up existing player, or create a new one
+    entityMap_t::const_iterator iter = entityMap.find( eid );
+    if ( iter == entityMap.end()) {
+        entity = new Entity(eid);
+        //Keep track of the player by entity ID
+        entityMap.insert( entityMap_t::value_type(eid, entity));
+        cerr << "ERROR! Unknown entity ID " << eid << endl;
+    } else {
+        entity = iter->second;
+    }
+    
+    return entity;
+}
+
+
+//Set a players visible equipment
+void Mobiles::setPlayerEquip(uint32_t eid, uint16_t slot, uint16_t item)
+{
+    //Lookup player pointer
+    Player* player = findPlayer(eid);
+    
+    //Set equipment item (1 item, item health unknown)
+    player->setSlot( (uint8_t)slot, item, 1, 0);
+
+}
+
+//Entity changed position
+void Mobiles::movePlayer( uint32_t eid, int8_t dX, int8_t dY, int8_t dZ)
+{
+    //Lookup player pointer
+    Player* player = findPlayer(eid);
+        
     //Set entity properites of the new player
-    player->setPosition( (double)X/32.0, double)Y/32.0, double)Z/32.0);
+    player->move( dX, dY, dZ);
     
 }
 
 //Entity position updated
-void Mobiles::moveEntity( uint32_t eid, uint8_t dX, uint8_t dY, uint8_t dZ)
+void Mobiles::moveEntity( uint32_t eid, int8_t dX, int8_t dY, int8_t dZ)
 {
-    Entity* entity = NULL;
-    
-    //Look up existing player, or create a new one
-    entityMap::const_iterator iter = entityMap.find( eid );
-    if ( iter == entityMap.end()) {
-        entity = new Entity("UNKNOWN");
-        //Keep track of the player by entity ID
-        entityMap.insert( eid, entity);
-        cerr << "ERROR! Unknown entity ID " << eid << endl;
-    } else {
-        entity = iter->second;
-    }
-    
+    //Lookup player pointer
+    Entity* entity = findEntity(eid);
+        
     //Set entity properites of the new player
-    entity->setPosition( (double)X/32.0, double)Y/32.0, double)Z/32.0);
-    
+    entity->move( dX, dY, dZ);
+
 }
 
 //Player changed direction
-void Mobiles::lookPlayer( uint32_t eid, float yaw, float pitch)
+void Mobiles::turnPlayer( uint32_t eid,  int8_t dYaw, int8_t dPitch)
 {
-    Player* player = NULL;
-    
-    //Look up existing player, or create a new one
-    playerMap::const_iterator iter = playerMap.find( eid );
-    if ( iter == playerMap.end()) {
-        player = new Player(name);
-        //Keep track of the player by entity ID
-        playerMap.insert( eid, player);
-        cerr << "ERROR! Unknown player entity ID " << eid << endl;
-    } else {
-        player = iter->second;
-    }
-    
-    //Set player idrection
-    player->setLook( yaw * 360.0/255.0, pitch * 360.0/255.0);
+    //Lookup player pointer
+    Player* player = findPlayer(eid);
+        
+    //Update player direction
+    player->look( dYaw, dPitch);
 
 }
 
 //Update entity direction
-void Mobiles::lookEntity( uint32_t eid, float yaw, float pitch)
+void Mobiles::turnEntity( uint32_t eid,  int8_t dYaw, int8_t dPitch)
 {
-    Entity* entity = NULL;
-    
-    //Look up existing player, or create a new one
-    entityMap::const_iterator iter = entityMap.find( eid );
-    if ( iter == entityMap.end()) {
-        entity = new Entity(name);
-        //Keep track of the player by entity ID
-        entityMap.insert( eid, entity);
-        cerr << "ERROR! Unknown entity ID " << eid << endl;
-    } else {
-        entity = iter->second;
-    }
-    
-    //Set player idrection
-    entity->setLook( yaw * 360.0/255.0, pitch * 360.0/255.0);
+    //Lookup entity pointer
+    Entity* entity = findEntity(eid);
+        
+    //Update player direction
+    entity->look( dYaw, dPitch);
+
+
 }
 
 //Get entity pointer for EID (null if not found)
@@ -173,21 +275,21 @@ mc__::Entity* Mobiles::getEntity(uint32_t eid)
     Entity* entity = NULL;
     
     //Look for animal/monster, return if found
-    entityMap::const_iterator ent_iter = entityMap.find( eid );
+    entityMap_t::const_iterator ent_iter = entityMap.find( eid );
     if ( ent_iter != entityMap.end()) {
         entity = ent_iter->second;
         return entity;
     }
     
     //Look for player, return if found
-    playerMap::const_iterator pl_iter = playerMap.find( eid );
+    playerMap_t::const_iterator pl_iter = playerMap.find( eid );
     if ( pl_iter != playerMap.end()) {
         entity = pl_iter->second;
         return entity;
     }
     
     //Look for item, return if found
-    itemMap::const_iterator item_iter = itemMap.find( eid );
+    itemMap_t::const_iterator item_iter = itemMap.find( eid );
     if ( item_iter != itemMap.end()) {
         entity = item_iter->second;
         return entity;

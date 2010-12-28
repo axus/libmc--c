@@ -45,10 +45,27 @@ namespace mc__ {
                 on_ground(0), dX(0), dY(0), dZ(0), eyes_Y(y + humanHeight),
                 hitpoints(0), animation(0)
             {
-                X = abs_X/32.0;
-                Y = abs_Y/32.0;
-                Z = abs_Z/32.0;
+                X = abs_X*32;
+                Y = abs_Y*32;
+                Z = abs_Z*32;
             };
+            
+            //Move the entity
+            void move(int8_t dX, int8_t dY, int8_t dZ) {
+                X += dX;
+                Y += dY;
+                Z += dZ;
+                abs_X = X/32.0;
+                abs_Y = Y/32.0;
+                abs_Z = Z/32.0;
+                
+            };
+            
+            //Change entity direction
+            void look(int8_t dYaw, int8_t dPitch) {
+                yaw += dYaw*(360.0f/256.0f);
+                pitch += dPitch*(360.0f/256.0f);
+            }
             
             //Unique entity ID
             uint32_t EID;
@@ -57,7 +74,7 @@ namespace mc__ {
             uint8_t typeID;
             
             //Absolute position (integer)
-            int64_t X, Y, Z;
+            int32_t X, Y, Z;
 
             //Absolute position (double)
             double abs_X, abs_Y, abs_Z;

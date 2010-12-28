@@ -29,10 +29,12 @@ using std::endl;
 using std::string;
 
 //mc--
+#include <mc--/Mobiles.hpp>
 #include "UserInterface.hpp"
 using mc__::World;
 using mc__::Player;
 using mc__::Events;
+using mc__::Mobiles;
 
 //SFML
 #include <SFML/System/Clock.hpp>
@@ -145,9 +147,6 @@ int main(int argc, char** argv)
     //Game world
     World world;
 
-    //Game player
-    Player player( player_name);
-    
     //Game events
     Events events;
 
@@ -155,9 +154,19 @@ int main(int argc, char** argv)
     cout << "Generating test world..." << endl;
     genWorld(world);
 
+    //Track entities with Mobiles object
+    Mobiles mobiles(world);
+
+    //Game player (Entity ID 1)
+    uint32_t playerEID = mobiles.newEID();
+    Player& player = *(mobiles.addPlayer(playerEID, player_name,
+        world.spawn_X << 5, world.spawn_Y << 5, world.spawn_Z << 5,
+        128, 0));
+    //Player player( playerEID, player_name);
     //Set player initial position and viewpoint (height, yaw, pitch)
-    player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
-        world.spawn_Y + 1, 180, 0);
+    //player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
+    //    world.spawn_Y + 1, 180, 0);
+    
 
     //Create user interface to world
     cout << "Creating user interface..." << endl;

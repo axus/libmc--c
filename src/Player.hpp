@@ -41,10 +41,10 @@ namespace mc__ {
         INV_CHEST=3, INV_CHEST_BIG=4, INV_WINDOW_MAX };
         
     //Window specific slot enums
-    enum inv_slot_player_t { SLOT_PL_CREATED=0,
-        SLOT_PL_CRAFT1=1, SLOT_PL_CRAFT2=2, SLOT_PL_CRAFT3=3, SLOT_PL_CRAFT4=4,
-        SLOT_PL_HEAD=5, SLOT_PL_TORSO=6, SLOT_PL_LEGS=7, SLOT_PL_FEET=8,
-        SLOT_PL_MAX };
+    enum slot_equipment_t { SLOT_EQ_CREATED=0,
+        SLOT_EQ_CRAFT1=1, SLOT_EQ_CRAFT2=2, SLOT_EQ_CRAFT3=3, SLOT_EQ_CRAFT4=4,
+        SLOT_EQ_HEAD=5, SLOT_EQ_TORSO=6, SLOT_EQ_LEGS=7, SLOT_EQ_FEET=8,
+        SLOT_EQ_MAX };
     
     typedef struct {
         uint16_t itemID;
@@ -52,18 +52,22 @@ namespace mc__ {
         uint8_t hitpoints;
     } InvItem;
     
-    //Number of player backpack slots
+    //Player inventory max slot
     const uint8_t player_backpack_slots=36;
-    
+    const uint8_t player_inv_slots=SLOT_EQ_MAX + player_backpack_slots;
+        
     //Number of window specific slots
     const uint8_t invWindowSlots[INV_WINDOW_MAX]= {
-        SLOT_PL_MAX, 10, 3, 27, 54};
+        SLOT_EQ_MAX, 10, 3, 27, 54};
+        
+    //Constant unsigned short value for empty slot
+    const uint16_t emptyID=0xFFFF;
     
     //Player class definition
     class Player : public mc__::Entity {
         public:
             //Constructor
-            Player( const std::string& entity_name);
+            Player( uint32_t eid, const std::string& entity_name);
             
             //Movement and looking
             bool setPosition( double x, double y, double z, double h);
@@ -73,11 +77,13 @@ namespace mc__ {
             
             //Inventory functions
             bool addItem( const InvItem& item);
+            bool setSlot( uint8_t to_slot, uint16_t itemID,
+                uint8_t count, uint8_t used);
             bool moveItem( uint8_t from_slot, uint8_t to_slot);
             bool removeItem( uint8_t from_slot);
             
-            //Player inventory... access this directly to read/write inventory
-            mc__::InvItem inventory[INVTYPE_MAX][ invSlotsMax ];
+            //Player inventory: equipment and backpack
+            mc__::InvItem inventory[ SLOT_EQ_MAX + player_backpack_slots];
             
             //Entity ID used as vehicle
             uint32_t VID;

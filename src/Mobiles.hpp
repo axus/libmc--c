@@ -55,31 +55,39 @@ namespace mc__ {
             
             //Add named entity (a player) to world
             mc__::Player* addPlayer(uint32_t eid, const std::string& name,
-                uint32_t X, uint32_t Y, uint32_t Z,
+                int32_t X, int32_t Y, int32_t Z,
                 uint8_t yaw=0, uint8_t pitch=0);
-            //Set a players visible equipment
-            void setPlayerEquip(uint32_t eid, uint16_t slot, uint16_t item);
-
             //Add item to world
             mc__::Item* addItem(uint32_t eid, uint16_t item, uint8_t count,
-                uint32_t X, uint32_t Y, uint32_t Z,
+                int32_t X, int32_t Y, int32_t Z,
                 uint8_t yaw=0, uint8_t pitch=0, uint8_t roll=0);
 
             //Add monster/animal/vehicle to world
             mc__::Entity* addEntity(uint32_t eid, uint8_t type_id,
-                uint32_t X, uint32_t Y, uint32_t Z,
+                int32_t X, int32_t Y, int32_t Z,
                 uint8_t yaw=0, uint8_t pitch=0 );
             
+            //Set a players visible equipment
+            void setPlayerEquip(uint32_t eid, uint16_t slot, uint16_t item);
+
             //Entity changed position
-            void movePlayer( uint32_t eid, uint8_t dX, uint8_t dY, uint8_t dZ);
-            void moveEntity( uint32_t eid, uint8_t dX, uint8_t dY, uint8_t dZ);
+            void movePlayer( uint32_t eid, int8_t dX, int8_t dY, int8_t dZ);
+            void moveEntity( uint32_t eid, int8_t dX, int8_t dY, int8_t dZ);
             
             //Entity changed direction
-            void lookPlayer( uint32_t eid, float yaw, float pitch);
-            void lookEntity( uint32_t eid, float yaw, float pitch);
+            void turnPlayer( uint32_t eid, int8_t dYaw, int8_t dPitch);
+            void turnEntity( uint32_t eid, int8_t dYaw, int8_t dPitch);
 
             //Get entity pointer for EID (null if not found)
             mc__::Entity* getEntity(uint32_t eid);
+            
+            //Get a new EID
+            uint32_t newEID() { return uniqueEID++; };
+            
+            //Find entity pointer, create UNKNOWN if not found
+            mc__::Player* findPlayer(uint32_t eid);
+            mc__::Entity* findEntity(uint32_t eid);
+            mc__::Item* findItem(uint32_t eid);
                         
             //Access this to see chunks in the Mobiles
             playerMap_t playerMap;    //EID -> Player*
@@ -88,6 +96,9 @@ namespace mc__ {
             
         protected:
             mc__::World& world; //World info
+            
+            uint32_t uniqueEID;  //Unique ID for entity IDs
+            
 
     };
 
