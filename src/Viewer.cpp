@@ -119,7 +119,9 @@ Viewer::Viewer(unsigned short width, unsigned short height):
 }
 
 //Start up OpenGL
-bool Viewer::init(const std::string &filename, bool mipmaps)
+bool Viewer::init(const std::string& filename,
+    const std::string& item_filename,
+    bool mipmaps)
 {
 
     //Compare devIL DLL version to header version
@@ -128,9 +130,15 @@ bool Viewer::init(const std::string &filename, bool mipmaps)
         return 1;
     }
 
+    //DevIL textures
+    ILuint il_texture_map, il_icon_map;
+
+    //Graphics options
     use_mipmaps=mipmaps;
 
+    //Remember filenames
     texture_map_file = filename;
+    item_icon_file = item_filename;
 
     //Load game block information
     loadBlockInfo();
@@ -140,6 +148,21 @@ bool Viewer::init(const std::string &filename, bool mipmaps)
 
     //Start DevIL
     ilInit();
+
+    //Load item icon map, copy to openGL texture
+    il_icon_map = loadImageFile(item_icon_file);
+    if (il_icon_map == 0) {
+        return 0;   //error, exit program
+    }
+
+    //glBind texture before assigning it
+    glBindTexture(GL_TEXTURE_2D, item_tex);
+    
+    //Copy current DevIL image to OpenGL image.
+    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+
 
     //Load terrain texture map, bind it to current DevIL image
     il_texture_map = loadImageFile(texture_map_file);
@@ -154,6 +177,7 @@ bool Viewer::init(const std::string &filename, bool mipmaps)
     glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
         ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
         ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+
 
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
@@ -1032,6 +1056,45 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
     }
     
 }
+
+//Draw all moving objects (entities)
+bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
+{
+    itemMap_t::const_iterator item_iter;
+    
+    const itemMap_t& itemMap = mobiles.itemMap;
+    GLuint displayList;
+    
+    //Go through all items in the world that we know about
+    //  TODO: items in visible range
+    for (item_iter = itemMap.begin(); item_iter != itemMap.end(); item_iter++) {
+        //NO ERROR CHECKING HERE!  FOR GREAT JUSTICE
+        
+        //Get display list for item
+        const Item *item = item_iter->second;
+        displayList = itemModels[ item->itemID ];
+
+        //Draw the precompiled list
+        glCallList(displayList);
+
+    }
+    
+    return true;
+}
+
+//Create the display lists that will be used for drawing mobiles
+bool Viewer::createItemModels()
+{
+    //itemModels.insert( shortUintMap_t::value_type( itemID, displayList));
+    return true;
+}
+
+bool Viewer::createEntityModels()
+{
+    //entityModels.insert( shortUintMap_t::value_type( entity_type, displayList));
+    return true;
+}
+
 
 //Draw the megachunks in mc__::World
 void Viewer::drawMapChunks( const World& world)

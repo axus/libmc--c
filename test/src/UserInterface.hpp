@@ -51,7 +51,8 @@ namespace mc__ {
             
             //Texture file
             const std::string texture_map_filename;
-
+            const std::string item_icon_filename;
+            
             //Constructor, initialize SFML and mc-- objects here
             UserInterface(const std::string& title, mc__::World&,
                 mc__::Player& player, mc__::Events& ev, bool dbg=false);

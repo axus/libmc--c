@@ -59,6 +59,7 @@ UserInterface::UserInterface(
 
     //initialize objects here
     texture_map_filename("terrain.png"),    //block textures
+    item_icon_filename("items.png"),        //item icons
     mouseSensitivity(UI_mouse_sensitivity), //Mouselook sensitivity
     Settings(UI_bpp, 0, 0),                 //32bpp, 0 stencil, 0 anti-aliasing
     App(sf::VideoMode(UI_width, UI_height, UI_bpp), //860x480, 32-bit color

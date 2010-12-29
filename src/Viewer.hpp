@@ -29,6 +29,9 @@
 #include "World.hpp"
 #include "Mobiles.hpp"
 
+//DevIL
+#include <IL/il.h>
+
 //STL
 #include <string>
 #include <map>
@@ -38,9 +41,6 @@
 #include <GL/gl.h>
 #include <GL/glu.h>
 #include <GL/glext.h>
-
-//DevIL
-#include <IL/il.h>
 
 namespace mc__ {
 
@@ -75,9 +75,14 @@ namespace mc__ {
     class Viewer {
         public:
 
-            //relate MapChunk* -> GL List
+            //relate MapChunk* -> GL List number
             typedef std::unordered_map< mc__::MapChunk*, GLuint>
                 mapChunkUintMap_t;
+
+            //relate 16-bit ID to GL List number
+            typedef std::unordered_map< uint16_t , GLuint>
+                shortUintMap_t;
+
 
             //Constructor
             Viewer(unsigned short width, unsigned short height);
@@ -88,7 +93,9 @@ namespace mc__ {
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
 
-            bool init(const std::string &texture_map_file, bool mipmaps=true);
+            bool init(const std::string &texture_map_file,
+                const std::string &item_icon_file,
+                bool mipmaps=true);
 
             //Load texture map
             ILuint loadImageFile( const std::string &imageFilename);
@@ -168,14 +175,10 @@ namespace mc__ {
             GLfloat cam_yaw, cam_pitch, cam_vecX, cam_vecY, cam_vecZ;
             
             //Remember texture map filename
-            std::string texture_map_file;
-
-            //DevIL textures
-            ILuint il_texture_map;
-            ILuint ilTextureList[texmap_TILE_MAX];
+            std::string texture_map_file, item_icon_file;
             
             //openGL image (for texture)
-            GLuint terrain_tex;
+            GLuint terrain_tex, item_tex;
             
             //GL display lists of display lists that player can see
             GLuint glListPlayer;
@@ -183,11 +186,18 @@ namespace mc__ {
             //GL display lists of display lists that player cannot see
             GLuint glListCamera;
             
+            //Map ID to GL display list
+            shortUintMap_t itemModels;
+            shortUintMap_t entityModels;
+            
             //Init functions
             void startOpenGL();
             void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
                 uint8_t D, uint8_t E, uint8_t F, uint8_t properties);
             bool loadBlockInfo();
+            
+            bool createItemModels();
+            bool createEntityModels();
             
             //Change face colors if needed by blockID
             void setBlockColor(uint8_t blockID, face_ID face);

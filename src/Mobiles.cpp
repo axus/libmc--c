@@ -221,7 +221,6 @@ void Mobiles::setPlayerEquip(uint32_t eid, uint16_t slot, uint16_t item)
     
     //Set equipment item (1 item, item health unknown)
     player->setSlot( (uint8_t)slot, item, 1, 0);
-
 }
 
 //Entity changed position
@@ -243,7 +242,6 @@ void Mobiles::moveEntity( uint32_t eid, int8_t dX, int8_t dY, int8_t dZ)
         
     //Set entity properites of the new player
     entity->move( dX, dY, dZ);
-
 }
 
 //Player changed direction
@@ -254,7 +252,6 @@ void Mobiles::turnPlayer( uint32_t eid,  int8_t dYaw, int8_t dPitch)
         
     //Update player direction
     player->look( dYaw, dPitch);
-
 }
 
 //Update entity direction
@@ -265,8 +262,6 @@ void Mobiles::turnEntity( uint32_t eid,  int8_t dYaw, int8_t dPitch)
         
     //Update player direction
     entity->look( dYaw, dPitch);
-
-
 }
 
 //Get entity pointer for EID (null if not found)
@@ -298,11 +293,3 @@ mc__::Entity* Mobiles::getEntity(uint32_t eid)
     //NOT FOUND
     return NULL;
 }
-
-/*           
-            //Access this to see chunks in the Mobiles
-            playerMap_t playerMap;    //EID -> Player*
-            itemMap_t itemMap;        //EID -> Item*
-            entityMap_t entityMap;    //EID -> Entity*
-            mc__::World& world; //World info
-*/
