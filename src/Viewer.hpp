@@ -64,6 +64,18 @@ namespace mc__ {
     //0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
     } BlockInfo;
 
+    //Re-use BlockInfo type for iteminfo.  Use these values for properties:
+    // 0x00 = terrain cube
+    // 0x01 = terrain item
+    // 0x02 = non-placeable item (items.png)
+    // 0x04 = stackable
+    // 0x10 = chest
+    // 0x20 = lever
+    // 0x30 = double-chest
+    // 0x40 = sign
+    // 0x50 = furnace
+    // 0x60 = workbench
+
     //Constants
     const size_t texmap_TILE_LENGTH = 16;   //openGL coords per tile
     const size_t texmap_TILES = 16;         //tiles in map (1D)
@@ -82,13 +94,15 @@ namespace mc__ {
             //relate 16-bit ID to GL List number
             typedef std::unordered_map< uint16_t , GLuint>
                 shortUintMap_t;
-
+            typedef std::unordered_map< uint16_t, BlockInfo>
+                itemInfoMap_t;
 
             //Constructor
             Viewer(unsigned short width, unsigned short height);
             
             //Map block ID to block information
             BlockInfo blockInfo[256];
+            itemInfoMap_t itemInfo;
             
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
@@ -194,7 +208,9 @@ namespace mc__ {
             void startOpenGL();
             void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
                 uint8_t D, uint8_t E, uint8_t F, uint8_t properties);
+            void setItemInfo( uint16_t index, uint8_t A, uint8_t properties);
             bool loadBlockInfo();
+            bool loadItemInfo();
             
             bool createItemModels();
             bool createEntityModels();

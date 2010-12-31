@@ -1054,7 +1054,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         //Finished drawing chunk, no longer "updated"
         myChunk.flags &= ~(MapChunk::UPDATED);
     }
-    
+
 }
 
 //Draw all moving objects (entities)
@@ -1091,6 +1091,29 @@ bool Viewer::createItemModels()
 
 bool Viewer::createEntityModels()
 {
+    //typeID    Description
+    //------    -----------
+    //0         Player
+                
+    //1         Boat
+    //10        MineCart
+    //11        ChestCart
+    //12        FurnaceCart
+    
+    //50        Creeper
+    //51        Skeleton
+    //52        Spider
+    //53        Giant Zombie
+    //54        Zombie
+    //55        Slime
+    //56        Ghast
+    //57        Zombie Pigman
+    
+    //90        Pig
+    //91        Sheep
+    //92        Cow
+    //93        Chicken
+
     //entityModels.insert( shortUintMap_t::value_type( entity_type, displayList));
     return true;
 }
@@ -1276,6 +1299,27 @@ void Viewer::setBlockInfo( uint8_t index,
     blockInfo[index].properties = properties;
 }
 
+void Viewer::setItemInfo( uint16_t index, uint8_t A, uint8_t properties)
+{
+    //A - F contain texture ID of the corresponding face (textureID = 0 - 255)
+    BlockInfo iteminf;
+    
+    //For each face,  precompute OpenGL texture offsets in texture map
+    // (Remember that texture map was loaded upside down!)
+    iteminf.textureID[0] = A;
+    iteminf.tx[0] = float(A & (texmap_TILES-1))/((float)texmap_TILES);
+    iteminf.ty[0] = float(A/texmap_TILES)/((float)texmap_TILES);
+
+    //TODO: draw to openGL texture if properties == 0 or 1
+
+    //Copy properties
+    iteminf.properties = properties;
+    
+    //Add to itemInfo map
+    itemInfo.insert(itemInfoMap_t::value_type( index, iteminf));
+}
+
+
 //Map block ID to block type information
 bool Viewer::loadBlockInfo()
 {
@@ -1405,6 +1449,221 @@ Normal block = 0x00: cube, dark, opaque, solid
 
     return true;
 }
+
+//Map item ID to item information
+bool Viewer::loadItemInfo()
+{
+    uint8_t ID;
+
+    //  properties:
+    // 0x00 = terrain cube (icon is single terrain cube)
+    // 0x01 = terrain item (icon is single terrain texture)
+    // 0x02 = item (icon is single tile from items.png)
+    // 0x03 = special icon
+    // 0x04 = unstackable
+    // 0x08 = biome colored
+    // 0x10 = chest
+    // 0x20 = lever
+    // 0x40 = sign
+    // 0x50 = furnace
+    // 0x60 = workbench
+    // 0xFF = air
+
+// 11 is the transparent texture
+
+    //Set "cube" blocks
+    setItemInfo( 0, 11, 0xFF);     //Air   (should not be drawn!)
+    setItemInfo( 1, 1,  0x00);     //Stone
+    setItemInfo( 2, 3,  0x08);     //Grass
+    setItemInfo( 3, 2,  0x00);     //Dirt
+    setItemInfo( 4, 16, 0x00);     //Cobble
+    setItemInfo( 5, 4,  0x00);     //Wood
+    setItemInfo( 6, 15, 0x01);     //Sapling
+    setItemInfo( 7, 17, 0x00);     //Bedrock
+    setItemInfo( 8, 0xCE, 0x00);     //Water(*)
+    setItemInfo( 9, 0xCD, 0x00);     //WaterStill
+    setItemInfo( 10, 0xEE,0x00);    //Lava(*)
+    setItemInfo( 11, 0xED,0x00);    //LavaStill
+    setItemInfo( 12, 18, 0x00);    //Sand
+    setItemInfo( 13, 19, 0x00);    //Gravel
+    setItemInfo( 14, 32, 0x00);    //GoldOre
+    setItemInfo( 15, 33, 0x00);    //IronOre
+    setItemInfo( 16, 34, 0x00);    //CoalOre
+    setItemInfo( 17, 20, 0x00);    //Log
+    setItemInfo( 18, 52, 0x08);    //Leaves
+    setItemInfo( 19, 48, 0x00);    //Sponge
+    setItemInfo( 20, 49, 0x00);    //Glass
+    
+    for (ID = 21; ID < 37; ID++) {
+        setItemInfo( ID, 64, 0x00);   //Cloth
+    }
+    setItemInfo( 37, 13, 0x01);    //Flower
+    setItemInfo( 38, 12, 0x01);    //Rose
+    setItemInfo( 39, 29, 0x01);    //BrownShroom
+    setItemInfo( 40, 28, 0x01);    //RedShroom
+    setItemInfo( 41, 39, 0x00);    //GoldBlock
+    setItemInfo( 42, 38, 0x00);    //IronBlock
+    setItemInfo( 43, 5,  0x00);    //DoubleStep
+    setItemInfo( 44, 5,  0x00);    //Step
+    setItemInfo( 45, 7,  0x00);    //Brick
+    setItemInfo( 46, 8,  0x00);    //TNT
+    setItemInfo( 47, 35, 0x00);    //Bookshelf
+    setItemInfo( 48, 36, 0x00);    //Mossy
+    setItemInfo( 49, 37, 0x00);    //Obsidian
+    setItemInfo( 50, 80, 0x01);    //Torch
+    setItemInfo( 51, 30, 0x03);    //Fire
+    setItemInfo( 52, 65, 0x00);    //Spawner
+    setItemInfo( 53, 4,  0x00);    //WoodStairs
+    setItemInfo( 54, 26, 0x10);    //Chest (*)
+    setItemInfo( 55, 84, 0x01);    //Wire (*)
+    setItemInfo( 56, 50, 0x00);    //DiamondOre
+    setItemInfo( 57, 40, 0x00);    //DiamondBlock
+    setItemInfo( 58, 60, 0x60);    //Workbench
+    setItemInfo( 59, 90, 0x01);    //Crops (*)
+    setItemInfo( 60, 2,  0x00);    //Soil
+    setItemInfo( 61, 45, 0x50);    //Furnace
+    setItemInfo( 62, 45, 0x53);    //LitFurnace
+    setItemInfo( 63, 42, 0x02);    //SignPost (*)
+    setItemInfo( 64, 43, 0x02);    //WoodDoor (*)
+    setItemInfo( 65, 83, 0x01);    //Ladder (*)
+    setItemInfo( 66, 112,0x01);    //Track (*)
+    setItemInfo( 67, 16, 0x00);    //CobbleStairs
+    setItemInfo( 68, 42, 0x02);    //WallSign (*)
+    setItemInfo( 69, 96, 0x00);    //Lever
+    setItemInfo( 70, 1,  0x00);    //StonePlate
+    setItemInfo( 71, 44, 0x02);    //IronDoor (*)
+    setItemInfo( 72, 4,  0x00);    //WoodPlate
+    setItemInfo( 73, 51, 0x00);    //RedstoneOre
+    setItemInfo( 74, 51, 0x00);    //RedstoneOreLit(*)
+    setItemInfo( 75, 115,0x01);    //RedstoneTorch
+    setItemInfo( 76, 99, 0x01);    //RedstoneTorchLit
+    setItemInfo( 77, 1,  0x00);    //StoneButton
+    setItemInfo( 78, 66, 0x00);    //SnowLayer(*)
+    setItemInfo( 79, 67, 0x00);    //Ice
+    setItemInfo( 80, 66, 0x00);    //SnowBlock
+    setItemInfo( 81, 70, 0x00);    //Cactus
+    setItemInfo( 82, 72, 0x00);    //Clay Block
+    setItemInfo( 83, 73, 0x01);    //Reed (*)
+    setItemInfo( 84, 74, 0x00);    //Jukebox
+    setItemInfo( 85, 4,  0x00);    //Fence (*)
+    setItemInfo( 86, 118,0x00);    //Pumpkin
+    setItemInfo( 87, 103,0x00);    //Netherstone
+    setItemInfo( 88, 104,0x00);    //SlowSand
+    setItemInfo( 89, 105,0x00);    //Lightstone
+    setItemInfo( 90, 49, 0x03);    //Portal (??)
+    setItemInfo( 91, 118,0x00);    //PumpkinLit
+
+    //Set inventory items info
+    setItemInfo(256, 82,0x02);     //Iron Shovel
+    setItemInfo(257, 98,0x02);     //Iron Pick
+    setItemInfo(258,114,0x02);     //Iron Axe
+    setItemInfo(259,  5,0x02);     //Flint n Steel
+    setItemInfo(260, 10,0x02);     //Apple
+    setItemInfo(261, 21,0x02);     //Bow
+    setItemInfo(262, 37,0x02);     //Arrow
+    setItemInfo(263,  7,0x02);     //Coal
+    setItemInfo(264, 55,0x02);     //Diamond
+    setItemInfo(265, 23,0x02);     //Iron Ingot
+    setItemInfo(266, 39,0x02);     //Gold Ingot
+    //... TODO:
+    /*
+    setItemInfo(267, ,0x02);//    Iron Sword
+    setItemInfo(268, ,0x02);//    Wooden Sword
+    setItemInfo(269, ,0x02);//    Wooden Shovel
+    setItemInfo(270, ,0x02);//    Wooden Pickaxe
+    setItemInfo(271, ,0x02);//    Wooden Axe
+    setItemInfo(272, ,0x02);//    Stone Sword
+    setItemInfo(273, ,0x02);//    Stone Shovel
+    setItemInfo(274, ,0x02);//    Stone Pickaxe
+    setItemInfo(275, ,0x02);//    Stone Axe
+    setItemInfo(276, ,0x02);//    Diamond Sword
+    setItemInfo(277, ,0x02);//    Diamond Shovel
+    setItemInfo(278, ,0x02);//    Diamond Pickaxe
+    setItemInfo(279, ,0x02);//    Diamond Axe
+    setItemInfo(280, ,0x02);//    Stick
+    setItemInfo(281, ,0x02);//    Bowl
+    setItemInfo(282, ,0x02);//    Mushroom Soup
+    setItemInfo(283, ,0x02);//    Gold Sword
+    setItemInfo(284, ,0x02);//    Gold Shovel
+    setItemInfo(285, ,0x02);//    Gold Pickaxe
+    setItemInfo(286, ,0x02);//    Gold Axe
+    setItemInfo(287, ,0x02);//    String
+    setItemInfo(288, ,0x02);//    Feather
+    setItemInfo(289, ,0x02);//    Sulphur
+    setItemInfo(290, ,0x02);//    Wooden Hoe
+    setItemInfo(291, ,0x02);//    Stone Hoe
+    setItemInfo(292, ,0x02);//    Iron Hoe
+    setItemInfo(293, ,0x02);//    Diamond Hoe
+    setItemInfo(294, ,0x02);//    Gold Hoe
+    setItemInfo(295, ,0x02);//    Seeds
+    setItemInfo(296, ,0x02);//    Wheat
+    setItemInfo(297, ,0x02);//    Bread
+    setItemInfo(298, ,0x02);//    Leather Helmet
+    setItemInfo(299, ,0x02);//    Leather Chestplate
+    setItemInfo(300, ,0x02);//    Leather Leggings
+    setItemInfo(301, ,0x02);//    Leather Boots
+    setItemInfo(302, ,0x02);//    Chainmail Helmet
+    setItemInfo(303, ,0x02);//    Chainmail Chestplate
+    setItemInfo(304, ,0x02);//    Chainmail Leggings
+    setItemInfo(305, ,0x02);//    Chainmail Boots
+    setItemInfo(306, ,0x02);//    Iron Helmet
+    setItemInfo(307, ,0x02);//    Iron Chestplate
+    setItemInfo(308, ,0x02);//    Iron Leggings
+    setItemInfo(309, ,0x02);//    Iron Boots
+    setItemInfo(310, ,0x02);//    Diamond Helmet
+    setItemInfo(311, ,0x02);//    Diamond Chestplate
+    setItemInfo(312, ,0x02);//    Diamond Leggings
+    setItemInfo(313, ,0x02);//    Diamond Boots
+    setItemInfo(314, ,0x02);//    Gold Helmet
+    setItemInfo(315, ,0x02);//    Gold Chestplate
+    setItemInfo(316, ,0x02);//    Gold Leggings
+    setItemInfo(317, ,0x02);//    Gold Boots
+    setItemInfo(318, ,0x02);//    Flint
+    setItemInfo(319, ,0x02);//    Raw Porkchop
+    setItemInfo(320, ,0x02);//    Cooked Porkchop
+    setItemInfo(321, ,0x02);//    Paintings
+    setItemInfo(322, ,0x02);//    Golden apple
+    setItemInfo(323, ,0x02);//    Sign
+    setItemInfo(324, ,0x02);//    Wooden door
+    setItemInfo(325, ,0x02);//    Bucket
+    setItemInfo(326, ,0x02);//    Water bucket
+    setItemInfo(327, ,0x02);//    Lava bucket
+    setItemInfo(328, ,0x02);//    Mine cart
+    setItemInfo(329, ,0x02);//    Saddle
+    setItemInfo(330, ,0x02);//    Iron door
+    setItemInfo(331, ,0x02);//    Redstone
+    setItemInfo(332, ,0x02);//    Snowball
+    setItemInfo(333, ,0x02);//    Boat
+    setItemInfo(334, ,0x02);//    Leather
+    setItemInfo(335, ,0x02);//    Milk
+    setItemInfo(336, ,0x02);//    Clay Brick
+    setItemInfo(337, ,0x02);//    Clay Balls
+    setItemInfo(338, ,0x02);//    Reed
+    setItemInfo(339, ,0x02);//    Paper
+    setItemInfo(340, ,0x02);//    Book
+    setItemInfo(341, ,0x02);//    Slimeball
+    setItemInfo(342, ,0x02);//    Storage Minecart
+    setItemInfo(343, ,0x02);//    Powered Minecart
+    setItemInfo(344, ,0x02);//    Egg
+    setItemInfo(345, ,0x02);//    Compass
+    setItemInfo(346, ,0x02);//    Fishing Rod
+    setItemInfo(347, ,0x02);//    Clock
+    setItemInfo(348, ,0x02);//    Glowstone Dust
+    setItemInfo(349, ,0x02);//    Raw Fish
+    setItemInfo(350, ,0x02);//    Cooked Fish
+    setItemInfo(2256, ,0x02);//    Gold Music Disc
+    setItemInfo(2257, ,0x02);//    Green Music Disc
+*/
+
+    //  properties:
+    // 0x00 = terrain cube (icon is single terrain cube)
+    // 0x01 = terrain item (icon is single terrain texture)
+    // 0x02 = item (icon is single tile from items.png)
+    // 0x03 = special icon
+
+    return true;
+}
+
 
 //Write binary data of uncompressed chunk
 bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename) const
