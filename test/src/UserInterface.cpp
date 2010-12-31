@@ -95,8 +95,8 @@ UserInterface::UserInterface(
     status_string.SetSize(20);
     status_string.Move(10.f, 10.f);
 
-    //Load terrain.png
-    viewer.init(texture_map_filename, true);   //TODO: configurable
+    //Load textures   //TODO: configurable
+    viewer.init(texture_map_filename, item_icon_filename, true);
 
     //Reset camera
     resetCamera();

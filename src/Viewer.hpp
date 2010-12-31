@@ -80,6 +80,9 @@ namespace mc__ {
     const size_t texmap_TILE_LENGTH = 16;   //openGL coords per tile
     const size_t texmap_TILES = 16;         //tiles in map (1D)
     const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
+    const uint16_t block_id_MAX = 256;
+    const uint16_t item_id_MAX = 2304;
+    const uint16_t entity_type_MAX = 128;
 
     //Texture map ratio:  tile:texmap length
     const float tmr = 1.0f/((float)texmap_TILES);
@@ -91,18 +94,14 @@ namespace mc__ {
             typedef std::unordered_map< mc__::MapChunk*, GLuint>
                 mapChunkUintMap_t;
 
-            //relate 16-bit ID to GL List number
-            typedef std::unordered_map< uint16_t , GLuint>
-                shortUintMap_t;
-            typedef std::unordered_map< uint16_t, BlockInfo>
-                itemInfoMap_t;
-
             //Constructor
             Viewer(unsigned short width, unsigned short height);
             
             //Map block ID to block information
-            BlockInfo blockInfo[256];
-            itemInfoMap_t itemInfo;
+            BlockInfo blockInfo[block_id_MAX];
+            
+            //Map item ID to item information
+            BlockInfo itemInfo[item_id_MAX];
             
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
@@ -137,7 +136,10 @@ namespace mc__ {
                 GLfloat scale_x=1, GLfloat scale_y=1, GLfloat scale_z=1,
                 bool scale_textures=true,
                 GLint off_x=0, GLint off_y=0, GLint off_z=0);
-    
+
+            //dropped item drawing function (for display lists)
+            void drawDroppedItem( uint16_t blockID);
+
             //Draw minichunks only
             void drawChunks( const mc__::World& world);
             
@@ -190,20 +192,21 @@ namespace mc__ {
             
             //Remember texture map filename
             std::string texture_map_file, item_icon_file;
-            
+
             //openGL image (for texture)
             GLuint terrain_tex, item_tex;
-            
-            //GL display lists of display lists that player can see
+            GLuint entity_tex[entity_type_MAX];
+
+            //GL display list of terrain display lists that player can see
             GLuint glListPlayer;
-            
-            //GL display lists of display lists that player cannot see
+
+            //GL display list of terrain display lists that player cannot see
             GLuint glListCamera;
-            
+
             //Map ID to GL display list
-            shortUintMap_t itemModels;
-            shortUintMap_t entityModels;
-            
+            GLuint itemModels[item_id_MAX];
+            GLuint entityModels[entity_type_MAX];
+
             //Init functions
             void startOpenGL();
             void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
@@ -211,7 +214,11 @@ namespace mc__ {
             void setItemInfo( uint16_t index, uint8_t A, uint8_t properties);
             bool loadBlockInfo();
             bool loadItemInfo();
-            
+
+            //Create display list for ID after loadItemInfo has been called
+            bool createItemModel( uint16_t ID);
+
+            //Create display lists for all IDs
             bool createItemModels();
             bool createEntityModels();
             

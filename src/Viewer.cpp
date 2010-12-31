@@ -124,10 +124,12 @@ bool Viewer::init(const std::string& filename,
     bool mipmaps)
 {
 
+    bool result=true;
+
     //Compare devIL DLL version to header version
     if (ilGetInteger(IL_VERSION_NUM) < IL_VERSION) {
         cerr << "DevIL wrong DLL version" << endl;
-        return 1;
+        return false;
     }
 
     //DevIL textures
@@ -152,38 +154,41 @@ bool Viewer::init(const std::string& filename,
     //Load item icon map, copy to openGL texture
     il_icon_map = loadImageFile(item_icon_file);
     if (il_icon_map == 0) {
-        return 0;   //error, exit program
+        result=false;
+        //cerr << "Error loading " << item_icon_file << endl;
+    } else {
+        //glBind texture before assigning it
+        glBindTexture(GL_TEXTURE_2D, item_tex);
+        
+        //Copy current DevIL image to OpenGL image.
+        glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+            ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+            ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
     }
 
-    //glBind texture before assigning it
-    glBindTexture(GL_TEXTURE_2D, item_tex);
-    
-    //Copy current DevIL image to OpenGL image.
-    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
 
 
     //Load terrain texture map, bind it to current DevIL image
     il_texture_map = loadImageFile(texture_map_file);
     if (il_texture_map == 0) {
-        return 0;   //error, exit program
-    }
-
-    //glBind texture before assigning it
-    glBindTexture(GL_TEXTURE_2D, terrain_tex);
+        result = false;   //error, exit program
+        //cerr << "Error loading " << texture_map_file << endl;
+    } else {
+        //glBind texture before assigning it
+        glBindTexture(GL_TEXTURE_2D, terrain_tex);
+        
+        //Copy current DevIL image to OpenGL image.
+        glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+            ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+            ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
     
-    //Copy current DevIL image to OpenGL image.
-    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
-
+    }
 
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    return true;
+    return result;
 }
 
 //change back to texture if needed
@@ -836,6 +841,7 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
     glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
 
+    //Intersecting plane
     tx_0 = blockInfo[blockID].tx[EAST];
     tx_1 = blockInfo[blockID].tx[EAST] + tmr;
     ty_0 = blockInfo[blockID].ty[EAST] + tmr;    //flip y
@@ -853,6 +859,42 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 
 }
 
+//Draw a dropped item that can be picked up (caller must translate to X,Y,Z)
+void Viewer::drawDroppedItem( uint16_t itemID )
+{
+
+    //To always face player, translate then rotate at camera(?)
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Object boundaries... 2 crossed squares inside a clear cube
+    GLint A = 0;
+    GLint B = texmap_TILE_LENGTH;
+    GLint C = 0;
+    GLint D = texmap_TILE_LENGTH;
+    //GLint E = 0;
+    //GLint F = texmap_TILE_LENGTH;
+    GLint G = texmap_TILE_LENGTH/2;    //half-way through z 
+    //GLint H = (texmap_TILE_LENGTH/2);    //half-way through x
+
+    //Look up texture coordinates for the item
+    tx_0 = itemInfo[itemID].tx[WEST];
+    tx_1 = itemInfo[itemID].tx[WEST] + tmr;
+    ty_0 = itemInfo[itemID].ty[WEST] + tmr;    //flip y
+    ty_1 = itemInfo[itemID].ty[WEST];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+
+}
 
 
 //Draw a placed mc__::Block in openGL
@@ -1161,8 +1203,12 @@ void Viewer::startOpenGL() {
     //Save the original viewpoint
     glPushMatrix(); 
 
-    //Create memory for openGL texture (for terrain)
+    //Create memory for openGL textures
     glGenTextures(1, &terrain_tex);
+    glGenTextures(1, &item_tex);
+    glGenTextures(entity_type_MAX, entity_tex);
+    
+    //Settings for terrain texture
     glBindTexture(GL_TEXTURE_2D, terrain_tex);
     
     //Set out-of-range texture coordinates
@@ -1299,10 +1345,11 @@ void Viewer::setBlockInfo( uint8_t index,
     blockInfo[index].properties = properties;
 }
 
+//Map item ID to texture coordinates and appropriate texture map (properties)
 void Viewer::setItemInfo( uint16_t index, uint8_t A, uint8_t properties)
 {
     //A - F contain texture ID of the corresponding face (textureID = 0 - 255)
-    BlockInfo iteminf;
+    BlockInfo& iteminf = itemInfo[index];
     
     //For each face,  precompute OpenGL texture offsets in texture map
     // (Remember that texture map was loaded upside down!)
@@ -1310,13 +1357,59 @@ void Viewer::setItemInfo( uint16_t index, uint8_t A, uint8_t properties)
     iteminf.tx[0] = float(A & (texmap_TILES-1))/((float)texmap_TILES);
     iteminf.ty[0] = float(A/texmap_TILES)/((float)texmap_TILES);
 
-    //TODO: draw to openGL texture if properties == 0 or 1
-
     //Copy properties
     iteminf.properties = properties;
+
+    //draw to openGL texture and model
+    //createItemTexture(index);
+}
+
+//Create texture and model for item
+bool Viewer::createItemModel( uint16_t index)
+{
+    BlockInfo& iteminf = itemInfo[index];
+
+    //Create display list for item model
+    itemModels[index] = glGenLists(1);
+    glNewList(itemModels[index], GL_COMPILE);
+
+    //Draw model to display list
+    switch (iteminf.properties & 0x03) {
+        case 0:
+            //Terrain cube (as item 75% size)
+            glBindTexture( GL_TEXTURE_2D, terrain_tex);
+            glBegin(GL_QUADS);
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.75, 0.75, 0.75, false, 2, 2, 2);
+            glEnd();
+            break;
+        case 1:
+            //Terrain item (as item 75% size)
+            glBindTexture( GL_TEXTURE_2D, terrain_tex);
+            glBegin(GL_QUADS);
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.75, 0.75, 0.75, false, 2, 2, 2);
+            glEnd();
+            break;
+        case 2:
+            //Inventory item
+            glBindTexture( GL_TEXTURE_2D, item_tex);
+            glBegin(GL_QUADS);
+            drawDroppedItem( index);
+            glEnd();
+            break;
+        case 3:
+            //Special inventory item
+            glBindTexture( GL_TEXTURE_2D, item_tex);
+            glBegin(GL_QUADS);
+            drawDroppedItem( index);
+            glEnd();
+            break;
+        default:
+            break;
+    }
     
-    //Add to itemInfo map
-    itemInfo.insert(itemInfoMap_t::value_type( index, iteminf));
+    glEndList();
+    
+    return true;
 }
 
 
@@ -1453,7 +1546,7 @@ Normal block = 0x00: cube, dark, opaque, solid
 //Map item ID to item information
 bool Viewer::loadItemInfo()
 {
-    uint8_t ID;
+    uint16_t ID;
 
     //  properties:
     // 0x00 = terrain cube (icon is single terrain cube)
@@ -1471,7 +1564,7 @@ bool Viewer::loadItemInfo()
 
 // 11 is the transparent texture
 
-    //Set "cube" blocks
+    //Set "cube" blocks: ID, texture, properties
     setItemInfo( 0, 11, 0xFF);     //Air   (should not be drawn!)
     setItemInfo( 1, 1,  0x00);     //Stone
     setItemInfo( 2, 3,  0x08);     //Grass
@@ -1514,152 +1607,160 @@ bool Viewer::loadItemInfo()
     setItemInfo( 51, 30, 0x03);    //Fire
     setItemInfo( 52, 65, 0x00);    //Spawner
     setItemInfo( 53, 4,  0x00);    //WoodStairs
-    setItemInfo( 54, 26, 0x10);    //Chest (*)
-    setItemInfo( 55, 84, 0x01);    //Wire (*)
+    setItemInfo( 54, 26, 0x10);    //Chest
+    setItemInfo( 55, 84, 0x01);    //Wire
     setItemInfo( 56, 50, 0x00);    //DiamondOre
     setItemInfo( 57, 40, 0x00);    //DiamondBlock
     setItemInfo( 58, 60, 0x60);    //Workbench
-    setItemInfo( 59, 90, 0x01);    //Crops (*)
+    setItemInfo( 59, 90, 0x01);    //Crops
     setItemInfo( 60, 2,  0x00);    //Soil
     setItemInfo( 61, 45, 0x50);    //Furnace
     setItemInfo( 62, 45, 0x53);    //LitFurnace
-    setItemInfo( 63, 42, 0x02);    //SignPost (*)
-    setItemInfo( 64, 43, 0x02);    //WoodDoor (*)
-    setItemInfo( 65, 83, 0x01);    //Ladder (*)
-    setItemInfo( 66, 112,0x01);    //Track (*)
+    setItemInfo( 63, 42, 0x03);    //SignPost
+    setItemInfo( 64, 43, 0x02);    //WoodDoor
+    setItemInfo( 65, 83, 0x01);    //Ladder
+    setItemInfo( 66, 112,0x01);    //Track
     setItemInfo( 67, 16, 0x00);    //CobbleStairs
-    setItemInfo( 68, 42, 0x02);    //WallSign (*)
+    setItemInfo( 68, 42, 0x02);    //WallSign
     setItemInfo( 69, 96, 0x00);    //Lever
     setItemInfo( 70, 1,  0x00);    //StonePlate
-    setItemInfo( 71, 44, 0x02);    //IronDoor (*)
+    setItemInfo( 71, 44, 0x02);    //IronDoor
     setItemInfo( 72, 4,  0x00);    //WoodPlate
     setItemInfo( 73, 51, 0x00);    //RedstoneOre
-    setItemInfo( 74, 51, 0x00);    //RedstoneOreLit(*)
+    setItemInfo( 74, 51, 0x00);    //RedstoneOreLit
     setItemInfo( 75, 115,0x01);    //RedstoneTorch
     setItemInfo( 76, 99, 0x01);    //RedstoneTorchLit
     setItemInfo( 77, 1,  0x00);    //StoneButton
-    setItemInfo( 78, 66, 0x00);    //SnowLayer(*)
+    setItemInfo( 78, 66, 0x00);    //SnowLayer
     setItemInfo( 79, 67, 0x00);    //Ice
     setItemInfo( 80, 66, 0x00);    //SnowBlock
     setItemInfo( 81, 70, 0x00);    //Cactus
     setItemInfo( 82, 72, 0x00);    //Clay Block
-    setItemInfo( 83, 73, 0x01);    //Reed (*)
+    setItemInfo( 83, 73, 0x01);    //Reed
     setItemInfo( 84, 74, 0x00);    //Jukebox
-    setItemInfo( 85, 4,  0x00);    //Fence (*)
+    setItemInfo( 85, 4,  0x00);    //Fence
     setItemInfo( 86, 118,0x00);    //Pumpkin
     setItemInfo( 87, 103,0x00);    //Netherstone
     setItemInfo( 88, 104,0x00);    //SlowSand
     setItemInfo( 89, 105,0x00);    //Lightstone
-    setItemInfo( 90, 49, 0x03);    //Portal (??)
+    setItemInfo( 90, 49, 0x03);    //Portal
     setItemInfo( 91, 118,0x00);    //PumpkinLit
 
-    //Set inventory items info
-    setItemInfo(256, 82,0x02);     //Iron Shovel
-    setItemInfo(257, 98,0x02);     //Iron Pick
-    setItemInfo(258,114,0x02);     //Iron Axe
-    setItemInfo(259,  5,0x02);     //Flint n Steel
-    setItemInfo(260, 10,0x02);     //Apple
-    setItemInfo(261, 21,0x02);     //Bow
-    setItemInfo(262, 37,0x02);     //Arrow
-    setItemInfo(263,  7,0x02);     //Coal
-    setItemInfo(264, 55,0x02);     //Diamond
-    setItemInfo(265, 23,0x02);     //Iron Ingot
-    setItemInfo(266, 39,0x02);     //Gold Ingot
-    //... TODO:
-    /*
-    setItemInfo(267, ,0x02);//    Iron Sword
-    setItemInfo(268, ,0x02);//    Wooden Sword
-    setItemInfo(269, ,0x02);//    Wooden Shovel
-    setItemInfo(270, ,0x02);//    Wooden Pickaxe
-    setItemInfo(271, ,0x02);//    Wooden Axe
-    setItemInfo(272, ,0x02);//    Stone Sword
-    setItemInfo(273, ,0x02);//    Stone Shovel
-    setItemInfo(274, ,0x02);//    Stone Pickaxe
-    setItemInfo(275, ,0x02);//    Stone Axe
-    setItemInfo(276, ,0x02);//    Diamond Sword
-    setItemInfo(277, ,0x02);//    Diamond Shovel
-    setItemInfo(278, ,0x02);//    Diamond Pickaxe
-    setItemInfo(279, ,0x02);//    Diamond Axe
-    setItemInfo(280, ,0x02);//    Stick
-    setItemInfo(281, ,0x02);//    Bowl
-    setItemInfo(282, ,0x02);//    Mushroom Soup
-    setItemInfo(283, ,0x02);//    Gold Sword
-    setItemInfo(284, ,0x02);//    Gold Shovel
-    setItemInfo(285, ,0x02);//    Gold Pickaxe
-    setItemInfo(286, ,0x02);//    Gold Axe
-    setItemInfo(287, ,0x02);//    String
-    setItemInfo(288, ,0x02);//    Feather
-    setItemInfo(289, ,0x02);//    Sulphur
-    setItemInfo(290, ,0x02);//    Wooden Hoe
-    setItemInfo(291, ,0x02);//    Stone Hoe
-    setItemInfo(292, ,0x02);//    Iron Hoe
-    setItemInfo(293, ,0x02);//    Diamond Hoe
-    setItemInfo(294, ,0x02);//    Gold Hoe
-    setItemInfo(295, ,0x02);//    Seeds
-    setItemInfo(296, ,0x02);//    Wheat
-    setItemInfo(297, ,0x02);//    Bread
-    setItemInfo(298, ,0x02);//    Leather Helmet
-    setItemInfo(299, ,0x02);//    Leather Chestplate
-    setItemInfo(300, ,0x02);//    Leather Leggings
-    setItemInfo(301, ,0x02);//    Leather Boots
-    setItemInfo(302, ,0x02);//    Chainmail Helmet
-    setItemInfo(303, ,0x02);//    Chainmail Chestplate
-    setItemInfo(304, ,0x02);//    Chainmail Leggings
-    setItemInfo(305, ,0x02);//    Chainmail Boots
-    setItemInfo(306, ,0x02);//    Iron Helmet
-    setItemInfo(307, ,0x02);//    Iron Chestplate
-    setItemInfo(308, ,0x02);//    Iron Leggings
-    setItemInfo(309, ,0x02);//    Iron Boots
-    setItemInfo(310, ,0x02);//    Diamond Helmet
-    setItemInfo(311, ,0x02);//    Diamond Chestplate
-    setItemInfo(312, ,0x02);//    Diamond Leggings
-    setItemInfo(313, ,0x02);//    Diamond Boots
-    setItemInfo(314, ,0x02);//    Gold Helmet
-    setItemInfo(315, ,0x02);//    Gold Chestplate
-    setItemInfo(316, ,0x02);//    Gold Leggings
-    setItemInfo(317, ,0x02);//    Gold Boots
-    setItemInfo(318, ,0x02);//    Flint
-    setItemInfo(319, ,0x02);//    Raw Porkchop
-    setItemInfo(320, ,0x02);//    Cooked Porkchop
-    setItemInfo(321, ,0x02);//    Paintings
-    setItemInfo(322, ,0x02);//    Golden apple
-    setItemInfo(323, ,0x02);//    Sign
-    setItemInfo(324, ,0x02);//    Wooden door
-    setItemInfo(325, ,0x02);//    Bucket
-    setItemInfo(326, ,0x02);//    Water bucket
-    setItemInfo(327, ,0x02);//    Lava bucket
-    setItemInfo(328, ,0x02);//    Mine cart
-    setItemInfo(329, ,0x02);//    Saddle
-    setItemInfo(330, ,0x02);//    Iron door
-    setItemInfo(331, ,0x02);//    Redstone
-    setItemInfo(332, ,0x02);//    Snowball
-    setItemInfo(333, ,0x02);//    Boat
-    setItemInfo(334, ,0x02);//    Leather
-    setItemInfo(335, ,0x02);//    Milk
-    setItemInfo(336, ,0x02);//    Clay Brick
-    setItemInfo(337, ,0x02);//    Clay Balls
-    setItemInfo(338, ,0x02);//    Reed
-    setItemInfo(339, ,0x02);//    Paper
-    setItemInfo(340, ,0x02);//    Book
-    setItemInfo(341, ,0x02);//    Slimeball
-    setItemInfo(342, ,0x02);//    Storage Minecart
-    setItemInfo(343, ,0x02);//    Powered Minecart
-    setItemInfo(344, ,0x02);//    Egg
-    setItemInfo(345, ,0x02);//    Compass
-    setItemInfo(346, ,0x02);//    Fishing Rod
-    setItemInfo(347, ,0x02);//    Clock
-    setItemInfo(348, ,0x02);//    Glowstone Dust
-    setItemInfo(349, ,0x02);//    Raw Fish
-    setItemInfo(350, ,0x02);//    Cooked Fish
-    setItemInfo(2256, ,0x02);//    Gold Music Disc
-    setItemInfo(2257, ,0x02);//    Green Music Disc
-*/
+    //Set default item information to sponge!
+    for (ID = 92; ID < 256; ID++) {
+        setItemInfo( ID, 48, 0x00);
+    }
+
+    //Set inventory items info: ID, texture, properties
+    setItemInfo(256, 82,0x02);//    Iron Shovel
+    setItemInfo(257, 98,0x02);//    Iron Pick
+    setItemInfo(258,114,0x02);//    Iron Axe
+    setItemInfo(259,  5,0x02);//    Flint n Steel
+    setItemInfo(260, 10,0x02);//    Apple
+    setItemInfo(261, 21,0x02);//    Bow
+    setItemInfo(262, 37,0x02);//    Arrow
+    setItemInfo(263,  7,0x02);//    Coal
+    setItemInfo(264, 55,0x02);//    Diamond
+    setItemInfo(265, 23,0x02);//    Iron Ingot
+    setItemInfo(266, 39,0x02);//    Gold Ingot
+    setItemInfo(267, 66,0x02);//    Iron Sword
+    setItemInfo(268, 64,0x02);//    Wooden Sword
+    setItemInfo(269, 80,0x02);//    Wooden Shovel
+    setItemInfo(270, 96,0x02);//    Wooden Pickaxe
+    setItemInfo(271,112,0x02);//    Wooden Axe
+    setItemInfo(272, 65,0x02);//    Stone Sword
+    setItemInfo(273, 81,0x02);//    Stone Shovel
+    setItemInfo(274, 97,0x02);//    Stone Pickaxe
+    setItemInfo(275,113,0x02);//    Stone Axe
+    setItemInfo(276, 67,0x02);//    Diamond Sword
+    setItemInfo(277, 83,0x02);//    Diamond Shovel
+    setItemInfo(278, 99,0x02);//    Diamond Pickaxe
+    setItemInfo(279,115,0x02);//    Diamond Axe
+    setItemInfo(280, 53,0x02);//    Stick
+    setItemInfo(281, 71,0x02);//    Bowl
+    setItemInfo(282, 72,0x02);//    Mushroom Soup
+    setItemInfo(283, 68,0x02);//    Gold Sword
+    setItemInfo(284, 84,0x02);//    Gold Shovel
+    setItemInfo(285,100,0x02);//    Gold Pickaxe
+    setItemInfo(286,116,0x02);//    Gold Axe
+    setItemInfo(287,  8,0x02);//    String
+    setItemInfo(288, 24,0x02);//    Feather
+    setItemInfo(289, 40,0x02);//    Sulphur
+    setItemInfo(290,128,0x02);//    Wooden Hoe
+    setItemInfo(291,129,0x02);//    Stone Hoe
+    setItemInfo(292,130,0x02);//    Iron Hoe
+    setItemInfo(293,131,0x02);//    Diamond Hoe
+    setItemInfo(294,132,0x02);//    Gold Hoe
+    setItemInfo(295,  9,0x02);//    Seeds
+    setItemInfo(296, 25,0x02);//    Wheat
+    setItemInfo(297, 41,0x02);//    Bread
+    setItemInfo(298,  0,0x02);//    Leather Helmet
+    setItemInfo(299, 16,0x02);//    Leather Chestplate
+    setItemInfo(300, 32,0x02);//    Leather Leggings
+    setItemInfo(301, 48,0x02);//    Leather Boots
+    setItemInfo(302,  1,0x02);//    Chainmail Helmet
+    setItemInfo(303, 17,0x02);//    Chainmail Chestplate
+    setItemInfo(304, 33,0x02);//    Chainmail Leggings
+    setItemInfo(305, 49,0x02);//    Chainmail Boots
+    setItemInfo(306,  2,0x02);//    Iron Helmet
+    setItemInfo(307, 18,0x02);//    Iron Chestplate
+    setItemInfo(308, 34,0x02);//    Iron Leggings
+    setItemInfo(309, 50,0x02);//    Iron Boots
+    setItemInfo(310,  3,0x02);//    Diamond Helmet
+    setItemInfo(311, 19,0x02);//    Diamond Chestplate
+    setItemInfo(312, 35,0x02);//    Diamond Leggings
+    setItemInfo(313, 51,0x02);//    Diamond Boots
+    setItemInfo(314,  4,0x02);//    Gold Helmet
+    setItemInfo(315, 20,0x02);//    Gold Chestplate
+    setItemInfo(316, 36,0x02);//    Gold Leggings
+    setItemInfo(317, 52,0x02);//    Gold Boots
+    setItemInfo(318,  6,0x02);//    Flint
+    setItemInfo(319, 87,0x02);//    Raw Porkchop
+    setItemInfo(320, 88,0x02);//    Cooked Porkchop
+    setItemInfo(321, 26,0x02);//    Paintings
+    setItemInfo(322, 11,0x02);//    Golden apple
+    setItemInfo(323, 42,0x02);//    Sign
+    setItemInfo(324, 43,0x02);//    Wooden door
+    setItemInfo(325, 74,0x02);//    Bucket
+    setItemInfo(326, 75,0x02);//    Water bucket
+    setItemInfo(327, 76,0x02);//    Lava bucket
+    setItemInfo(328,135,0x02);//    Mine cart
+    setItemInfo(329,104,0x02);//    Saddle
+    setItemInfo(330, 44,0x02);//    Iron door
+    setItemInfo(331, 56,0x02);//    Redstone
+    setItemInfo(332, 14,0x02);//    Snowball
+    setItemInfo(333,136,0x02);//    Boat
+    setItemInfo(334,103,0x02);//    Leather
+    setItemInfo(335, 77,0x02);//    Milk
+    setItemInfo(336, 22,0x02);//    Clay Brick
+    setItemInfo(337, 57,0x02);//    Clay Balls
+    setItemInfo(338, 27,0x02);//    Reed
+    setItemInfo(339, 58,0x02);//    Paper
+    setItemInfo(340, 59,0x02);//    Book
+    setItemInfo(341, 30,0x02);//    Slimeball
+    setItemInfo(342,141,0x02);//    Storage Minecart
+    setItemInfo(343,157,0x02);//    Powered Minecart
+    setItemInfo(344, 12,0x02);//    Egg
+    setItemInfo(345, 54,0x03);//    Compass
+    setItemInfo(346, 69,0x02);//    Fishing Rod
+    setItemInfo(347, 70,0x03);//    Clock
+    setItemInfo(348, 73,0x02);//    Glowstone Dust
+    setItemInfo(349, 89,0x02);//    Raw Fish
+    setItemInfo(350, 90,0x02);//    Cooked Fish
+
+    //Set unimplemented item information to saddle
+    for (ID = 351; ID < 2256; ID++) {
+        setItemInfo( ID,104, 0x02);    //[Unimplemented item]
+    }
+
+    setItemInfo(2256,240,0x02);//   Gold Record
+    setItemInfo(2257,241,0x02);//   Green Record
 
     //  properties:
     // 0x00 = terrain cube (icon is single terrain cube)
     // 0x01 = terrain item (icon is single terrain texture)
     // 0x02 = item (icon is single tile from items.png)
-    // 0x03 = special icon
+    // 0x03 = special icon (not from just terrain.png/items.png)
 
     return true;
 }
