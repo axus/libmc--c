@@ -2,7 +2,7 @@
   mc__::World
     Store chunks comprising a voxel game world
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -59,6 +59,8 @@ namespace mc__ {
             
             //Return chunk at X,Y,Z
             mc__::MapChunk* getChunk(int32_t X, int32_t Z);
+            const mc__::MapChunk* getChunk(int32_t X, int32_t Z) const;
+            mc__::MapChunk copyChunk(int32_t X, int32_t Z) const;
             
             //Return new chunk at X,Y,Z, erasing old chunk
             mc__::Chunk* newChunk(int32_t X, int8_t Y, int32_t Z,

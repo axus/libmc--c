@@ -2,7 +2,7 @@
   libmc--c UserInterface
   User Interface for mc--c library test program
 
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -494,6 +494,7 @@ bool UserInterface::handleKeys()
     for( index = 0; index < keys_typed; index++) {
       
         //Game in "PLAYING" state... Do something else for text input
+        //  if (inputState == PLAYING)
         switch ( key_buffer[index]) {
             //Quit
             case sf::Key::Escape:
@@ -552,15 +553,8 @@ bool UserInterface::handleKeys()
                 cout << "Recalculating visibility of all chunks" << endl;
                 world.redraw();
                 break;
-            case sf::Key::Tilde:
-                //Write chunk data to files
-                viewer.saveChunks(world);
-                break;
-            case sf::Key::BackSlash:
-                //Print chunk information to stdout
-                viewer.printChunks(world);
-                break;
             default:
+                customHandleKey(key_buffer[index]);
                 break;
         }
     }
@@ -647,4 +641,21 @@ bool UserInterface::handleKeys()
     }
     
     return result;
+}
+
+//Responses to keys read from key buffer during PLAYING input
+void UserInterface::customHandleKey(sf::Key::Code keycode)
+{
+    switch (keycode) {
+        case sf::Key::Tilde:
+            //Write chunk data to files
+            viewer.saveChunks(world);
+            break;
+        case sf::Key::BackSlash:
+            //Print chunk information to stdout
+            viewer.printChunks(world);
+            break;
+        default:
+            break;
+    }
 }

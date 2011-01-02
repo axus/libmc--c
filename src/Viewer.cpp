@@ -2,7 +2,7 @@
   mc__::Viewer
   Draw mc__::World objects using OpenGL
 
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -865,18 +865,24 @@ void Viewer::drawDroppedItem( uint16_t itemID )
 
     //To always face player, translate then rotate at camera(?)
 
+
+    //Scale the size of the item picture, and offset up by 2,2,2
+    GLint width, height, depth;
+    
+    width  = texmap_TILE_LENGTH * 0.75;
+    height = texmap_TILE_LENGTH * 0.75;
+    depth  = texmap_TILE_LENGTH * 0.75;
+    
+    //Face coordinates (in pixels)
+    GLint A = 2;
+    GLint B = 2 + width;
+    GLint C = 2;
+    GLint D = 2 + height;
+    GLint G = 2 + depth/2;    //half-way through z 
+
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
 
-    //Object boundaries... 2 crossed squares inside a clear cube
-    GLint A = 0;
-    GLint B = texmap_TILE_LENGTH;
-    GLint C = 0;
-    GLint D = texmap_TILE_LENGTH;
-    //GLint E = 0;
-    //GLint F = texmap_TILE_LENGTH;
-    GLint G = texmap_TILE_LENGTH/2;    //half-way through z 
-    //GLint H = (texmap_TILE_LENGTH/2);    //half-way through x
 
     //Look up texture coordinates for the item
     tx_0 = itemInfo[itemID].tx[WEST];

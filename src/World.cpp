@@ -2,7 +2,7 @@
   mc__::World
     Store chunks comprising a voxel game world
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -141,6 +141,36 @@ mc__::MapChunk* World::getChunk(int32_t X, int32_t Z)
     
     return result;
 }
+
+//Constant pointer getChunk
+const mc__::MapChunk* World::getChunk(int32_t X, int32_t Z) const
+{    
+    uint64_t key = getKey(X, Z);
+    XZMapChunk_t::const_iterator iter_xz = coordMapChunks.find(key);
+    if (iter_xz != coordMapChunks.end()) {
+        const mc__::MapChunk* result=iter_xz->second;
+        return result;
+    } else {
+        return NULL;
+    }
+}
+
+//Return MapChunk copy at X,Y,Z if it exists, empty chunk otherwise
+mc__::MapChunk World::copyChunk(int32_t X, int32_t Z) const
+{
+
+    uint64_t key = getKey(X, Z);
+    XZMapChunk_t::const_iterator iter_xz = coordMapChunks.find(key);
+    if (iter_xz != coordMapChunks.end()) {
+        //TODO: Chunk and MapChunk copy constructor
+        const mc__::MapChunk *result = iter_xz->second; 
+        return *result;
+    } else {
+        cerr << "copyChunk: not found @ " << X << "," << Z << endl;
+        return MapChunk(0x07FFFFFF, 0x07FFFFFF);
+    }    
+}
+
 
 //Allocate new chunk on to-be-added list
 mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,

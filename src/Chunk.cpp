@@ -2,7 +2,7 @@
   mc__::Chunk
   Chunk of voxel blocks.  Also, Block and Item definitions.
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -73,8 +73,69 @@ Chunk::~Chunk()
     deleteZipArray();
 }
 
+//Copy constructor: copy all pointed to memory
+Chunk::Chunk( const Chunk& ch):
+            size_X(ch.size_X), size_Y(ch.size_Y), size_Z(ch.size_Z),
+            X(ch.X), Y(ch.Y), Z(ch.Z),
+            array_length(ch.array_length), byte_length(ch.byte_length),
+            block_array(NULL), byte_array(NULL),
+            isUnzipped(ch.isUnzipped),
+            zipped_length(ch.zipped_length), zipped(NULL)
+{
+    //Copy memory
+    copyZip(zipped_length, zipped);
+    
+    if (byte_length > 0) {
+        byte_array = new uint8_t[byte_length];
+        memcpy(byte_array, ch.byte_array, byte_length);
+    }
+
+    if (array_length > 0) {
+        block_array = new Block[array_length];
+        memcpy(block_array, ch.block_array, array_length*sizeof(mc__::Block));
+    }
+
+}
+
+
+//Assignment operator: copy all pointed to memory
+Chunk& Chunk::operator=( const Chunk& ch)
+{
+    //Don't copy over myself
+    if (this == &ch) { return *this; }
+  
+    //Copy values
+    size_X = ch.size_X;
+    size_Y = ch.size_Y;
+    size_Z = ch.size_Z;
+    X = ch.X; Y = ch.Y; Z = ch.Z;
+    array_length = ch.array_length;
+    byte_length = ch.byte_length;
+    block_array = NULL;
+    byte_array = NULL;
+    isUnzipped = ch.isUnzipped;
+    zipped_length = ch.zipped_length;
+    zipped = NULL;
+    
+    
+    //Copy memory
+    copyZip(zipped_length, zipped);
+
+    if (byte_length > 0) {
+        byte_array = new uint8_t[byte_length];
+        memcpy(byte_array, ch.byte_array, byte_length);
+    }
+
+    if (array_length > 0) {
+        block_array = new Block[array_length];
+        memcpy(block_array, ch.block_array, array_length*sizeof(mc__::Block));
+    }
+
+    return *this;
+}
+
 //Copy block_array to byte_array
-void  Chunk::packBlocks()
+void Chunk::packBlocks()
 {
     //re-allocate byte array
     allocByteArray();
@@ -248,7 +309,7 @@ void Chunk::deleteZipArray() {
 }
 
 //Copy compressed data to chunk
-void Chunk::copyZip(uint32_t size, uint8_t *data)
+void Chunk::copyZip(uint32_t size, const uint8_t *data)
 {
     //Allocate space and copy data
     if (allocZip(size) != NULL) {

@@ -2,7 +2,7 @@
   mc__::Mobiles
     Store entities visible in the game Mobiles
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as

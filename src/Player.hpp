@@ -2,7 +2,7 @@
   mc__::Player
     Represent 3D game player (or named entity) and their inventory
   
-  Copyright 2010 axus
+  Copyright 2010-20111 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as

@@ -2,7 +2,7 @@
   mc__::Entity
     Represent mobile entity in a 3D game
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as

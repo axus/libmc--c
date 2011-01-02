@@ -2,7 +2,7 @@
   mc__::Item
     Represent game Item
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -72,7 +72,7 @@ string Item::getString( uint16_t iid)
         case 23: result = "Yellow Cloth"; break;
         case 24: result = "Lime Cloth"; break;
         case 25: result = "Green Cloth"; break;
-        case 26: result = "Aqua green Cloth"; break;
+        case 26: result = "Aqua Cloth"; break;
         case 27: result = "Cyan Cloth"; break;
         case 28: result = "Blue Cloth"; break;
         case 29: result = "Purple Cloth"; break;
@@ -98,7 +98,7 @@ string Item::getString( uint16_t iid)
         case 49: result = "Obsidian"; break;
         case 50: result = "Torch"; break;
         case 51: result = "Fire"; break;
-        case 52: result = "Monster Spawner"; break;
+        case 52: result = "Monster Spawn"; break;
         case 53: result = "Wooden Stairs"; break;
         case 54: result = "Chest"; break;
         case 55: result = "Redstone Wire"; break;
@@ -108,7 +108,7 @@ string Item::getString( uint16_t iid)
         case 59: result = "Crops"; break;
         case 60: result = "Soil"; break;
         case 61: result = "Furnace"; break;
-        case 62: result = "Burning Furnace"; break;
+        case 62: result = "Lit Furnace"; break;
         case 63: result = "Sign Post"; break;
         case 64: result = "Wooden Door"; break;
         case 65: result = "Ladder"; break;
@@ -116,13 +116,13 @@ string Item::getString( uint16_t iid)
         case 67: result = "Cobblestone Stairs"; break;
         case 68: result = "Wall Sign"; break;
         case 69: result = "Lever"; break;
-        case 70: result = "Stone Pressure Plate"; break;
+        case 70: result = "Stone Floorplate"; break;
         case 71: result = "Iron Door"; break;
-        case 72: result = "Wooden Pressure Plate"; break;
+        case 72: result = "Wooden Floorplate"; break;
         case 73: result = "Redstone Ore"; break;
-        case 74: result = "Glowing Redstone Ore"; break;
+        case 74: result = "Glowing Redstone"; break;
         case 75: result = "Redstone torch"; break;
-        case 76: result = "Redstone torch (on)"; break;
+        case 76: result = "Lit Redstone torch"; break;
         case 77: result = "Stone Button"; break;
         case 78: result = "Snow"; break;
         case 79: result = "Ice"; break;
@@ -181,19 +181,19 @@ string Item::getString( uint16_t iid)
         case 296: result = "Wheat"; break;
         case 297: result = "Bread"; break;
         case 298: result = "Leather Helmet"; break;
-        case 299: result = "Leather Chestplate"; break;
+        case 299: result = "Leather Tunic"; break;
         case 300: result = "Leather Leggings"; break;
         case 301: result = "Leather Boots"; break;
         case 302: result = "Chainmail Helmet"; break;
-        case 303: result = "Chainmail Chestplate"; break;
+        case 303: result = "Chainmail Tunic"; break;
         case 304: result = "Chainmail Leggings"; break;
         case 305: result = "Chainmail Boots"; break;
         case 306: result = "Iron Helmet"; break;
-        case 307: result = "Iron Chestplate"; break;
+        case 307: result = "Iron Mail"; break;
         case 308: result = "Iron Leggings"; break;
         case 309: result = "Iron Boots"; break;
         case 310: result = "Diamond Helmet"; break;
-        case 311: result = "Diamond Chestplate"; break;
+        case 311: result = "Diamond Mail"; break;
         case 312: result = "Diamond Leggings"; break;
         case 313: result = "Diamond Boots"; break;
         case 314: result = "Gold Helmet"; break;
@@ -224,8 +224,8 @@ string Item::getString( uint16_t iid)
         case 339: result = "Paper"; break;
         case 340: result = "Book"; break;
         case 341: result = "Slimeball"; break;
-        case 342: result = "Storage Minecart"; break;
-        case 343: result = "Powered Minecart"; break;
+        case 342: result = "Storage Cart"; break;
+        case 343: result = "Powered Cart"; break;
         case 344: result = "Egg"; break;
         case 345: result = "Compass"; break;
         case 346: result = "Fishing Rod"; break;
@@ -233,8 +233,8 @@ string Item::getString( uint16_t iid)
         case 348: result = "Glowstone Dust"; break;
         case 349: result = "Raw Fish"; break;
         case 350: result = "Cooked Fish"; break;
-        case 2256: result = "Gold Music Disc"; break;
-        case 2257: result = "Green Music Disc"; break;
+        case 2256: result = "Gold Record"; break;
+        case 2257: result = "Green Record"; break;
 
         default:
             result="Unknown";

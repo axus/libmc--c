@@ -2,7 +2,7 @@
   libmc--c UserInterface
   User Interface for mc--c library test program
 
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -79,6 +79,7 @@ namespace mc__ {
             
             //Process keys typed
             bool handleKeys();
+            virtual void customHandleKey(sf::Key::Code);
             
             //Process mouse movement
             bool handleMouse();

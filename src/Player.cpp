@@ -2,7 +2,7 @@
   mc__::Player
     Represent 3D game player (or named entity) and their inventory
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -45,9 +45,9 @@ bool Player::setPosition( double x, double y, double z, double h)
     eyes_Y = h;
     
     //Absolute position (integer)
-    X = (int64_t)x;
-    Y = (int64_t)y;
-    Z = (int64_t)z;
+    X = (int32_t)(x * 32);
+    Y = (int32_t)(y * 32);
+    Z = (int32_t)(z * 32);
 
     return true;
 }
