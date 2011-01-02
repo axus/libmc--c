@@ -36,7 +36,8 @@ using mc__::Block;
 //using mc__::chunkIterator;
 
 //Create empty world
-World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0), debugging(false)
+World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0),
+    name("My World"), debugging(false)
 {
 }
 

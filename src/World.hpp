@@ -29,6 +29,7 @@
 //STL
 #include <unordered_map>      //map / unordered_map / hash_map
 #include <vector>
+#include <string>
 
 //Define class inside mc__ namespace
 namespace mc__ {
@@ -114,6 +115,9 @@ namespace mc__ {
             int32_t spawn_X;
             int8_t spawn_Y;
             int32_t spawn_Z;
+            
+            //Name for this world
+            std::string name;
             
             //TODO: list of warp points?
             
