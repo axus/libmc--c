@@ -157,20 +157,31 @@ int main(int argc, char** argv)
     //Track entities with Mobiles object
     Mobiles mobiles(world);
 
-    //Game player (Entity ID 1)
+    //Add some glass cubes for pickup, next to world spawn
+    mobiles.addItem( mobiles.newEID(), 20, 8,
+        (world.spawn_X + 1) << 5,
+        (world.spawn_Y + 1) << 5,
+        (world.spawn_Z + 1) << 5);
+
+    //Add some brick cubes for pickup, next to world spawn
+    mobiles.addItem( mobiles.newEID(), 45, 8,
+        (world.spawn_X + 2) << 5,
+        (world.spawn_Y + 1) << 5,
+        (world.spawn_Z + 2) << 5);
+        
+
+    //Choose entity ID for player
     uint32_t playerEID = mobiles.newEID();
+    
+    //Add a player at the spawn point, and make a reference to it
     Player& player = *(mobiles.addPlayer(playerEID, player_name,
         world.spawn_X << 5, world.spawn_Y << 5, world.spawn_Z << 5,
         128, 0));
-    //Player player( playerEID, player_name);
-    //Set player initial position and viewpoint (height, yaw, pitch)
-    //player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
-    //    world.spawn_Y + 1, 180, 0);
-    
 
     //Create user interface to world
     cout << "Creating user interface..." << endl;
-    mc__::UserInterface ui("libmc--c example", world, player, events);
+    mc__::UserInterface ui("libmc--c example",
+        world, mobiles, player, events);
         
     //Run until user exits
     while (ui.run()) {

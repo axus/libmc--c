@@ -55,7 +55,8 @@ const float UI_mouse_sensitivity=2.8;   //Mouselook sensitivity, high is slower
 
 //Constructor
 UserInterface::UserInterface(
-        const string& name, World& w, Player& p, Events& ev, bool dbg):
+        const string& name, World& w, Mobiles& m,
+            Player& p, Events& ev, bool dbg):
 
     //initialize objects here
     texture_map_filename("terrain.png"),    //block textures
@@ -65,7 +66,7 @@ UserInterface::UserInterface(
     App(sf::VideoMode(UI_width, UI_height, UI_bpp), //860x480, 32-bit color
         name, sf::Style::Resize|sf::Style::Close, Settings),    //Resizable
     viewer(UI_width, UI_height),
-    world(w), player(p), events(ev), debugging(dbg),
+    world(w), mobiles(m), player(p), events(ev), debugging(dbg),
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window
     keys_typed(0),                                //Empty keypress buffer
@@ -165,9 +166,12 @@ bool UserInterface::run()
     //Handle mouse position changes (if there were inputs)
     if (inputs && handleMouse()) {;}
 
-    //Redraw the world       
-    viewer.drawWorld(world);
+    //Redraw the entities, items, etc.
+    viewer.drawMobiles(mobiles);
 
+    //Redraw the world (terrain)
+    viewer.drawWorld(world);
+    
     //2D overlay
     //Update status display
     if (showStatus) {

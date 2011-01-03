@@ -166,8 +166,6 @@ bool Viewer::init(const std::string& filename,
             ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
     }
 
-
-
     //Load terrain texture map, bind it to current DevIL image
     il_texture_map = loadImageFile(texture_map_file);
     if (il_texture_map == 0) {
@@ -187,6 +185,9 @@ bool Viewer::init(const std::string& filename,
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+
+    //Generate the ITEM, ENTITY, and PLAYER display lists
+    loadItemInfo();
 
     return result;
 }
@@ -1122,6 +1123,10 @@ bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
         const Item *item = item_iter->second;
         displayList = itemModels[ item->itemID ];
 
+        //Translate camera to item coordinates
+        glLoadIdentity();
+        glTranslatef( - item->abs_X, - item->abs_Y, - item->abs_Z);
+
         //Draw the precompiled list
         glCallList(displayList);
 
@@ -1130,13 +1135,7 @@ bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
     return true;
 }
 
-//Create the display lists that will be used for drawing mobiles
-bool Viewer::createItemModels()
-{
-    //itemModels.insert( shortUintMap_t::value_type( itemID, displayList));
-    return true;
-}
-
+/*
 bool Viewer::createEntityModels()
 {
     //typeID    Description
@@ -1162,10 +1161,9 @@ bool Viewer::createEntityModels()
     //92        Cow
     //93        Chicken
 
-    //entityModels.insert( shortUintMap_t::value_type( entity_type, displayList));
     return true;
 }
-
+*/
 
 //Draw the megachunks in mc__::World
 void Viewer::drawMapChunks( const World& world)
@@ -1366,7 +1364,9 @@ void Viewer::setItemInfo( uint16_t index, uint8_t A, uint8_t properties)
     //Copy properties
     iteminf.properties = properties;
 
-    //draw to openGL texture and model
+    //draw to openGL model
+    createItemModel(index);
+    
     //createItemTexture(index);
 }
 
@@ -1418,6 +1418,20 @@ bool Viewer::createItemModel( uint16_t index)
     return true;
 }
 
+/*
+//Create the display lists that will be used for drawing mobiles
+bool Viewer::createItemModels()
+{
+    uint16_t ID;
+    
+    //Block item models
+    for (ID=1; ID < Chunk::maxBlockID; ID++) {
+        createItemModel(ID);
+    }
+    
+    return true;
+}
+*/
 
 //Map block ID to block type information
 bool Viewer::loadBlockInfo()

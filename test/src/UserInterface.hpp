@@ -24,6 +24,7 @@
 
 //libmc--c classes
 #include <mc--/World.hpp>
+#include <mc--/Mobiles.hpp>
 #include <mc--/Viewer.hpp>
 #include <mc--/Player.hpp>
 #include <mc--/Events.hpp>
@@ -54,8 +55,9 @@ namespace mc__ {
             const std::string item_icon_filename;
             
             //Constructor, initialize SFML and mc-- objects here
-            UserInterface(const std::string& title, mc__::World&,
-                mc__::Player& player, mc__::Events& ev, bool dbg=false);
+            UserInterface(const std::string& title, mc__::World& w,
+                mc__::Mobiles& m, mc__::Player& player,
+                mc__::Events& ev, bool dbg=false);
             ~UserInterface();
             
             bool init();
@@ -94,6 +96,7 @@ namespace mc__ {
             //mc--
             mc__::Viewer viewer;
             mc__::World& world;
+            mc__::Mobiles& mobiles;
             mc__::Player& player;
             mc__::Events& events;
             bool debugging;

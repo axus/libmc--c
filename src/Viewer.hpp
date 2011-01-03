@@ -219,8 +219,8 @@ namespace mc__ {
             bool createItemModel( uint16_t ID);
 
             //Create display lists for all IDs
-            bool createItemModels();
-            bool createEntityModels();
+            //bool createItemModels();
+            //bool createEntityModels();
             
             //Change face colors if needed by blockID
             void setBlockColor(uint8_t blockID, face_ID face);
