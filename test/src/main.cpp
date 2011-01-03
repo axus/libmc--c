@@ -157,18 +157,17 @@ int main(int argc, char** argv)
     //Track entities with Mobiles object
     Mobiles mobiles(world);
 
-    //Add some glass cubes for pickup, next to world spawn
+    //Add some glass cubes for pickup, next to world spawn, 1/8 yaw
     mobiles.addItem( mobiles.newEID(), 20, 8,
-        (world.spawn_X + 1) << 5,
-        (world.spawn_Y + 1) << 5,
-        (world.spawn_Z + 1) << 5);
+        (world.spawn_X - 1) << 5,
+        (world.spawn_Y ) << 5,
+        (world.spawn_Z - 1) << 5, 0x20);
 
-    //Add some brick cubes for pickup, next to world spawn
+    //Add some brick cubes for pickup, next to world spawn, 1/6 yaw
     mobiles.addItem( mobiles.newEID(), 45, 8,
-        (world.spawn_X + 2) << 5,
-        (world.spawn_Y + 1) << 5,
-        (world.spawn_Z + 2) << 5);
-        
+        (world.spawn_X - 2) << 5,
+        (world.spawn_Y ) << 5,
+        (world.spawn_Z - 2) << 5, 0x2B);
 
     //Choose entity ID for player
     uint32_t playerEID = mobiles.newEID();

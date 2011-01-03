@@ -114,8 +114,16 @@ namespace mc__ {
             ILuint loadImageFile( const std::string &imageFilename);
             void rebindTerrain();   //change back to texture if needed
 
+
+            //
+            // Drawing functions
+            //
+
             //Erase all polygons from openGL
             void clear();
+
+            //Offset model view from current camera position
+            void drawFromCamera();
 
             //Single block drawing functions
             void drawBlock(const mc__::Block& block,
@@ -157,7 +165,12 @@ namespace mc__ {
             
             //Draw all moving objects (entities)
             bool drawMobiles(const mc__::Mobiles& mobiles);
-            
+
+
+            //
+            //
+            //
+
             //Camera functions
             void move( GLfloat side, GLfloat up, GLfloat forward);
             void turn( GLfloat degrees);  //Change current yaw by "degrees"

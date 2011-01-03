@@ -599,12 +599,13 @@ void Viewer::drawScaledBlock( uint8_t blockID,
         tmr_x  = scale_x * tmr;
         tmr_y = scale_y * tmr;
         tmr_z  = scale_z * tmr;
+        tmr_off_x = tmr*off_x/texmap_TILE_LENGTH;
+        tmr_off_y = tmr*off_y/texmap_TILE_LENGTH;
+        tmr_off_z = tmr*off_z/texmap_TILE_LENGTH;
     } else {
         tmr_x = tmr_y = tmr_z = tmr;
+        tmr_off_x =  tmr_off_y = tmr_off_z = 0;
     }
-    tmr_off_x = tmr*off_x/texmap_TILE_LENGTH;
-    tmr_off_y = tmr*off_y/texmap_TILE_LENGTH;
-    tmr_off_z = tmr*off_z/texmap_TILE_LENGTH;
 
     //For each face, use the appropriate texture offsets for the block ID
     //       ADE ---- BDE
@@ -870,9 +871,9 @@ void Viewer::drawDroppedItem( uint16_t itemID )
     //Scale the size of the item picture, and offset up by 2,2,2
     GLint width, height, depth;
     
-    width  = texmap_TILE_LENGTH * 0.75;
-    height = texmap_TILE_LENGTH * 0.75;
-    depth  = texmap_TILE_LENGTH * 0.75;
+    width  = texmap_TILE_LENGTH >> 1;   //half length
+    height = texmap_TILE_LENGTH >> 1;
+    depth  = texmap_TILE_LENGTH >> 1;
     
     //Face coordinates (in pixels)
     GLint A = 2;
@@ -883,7 +884,6 @@ void Viewer::drawDroppedItem( uint16_t itemID )
 
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
-
 
     //Look up texture coordinates for the item
     tx_0 = itemInfo[itemID].tx[WEST];
@@ -1121,16 +1121,14 @@ bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
         const Item *item = item_iter->second;
         displayList = itemModels[ item->itemID ];
 
-        //Translate camera to item coordinates
-        glLoadIdentity();
-        glTranslatef( -(item->X >> 1), -(item->Y >> 1), -(item->Z >> 1));
+        //Translate world to item coordinates (offset from camera)
+        drawFromCamera();
+        glTranslatef( item->X >> 1, item->Y >> 1, item->Z >> 1);
+        glRotatef( item->yaw, 0.0f, 1.0f, 0.0f);
+
 
         //Draw the precompiled list
         glCallList(displayList);
-
-        //DEBUG
-        cerr << "Drew " << displayList << " @ " << item->abs_X
-             << ", " << item->abs_Y << ", " << item->abs_Z << endl;
 
     }
 
@@ -1288,8 +1286,8 @@ void Viewer::clear()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
 
-//OpenGL rendering of cubes.  No update to camera.
-bool Viewer::drawWorld(const World& world)
+//Offset model view from current camera position
+void Viewer::drawFromCamera()
 {
     //Reset camera
     glLoadIdentity();
@@ -1300,6 +1298,14 @@ bool Viewer::drawWorld(const World& world)
     
     //Bring the world to the camera, not the camera to the world
     glTranslatef( -cam_X, -cam_Y, -cam_Z );
+}
+
+
+//OpenGL rendering of cubes.  No update to camera.
+bool Viewer::drawWorld(const World& world)
+{
+    //Reset camera
+    drawFromCamera();
     
     //Draw the map-chunks
     drawMapChunks(world);
@@ -1390,14 +1396,14 @@ bool Viewer::createItemModel( uint16_t index)
             //Terrain cube (as item 75% size)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
             glBegin(GL_QUADS);
-            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.75, 0.75, 0.75, false, 2, 2, 2);
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25, false, 6, 2, 6);
             glEnd();
             break;
         case 1:
             //Terrain item (as item 75% size)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
             glBegin(GL_QUADS);
-            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.75, 0.75, 0.75, false, 2, 2, 2);
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25, false, 6, 2, 6);
             glEnd();
             break;
         case 2:
