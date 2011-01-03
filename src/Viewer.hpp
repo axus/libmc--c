@@ -114,6 +114,9 @@ namespace mc__ {
             ILuint loadImageFile( const std::string &imageFilename);
             void rebindTerrain();   //change back to texture if needed
 
+            //Erase all polygons from openGL
+            void clear();
+
             //Single block drawing functions
             void drawBlock(const mc__::Block& block,
                 GLint x, GLint y, GLint z, uint8_t visflags=0);

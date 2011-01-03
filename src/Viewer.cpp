@@ -1050,7 +1050,6 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         myChunk.flags |= MapChunk::UPDATED;
     }
 
-    
     //Compile GL list if needed (drawing to screen happens elsewhere)
     if (myChunk.flags & MapChunk::UPDATED) {
 
@@ -1065,11 +1064,11 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         indexList_t& visibleIndices = myChunk.visibleIndices;
         indexList_t::const_iterator iter;
 
-        //Calculate facemask to apply to visflags, based on chunk X/Z
-        // WORK IN PROGRESS
+        //Chunk coordinates to compare... remove GL coordinate and last 4 bits
         GLint view_X = ((int)cam_X >> 8);
         GLint view_Z = ((int)cam_Z >> 8);
 
+        //Calculate facemask to apply to visflags, based on chunk X/Z
         //Mark faces player cannot see from their MapChunk as invisible
         uint8_t pvflags = 0;
         pvflags |= (X < view_X ? 0x80 : (X > view_X ? 0x40 : 0x00));
@@ -1103,7 +1102,6 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         //Finished drawing chunk, no longer "updated"
         myChunk.flags &= ~(MapChunk::UPDATED);
     }
-
 }
 
 //Draw all moving objects (entities)
@@ -1125,12 +1123,17 @@ bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
 
         //Translate camera to item coordinates
         glLoadIdentity();
-        glTranslatef( - item->abs_X, - item->abs_Y, - item->abs_Z);
+        glTranslatef( -(item->X >> 1), -(item->Y >> 1), -(item->Z >> 1));
 
         //Draw the precompiled list
         glCallList(displayList);
 
+        //DEBUG
+        cerr << "Drew " << displayList << " @ " << item->abs_X
+             << ", " << item->abs_Y << ", " << item->abs_Z << endl;
+
     }
+
     
     return true;
 }
@@ -1279,13 +1282,15 @@ ILuint Viewer::loadImageFile( const string &imageFilename) {
     return il_texture;
 }
 
+//Clear old polygons and colors
+void Viewer::clear() 
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+}
 
 //OpenGL rendering of cubes.  No update to camera.
 bool Viewer::drawWorld(const World& world)
 {
-    //Erase polygons
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
     //Reset camera
     glLoadIdentity();
     glRotatef( cam_yaw, 0.0f, 1.0f, 0.0f);

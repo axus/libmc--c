@@ -114,8 +114,10 @@ UserInterface::UserInterface(
     // Do you want to live forever?
     //App.PreserveOpenGLStates(true);
 
-    //Draw the world once
     App.SetActive();
+
+    //Draw the world once
+    viewer.clear();
     viewer.drawWorld(world);
 
     App.Display();
@@ -166,12 +168,16 @@ bool UserInterface::run()
     //Handle mouse position changes (if there were inputs)
     if (inputs && handleMouse()) {;}
 
+    //Clear the view
+    viewer.clear();
+
     //Redraw the entities, items, etc.
     viewer.drawMobiles(mobiles);
-
+    
     //Redraw the world (terrain)
     viewer.drawWorld(world);
     
+
     //2D overlay
     //Update status display
     if (showStatus) {
