@@ -220,7 +220,7 @@ void Mobiles::setPlayerEquip(uint32_t eid, uint16_t slot, uint16_t item)
     Player* player = findPlayer(eid);
     
     //Set equipment item (1 item, item health unknown)
-    player->setSlot( (uint8_t)slot, item, 1, 0);
+    player->setSlotItem( (uint8_t)slot, item, 1, 0);
 }
 
 //Entity changed position

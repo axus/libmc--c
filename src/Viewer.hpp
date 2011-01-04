@@ -245,6 +245,9 @@ namespace mc__ {
             void outputRGBAData();
 
         public:
+            //Yaw offset for rotating items
+            float item_rotation;
+        
             //Graphics options
             bool use_mipmaps, use_blending;
             

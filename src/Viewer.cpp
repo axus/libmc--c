@@ -100,6 +100,7 @@ Viewer::Viewer(unsigned short width, unsigned short height):
     view_width(width), view_height(height),
     aspectRatio((GLfloat)width/height), fieldOfViewY(70),
     cam_yaw(0), cam_pitch(0), cam_vecX(0), cam_vecY(0), cam_vecZ(0),
+    item_rotation(0),
     use_mipmaps(true), use_blending(false), debugging(false)
 {
   
@@ -1124,8 +1125,7 @@ bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
         //Translate world to item coordinates (offset from camera)
         drawFromCamera();
         glTranslatef( item->X >> 1, item->Y >> 1, item->Z >> 1);
-        glRotatef( item->yaw, 0.0f, 1.0f, 0.0f);
-
+        glRotatef( item->yaw + item_rotation, 0.0f, 1.0f, 0.0f);
 
         //Draw the precompiled list
         glCallList(displayList);
@@ -1396,14 +1396,14 @@ bool Viewer::createItemModel( uint16_t index)
             //Terrain cube (as item 75% size)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
             glBegin(GL_QUADS);
-            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25, false, 6, 2, 6);
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25, false, -2, 2, -2);
             glEnd();
             break;
         case 1:
             //Terrain item (as item 75% size)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
             glBegin(GL_QUADS);
-            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25, false, 6, 2, 6);
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25, false, -2, 2, -2);
             glEnd();
             break;
         case 2:

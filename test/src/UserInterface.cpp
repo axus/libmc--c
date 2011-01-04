@@ -116,9 +116,9 @@ UserInterface::UserInterface(
 
     App.SetActive();
 
-    //Draw the world once
+    //Clear the window
     viewer.clear();
-    viewer.drawWorld(world);
+    //viewer.drawWorld(world);
 
     App.Display();
 }
@@ -168,6 +168,12 @@ bool UserInterface::run()
     //Handle mouse position changes (if there were inputs)
     if (inputs && handleMouse()) {;}
 
+    //Increment item spin
+    viewer.item_rotation += 0.5;
+    if (viewer.item_rotation >= 360) {
+        viewer.item_rotation = 0.0;
+    }
+
     //Clear the view
     viewer.clear();
 
@@ -175,8 +181,7 @@ bool UserInterface::run()
     viewer.drawMobiles(mobiles);
     
     //Redraw the world (terrain)
-    viewer.drawWorld(world);
-    
+    viewer.drawWorld(world);    
 
     //2D overlay
     //Update status display
@@ -653,7 +658,7 @@ bool UserInterface::handleKeys()
     return result;
 }
 
-//Responses to keys read from key buffer during PLAYING input
+//Responses to keys read from key buffer during PLAYING (not CHAT or CONFIG)
 void UserInterface::customHandleKey(sf::Key::Code keycode)
 {
     switch (keycode) {
@@ -664,6 +669,23 @@ void UserInterface::customHandleKey(sf::Key::Code keycode)
         case sf::Key::BackSlash:
             //Print chunk information to stdout
             viewer.printChunks(world);
+            break;
+        case sf::Key::J:
+        {
+            //Drop inventory item to world
+            mc__::InvItem& item = player.inventory[player.held_slot];
+            if (item.itemID != mc__::emptyID) {
+              
+                //Add item at player openGL coordinates + offset from yaw
+                mobiles.addItem( mobiles.newEID(), item.itemID, item.count,
+                    /* item.hitpoints */
+                    player.X,
+                    player.Y,
+                    player.Z, 0x20);
+            }
+            cout << "Dropping item ID " << item.itemID << " @ "
+                << player.abs_X << "," << player.abs_Y << "," << player.abs_Z << endl;
+        }
             break;
         default:
             break;

@@ -36,6 +36,9 @@ using mc__::Player;
 using mc__::Events;
 using mc__::Mobiles;
 
+using mc__::SLOT_EQ_MAX;
+using mc__::player_inv_slots;
+
 //SFML
 #include <SFML/System/Clock.hpp>
 
@@ -126,6 +129,32 @@ void genWorld(World& world)
     world.redraw();
 }
 
+//Add some test objects to mobile items/entities
+void addItems( mc__::Mobiles& mobiles, const mc__::World& world) {
+    //Add some glass cubes for pickup, next to world spawn, 1/8 yaw
+    mobiles.addItem( mobiles.newEID(), 20, 8,
+        (world.spawn_X - 1) << 5,
+        (world.spawn_Y ) << 5,
+        (world.spawn_Z - 1) << 5, 0x20);
+
+    //Add some brick cubes for pickup, next to world spawn, 1/6 yaw
+    mobiles.addItem( mobiles.newEID(), 45, 8,
+        (world.spawn_X - 2) << 5,
+        (world.spawn_Y ) << 5,
+        (world.spawn_Z - 2) << 5, 0x2B);
+}
+
+//Give some items to player
+void genInventory( mc__::Player& player)
+{
+    uint8_t slot;
+    for (slot = SLOT_EQ_MAX; slot < player_inv_slots; slot++)
+    {
+        //Give a variety of item stacks
+        player.setSlotItem(slot, (uint16_t)slot, 64, 0);
+    }
+
+}
 
 int main(int argc, char** argv)
 {
@@ -157,18 +186,9 @@ int main(int argc, char** argv)
     //Track entities with Mobiles object
     Mobiles mobiles(world);
 
-    //Add some glass cubes for pickup, next to world spawn, 1/8 yaw
-    mobiles.addItem( mobiles.newEID(), 20, 8,
-        (world.spawn_X - 1) << 5,
-        (world.spawn_Y ) << 5,
-        (world.spawn_Z - 1) << 5, 0x20);
-
-    //Add some brick cubes for pickup, next to world spawn, 1/6 yaw
-    mobiles.addItem( mobiles.newEID(), 45, 8,
-        (world.spawn_X - 2) << 5,
-        (world.spawn_Y ) << 5,
-        (world.spawn_Z - 2) << 5, 0x2B);
-
+    //Create some test items
+    addItems(mobiles, world);
+    
     //Choose entity ID for player
     uint32_t playerEID = mobiles.newEID();
     
@@ -176,6 +196,9 @@ int main(int argc, char** argv)
     Player& player = *(mobiles.addPlayer(playerEID, player_name,
         world.spawn_X << 5, world.spawn_Y << 5, world.spawn_Z << 5,
         128, 0));
+
+    //Give the player some items
+    genInventory(player);
 
     //Create user interface to world
     cout << "Creating user interface..." << endl;

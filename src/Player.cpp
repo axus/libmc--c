@@ -30,8 +30,14 @@ using std::string;
 
 //Constructor
 Player::Player(uint32_t eid, const std::string& entity_name):
-    Entity(eid), name(entity_name)
+    Entity(eid), held_slot(SLOT_EQ_MAX), VID(0), name(entity_name)
 {
+    //Fill inventory with EMPTY items
+    uint8_t index;
+    for (index = 0; index < player_inv_slots; index++)
+    {
+        removeItem(index);
+    }
 }
 
 bool Player::setPosition( double x, double y, double z, double h)
@@ -106,7 +112,7 @@ bool Player::addItem( const InvItem& item)
 }
 
 //Set item in a slot
-bool Player::setSlot( uint8_t to_slot, uint16_t itemID,
+bool Player::setSlotItem( uint8_t to_slot, uint16_t itemID,
     uint8_t count, uint8_t used)
 {
     //Check if slot is invalid number

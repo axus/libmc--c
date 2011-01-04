@@ -77,13 +77,14 @@ namespace mc__ {
             
             //Inventory functions
             bool addItem( const InvItem& item);
-            bool setSlot( uint8_t to_slot, uint16_t itemID,
+            bool setSlotItem( uint8_t to_slot, uint16_t itemID,
                 uint8_t count, uint8_t used);
             bool moveItem( uint8_t from_slot, uint8_t to_slot);
             bool removeItem( uint8_t from_slot);
             
             //Player inventory: equipment and backpack
-            mc__::InvItem inventory[ SLOT_EQ_MAX + player_backpack_slots];
+            mc__::InvItem inventory[ player_inv_slots];
+            uint8_t held_slot;    //index of item being wielded
             
             //Entity ID used as vehicle
             uint32_t VID;

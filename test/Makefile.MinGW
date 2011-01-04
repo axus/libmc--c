@@ -9,7 +9,7 @@ LIBS        = -lmc--c -lopengl32 -lglu32 -lDevIL -lILU \
 
 INCLUDES    = -I/usr/local/include
 ###DEBUG       = on
-MOREFLAGS   = -std=c++0x
+MOREFLAGS   = -std=c++0x -march=native
 
 
 #Where to install or uninstall

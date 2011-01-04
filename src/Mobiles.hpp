@@ -98,8 +98,6 @@ namespace mc__ {
             mc__::World& world; //World info
             
             uint32_t uniqueEID;  //Unique ID for entity IDs
-            
-
     };
 
 }
