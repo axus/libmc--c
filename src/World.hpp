@@ -50,6 +50,9 @@ namespace mc__ {
             //Genesis
             World();
             
+            //Mitosis
+            World( const World& w);
+            
             //Armageddon
             ~World();
             

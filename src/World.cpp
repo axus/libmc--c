@@ -33,13 +33,53 @@ using mc__::World;
 using mc__::Chunk;
 using mc__::Block;
 
-//using mc__::chunkIterator;
-
 //Create empty world
 World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0),
     name("My World"), debugging(false)
 {
 }
+
+//Mitosis
+World::World( const World& w):
+    /* coordMapChunks( w.coordMapChunks), mapChunks( w.mapChunks),
+    chunkUpdates( w.chunkUpdates),*/
+    spawn_X( w.spawn_X), spawn_Y( w.spawn_Y), spawn_Z( w.spawn_Z),
+    name( w.name), debugging(w.debugging)
+    
+{
+
+    //Copy all map chunks
+    XZMapChunk_t::const_iterator iter_xz;  
+    for (iter_xz = w.coordMapChunks.begin();
+        iter_xz != w.coordMapChunks.end(); iter_xz++) {
+          
+        MapChunk* mc = iter_xz->second;
+        
+        if (mc != NULL) {
+            //Add X|Z -> MapChunk*
+            mc = new MapChunk(*mc);
+            
+            //Add to list of MapChunk*
+            mapChunks.push_back(mc);
+            
+            //Add to our coordMapChunks
+            coordMapChunks.insert(XZMapChunk_t::value_type(iter_xz->first, mc));
+        }
+    }
+
+    //Copy all unused mini-chunks
+    chunkSet_t::const_iterator iter_chunk;
+    for (iter_chunk = w.chunkUpdates.begin();
+         iter_chunk != w.chunkUpdates.end(); iter_chunk++)
+    {
+        Chunk* chunk = *iter_chunk;
+        if ( chunk != NULL) {
+            chunk = new Chunk(*chunk);
+            chunkUpdates.insert( chunk );
+        }
+    }
+}
+
 
 //Destroy world
 World::~World()

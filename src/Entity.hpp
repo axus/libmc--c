@@ -107,11 +107,11 @@ namespace mc__ {
 //0         Player
             
 //1         Boat
-//10        MineCart
-//11        ChestCart
-//12        FurnaceCart
+//10        Minecart
+//11        Chest Cart
+//12        Powered Cart
 
-//50        Creeper
+//50        Creeper / Activated TNT
 //51        Skeleton
 //52        Spider
 //53        Giant Zombie
@@ -119,6 +119,13 @@ namespace mc__ {
 //55        Slime
 //56        Ghast
 //57        Zombie Pigman
+
+//60        Arrow
+//61        Thrown Snowball
+//62        Thrown Egg
+
+//70        Falling Sand
+//71        Falling Gravel
 
 //90        Pig
 //91        Sheep
