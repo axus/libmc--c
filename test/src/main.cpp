@@ -113,7 +113,7 @@ void genWorld(World& world)
     
     //Single workbench made from block put in chunk
     mc__::Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
-    chunk1 = new mc__::Chunk(0, 0, 0, 8, 64, 8);    //location
+    chunk1 = new mc__::Chunk(0, 0, 0, 7, 64, 13);    //location
     chunk1->block_array[0] = workbench1;
     
     //Add the single chunk to 0,0 MapChunk
@@ -135,13 +135,19 @@ void addItems( mc__::Mobiles& mobiles, const mc__::World& world) {
     mobiles.addItem( mobiles.newEID(), 20, 8,
         (world.spawn_X - 1) << 5,
         (world.spawn_Y ) << 5,
-        (world.spawn_Z - 1) << 5, 0x20);
+        (world.spawn_Z - 2) << 5, 0x20);
 
     //Add some brick cubes for pickup, next to world spawn, 1/6 yaw
     mobiles.addItem( mobiles.newEID(), 45, 8,
         (world.spawn_X - 2) << 5,
         (world.spawn_Y ) << 5,
-        (world.spawn_Z - 2) << 5, 0x2B);
+        (world.spawn_Z - 3) << 5, 0x2B);
+
+    //Add 1 diamond pick 
+    mobiles.addItem( mobiles.newEID(), 278, 1,
+        (world.spawn_X ) << 5,
+        (world.spawn_Y ) << 5,
+        (world.spawn_Z - 3) << 5, 0x2B);
 }
 
 //Give some items to player

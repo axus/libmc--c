@@ -112,8 +112,10 @@ namespace mc__ {
 
             //Load texture map
             ILuint loadImageFile( const std::string &imageFilename);
-            void rebindTerrain();   //change back to texture if needed
-
+            bool configureTexture(GLuint texture_ID); 
+            
+            //change back to terrain texture
+            void rebindTerrain();   
 
             //
             // Drawing functions

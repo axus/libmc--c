@@ -156,7 +156,7 @@ bool Viewer::init(const std::string& filename,
     il_icon_map = loadImageFile(item_icon_file);
     if (il_icon_map == 0) {
         result=false;
-        //cerr << "Error loading " << item_icon_file << endl;
+        cerr << "Error loading " << item_icon_file << endl;
     } else {
         //glBind texture before assigning it
         glBindTexture(GL_TEXTURE_2D, item_tex);
@@ -171,7 +171,7 @@ bool Viewer::init(const std::string& filename,
     il_texture_map = loadImageFile(texture_map_file);
     if (il_texture_map == 0) {
         result = false;   //error, exit program
-        //cerr << "Error loading " << texture_map_file << endl;
+        cerr << "Error loading " << texture_map_file << endl;
     } else {
         //glBind texture before assigning it
         glBindTexture(GL_TEXTURE_2D, terrain_tex);
@@ -872,16 +872,16 @@ void Viewer::drawDroppedItem( uint16_t itemID )
     //Scale the size of the item picture, and offset up by 2,2,2
     GLint width, height, depth;
     
-    width  = texmap_TILE_LENGTH >> 1;   //half length
+    width  = texmap_TILE_LENGTH >> 1;   //half openGL length = 8
     height = texmap_TILE_LENGTH >> 1;
     depth  = texmap_TILE_LENGTH >> 1;
     
     //Face coordinates (in pixels)
-    GLint A = 2;
-    GLint B = 2 + width;
-    GLint C = 2;
-    GLint D = 2 + height;
-    GLint G = 2 + depth/2;    //half-way through z 
+    GLint A = -(texmap_TILE_LENGTH >> 2);  //offset 1/4 openGL length
+    GLint B = -(texmap_TILE_LENGTH >> 2) + width;
+    GLint C = 0;
+    GLint D = height;
+    GLint G = 0;    //No offset from middle
 
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
@@ -1124,7 +1124,9 @@ bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
 
         //Translate world to item coordinates (offset from camera)
         drawFromCamera();
-        glTranslatef( item->X >> 1, item->Y >> 1, item->Z >> 1);
+        glTranslatef( (item->X >> 1) + texmap_TILE_LENGTH/2,
+                      (item->Y >> 1) + 2,
+                      (item->Z >> 1) + texmap_TILE_LENGTH/2);
         glRotatef( item->yaw + item_rotation, 0.0f, 1.0f, 0.0f);
 
         //Draw the precompiled list
@@ -1208,37 +1210,18 @@ void Viewer::startOpenGL() {
     //Save the original viewpoint
     glPushMatrix(); 
 
-    //Create memory for openGL textures
+    //Create memory, set options for openGL terrain texture
     glGenTextures(1, &terrain_tex);
+    configureTexture(terrain_tex);
+    
+    //...for item texture
     glGenTextures(1, &item_tex);
+    configureTexture(item_tex);
+    
+    //...for entity textures
     glGenTextures(entity_type_MAX, entity_tex);
+    //TODO: configureTexture for each one
     
-    //Settings for terrain texture
-    glBindTexture(GL_TEXTURE_2D, terrain_tex);
-    
-    //Set out-of-range texture coordinates
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-    //Make textures "blocky" when up close
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    
-    //MipMap setting for far away textures
-    if (use_mipmaps) {
-        //Create OpenGL texture
-        glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST);//Nice mipmaps
-        
-        //Use texture mipmaps when far away
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-            GL_NEAREST_MIPMAP_NEAREST);
-    
-        //Generate mipmaps
-        glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
-    } else {
-        //Use nearest texture when far away
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    }
-
     //Blending setting
     if (!use_blending) {
         glDisable(GL_BLEND);
@@ -1280,6 +1263,39 @@ ILuint Viewer::loadImageFile( const string &imageFilename) {
     return il_texture;
 }
 
+//Set texture parameters
+bool Viewer::configureTexture(GLuint texture_ID)
+{
+    glBindTexture(GL_TEXTURE_2D, texture_ID);
+    
+    //Set out-of-range texture coordinates
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+
+    //Make textures "blocky" when up close
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    
+    //MipMap setting for far away textures
+    if (use_mipmaps) {
+        //Create OpenGL texture
+        glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST);//Nice mipmaps
+        
+        //Use texture mipmaps when far away
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+            GL_NEAREST_MIPMAP_NEAREST);
+    
+        //Generate mipmaps
+        glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+    } else {
+        //Use nearest texture when far away
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+    
+    //TODO: Check OpenGL error
+    return true;
+}
+
+
 //Clear old polygons and colors
 void Viewer::clear() 
 {
@@ -1304,6 +1320,9 @@ void Viewer::drawFromCamera()
 //OpenGL rendering of cubes.  No update to camera.
 bool Viewer::drawWorld(const World& world)
 {
+    //Rebind terrain png
+    glBindTexture( GL_TEXTURE_2D, terrain_tex);
+  
     //Reset camera
     drawFromCamera();
     
@@ -1396,14 +1415,18 @@ bool Viewer::createItemModel( uint16_t index)
             //Terrain cube (as item 75% size)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
             glBegin(GL_QUADS);
-            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25, false, -2, 2, -2);
+            //Centered at current position
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25,
+                false, -2, 0, -2);
             glEnd();
             break;
         case 1:
             //Terrain item (as item 75% size)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
             glBegin(GL_QUADS);
-            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25, false, -2, 2, -2);
+            //Centered at current position
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25,
+                false, -2, 0, -2);
             glEnd();
             break;
         case 2:
