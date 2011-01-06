@@ -1077,6 +1077,10 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
                 
         //Start the GL_COMPILING! Don't execute.
         glNewList(gl_list, GL_COMPILE);
+
+        //Rebind terrain png
+        glBindTexture( GL_TEXTURE_2D, terrain_tex);  
+
         glBegin(GL_QUADS);
         
         //Draw the visible blocks
@@ -1320,9 +1324,6 @@ void Viewer::drawFromCamera()
 //OpenGL rendering of cubes.  No update to camera.
 bool Viewer::drawWorld(const World& world)
 {
-    //Rebind terrain png
-    glBindTexture( GL_TEXTURE_2D, terrain_tex);
-  
     //Reset camera
     drawFromCamera();
     

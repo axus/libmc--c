@@ -208,8 +208,6 @@ bool UserInterface::run()
         //Reload attribute bits
         glPopAttrib( );
         
-        //Rebind texture
-        viewer.rebindTerrain();
     }
 
     
