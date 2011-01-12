@@ -2,7 +2,7 @@
   mc__::MapChunk
   16x128x16 complete Chunk, with visibility data
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -85,7 +85,8 @@ bool MapChunk::addChunk( const Chunk *chunk)
     uint8_t max_z = chunk->size_Z + in_z;
     
     if ((max_x > 15) || (max_y > 127) || (max_z > 15)) {
-        cerr << "ERROR! chunk too big for megachunk: "
+        cerr << "ERROR! chunk @ " << (int)(chunk->X) << "," << (int)(chunk->Y)
+            << "," << (int)(chunk->Z) << " too big, edge @ "
             << (int)max_x << "," << (int)max_y << "," << (int)max_z << endl;
         //The person adding chunk should have dissected it
     }

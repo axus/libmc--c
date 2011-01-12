@@ -2,7 +2,7 @@
   mc__::Player
     Represent 3D game player (or named entity) and their inventory
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -19,14 +19,25 @@
     <http://www.gnu.org/licenses/>.
 */
 
+//mc--
 #include "Player.hpp"
 using mc__::Player;
+using mc__::Entity;
+using mc__::InvItem;
 
+//STL
 using std::string;
 
 //Constructor
-Player::Player(const std::string& entity_name): Entity(), name(entity_name)
+Player::Player(uint32_t eid, const std::string& entity_name):
+    Entity(eid), held_slot(SLOT_EQ_MAX), VID(0), name(entity_name)
 {
+    //Fill inventory with EMPTY items
+    uint8_t index;
+    for (index = 0; index < player_inv_slots; index++)
+    {
+        removeItem(index);
+    }
 }
 
 bool Player::setPosition( double x, double y, double z, double h)
@@ -40,9 +51,9 @@ bool Player::setPosition( double x, double y, double z, double h)
     eyes_Y = h;
     
     //Absolute position (integer)
-    X = (int64_t)x;
-    Y = (int64_t)y;
-    Z = (int64_t)z;
+    X = (int32_t)(x * 32);
+    Y = (int32_t)(y * 32);
+    Z = (int32_t)(z * 32);
 
     return true;
 }
@@ -69,16 +80,29 @@ bool Player::setPosLook( double x, double y, double z,
     return true;
 }
 
-//Add item to inventory (return false if full)
-bool Player::addItem( const Item& item)
+//Add item to inventory (put in best available slot)
+bool Player::addItem( const InvItem& item)
 {
-    size_t slot=0;
     bool added=false;
-    
-    while (slot < invSlots[INVTYPE_MAIN] && !added) {
+    const uint8_t player_quickslot=player_inv_slots - 9;
+
+    //Start with left quickslot of backpack
+    uint8_t slot=player_quickslot;
+    while (slot < player_backpack_slots && !added) {
         //Check for empty slot
-        Item& nextItem = inventory[INVTYPE_MAIN][slot];
-        if ( nextItem.itemID == 0) {
+        InvItem& nextItem = inventory[slot];
+        if ( nextItem.itemID == emptyID) {
+            nextItem = item;
+            added=true;
+        }
+    }
+    
+    //Now, check slots in backpack that are not quickslots
+    slot=SLOT_EQ_MAX;
+    while (slot < player_quickslot && !added) {
+        //Check for empty slot
+        InvItem& nextItem = inventory[slot];
+        if ( nextItem.itemID == emptyID) {
             nextItem = item;
             added=true;
         }
@@ -87,16 +111,49 @@ bool Player::addItem( const Item& item)
     return added;
 }
 
-//Swap items inside inventory
-bool Player::moveItem( inv_type_t from_type, uint8_t from_slot,
-                       inv_type_t to_type,   uint8_t to_slot)
+//Set item in a slot
+bool Player::setSlotItem( uint8_t to_slot, uint16_t itemID,
+    uint8_t count, uint8_t used)
 {
-    //TODO: check if item is moving to invalid slot
+    //Check if slot is invalid number
+    if ( to_slot > player_inv_slots) {
+        return false;
+    }
+    //Check if slot is illegal for item ID
+    if ( to_slot == 0) {
+        //TODO: ONLY EQUIPMENT IN SLOTS SLOT_EQ_HEAD to SLOT_EQ_FEET
+        return false;
+    }
+    
+    //Reference inventory slot (old item is overwritten)
+    InvItem& item = inventory[to_slot];
+
+    //Set item in slot    
+    item.itemID = itemID;
+    item.count = count;
+    item.hitpoints = used;
+    
+    return true;
+}
+
+
+//Swap items inside equipment and inventory
+bool Player::moveItem( uint8_t from_slot, uint8_t to_slot)
+{
+    //Check if slot is invalid number
+    if (from_slot > player_inv_slots || to_slot > player_inv_slots) {
+        return false;
+    }
+    //Check if slot is illegal for item ID
+    if (from_slot == 0 || to_slot == 0) {
+        //TODO: ONLY EQUIPMENT IN SLOTS SLOT_EQ_HEAD to SLOT_EQ_FEET
+        return false;
+    }
     
     //Swap items
-    Item& from_item = inventory[from_type][from_slot];
-    Item& to_item = inventory[to_type][to_slot];
-    Item copy_item = to_item;
+    InvItem& from_item = inventory[from_slot];
+    InvItem& to_item = inventory[to_slot];
+    InvItem copy_item = to_item;
     to_item = from_item;
     from_item = copy_item;
 
@@ -104,13 +161,13 @@ bool Player::moveItem( inv_type_t from_type, uint8_t from_slot,
 }
 
 //Remove item from inventory slot
-bool Player::removeItem( inv_type_t from_type, uint8_t from_slot)
+bool Player::removeItem( uint8_t from_slot)
 {
     //Static empty item
-    static Item empty_item = { 0, 0, 0};
+    static InvItem empty_item = { emptyID, 0, 0};
 
     //Set inventory slot to empty
-    inventory[from_type][from_slot] = empty_item;
+    inventory[from_slot] = empty_item;
 
     return true;
 }

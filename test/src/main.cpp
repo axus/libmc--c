@@ -29,10 +29,15 @@ using std::endl;
 using std::string;
 
 //mc--
+#include <mc--/Mobiles.hpp>
 #include "UserInterface.hpp"
 using mc__::World;
 using mc__::Player;
 using mc__::Events;
+using mc__::Mobiles;
+
+using mc__::SLOT_EQ_MAX;
+using mc__::player_inv_slots;
 
 //SFML
 #include <SFML/System/Clock.hpp>
@@ -87,25 +92,32 @@ void genWorld(World& world)
         debugKey(world, 3, 64, 6);
     }
 
-    //Glass obelisk
+    //Glass pillar
     if (!world.genWall(24, 64, 2, 2, 17, 2, 20)) {
         cout << "Error: genWall ";
         debugKey(world, 3, 64, 6);
     }
+    //Brick pillar next to glass
     if (!world.genWall(26, 64, 2, 1, 17, 2, 45)) {
         cout << "Error: genWall ";
         debugKey(world, 3, 64, 6);
     }
-    
-    //Single workbench made from block put in chunk
-    mc__::Block block1 = {58, 0, 0, 0};
-    mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 8, 64, 8);
-    chunk1->block_array[0] = block1;
+    //Single wallsign embedded in brick wall
+    mc__::Block sign1 = {68, 0, 0, 0}; //wallsign, no metadata
+    mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 26, 65, 3);//location
+    chunk1->block_array[0] = sign1;
     
     //Add the single chunk to 0,0 MapChunk
     world.addMapChunk(chunk1);
+    delete chunk1;
     
-    //Free memory used by block, because it's copied
+    //Single workbench made from block put in chunk
+    mc__::Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
+    chunk1 = new mc__::Chunk(0, 0, 0, 7, 64, 13);    //location
+    chunk1->block_array[0] = workbench1;
+    
+    //Add the single chunk to 0,0 MapChunk
+    world.addMapChunk(chunk1);
     delete chunk1;
     
     //Move the world in these directions at start
@@ -117,6 +129,38 @@ void genWorld(World& world)
     world.redraw();
 }
 
+//Add some test objects to mobile items/entities
+void addItems( mc__::Mobiles& mobiles, const mc__::World& world) {
+    //Add some glass cubes for pickup, next to world spawn, 1/8 yaw
+    mobiles.addItem( mobiles.newEID(), 20, 8,
+        (world.spawn_X - 1) << 5,
+        (world.spawn_Y ) << 5,
+        (world.spawn_Z - 2) << 5, 0x20);
+
+    //Add some brick cubes for pickup, next to world spawn, 1/6 yaw
+    mobiles.addItem( mobiles.newEID(), 45, 8,
+        (world.spawn_X - 2) << 5,
+        (world.spawn_Y ) << 5,
+        (world.spawn_Z - 3) << 5, 0x2B);
+
+    //Add 1 diamond pick 
+    mobiles.addItem( mobiles.newEID(), 278, 1,
+        (world.spawn_X ) << 5,
+        (world.spawn_Y ) << 5,
+        (world.spawn_Z - 3) << 5, 0x2B);
+}
+
+//Give some items to player
+void genInventory( mc__::Player& player)
+{
+    uint8_t slot;
+    for (slot = SLOT_EQ_MAX; slot < player_inv_slots; slot++)
+    {
+        //Give a variety of item stacks
+        player.setSlotItem(slot, (uint16_t)slot, 64, 0);
+    }
+
+}
 
 int main(int argc, char** argv)
 {
@@ -138,9 +182,6 @@ int main(int argc, char** argv)
     //Game world
     World world;
 
-    //Game player
-    Player player( player_name);
-    
     //Game events
     Events events;
 
@@ -148,13 +189,27 @@ int main(int argc, char** argv)
     cout << "Generating test world..." << endl;
     genWorld(world);
 
-    //Set player initial position and viewpoint (height, yaw, pitch)
-    player.setPosLook( world.spawn_X, world.spawn_Y, world.spawn_Z,
-        world.spawn_Y + 1, 180, 0);
+    //Track entities with Mobiles object
+    Mobiles mobiles(world);
+
+    //Create some test items
+    addItems(mobiles, world);
+    
+    //Choose entity ID for player
+    uint32_t playerEID = mobiles.newEID();
+    
+    //Add a player at the spawn point, and make a reference to it
+    Player& player = *(mobiles.addPlayer(playerEID, player_name,
+        world.spawn_X << 5, world.spawn_Y << 5, world.spawn_Z << 5,
+        128, 0));
+
+    //Give the player some items
+    genInventory(player);
 
     //Create user interface to world
     cout << "Creating user interface..." << endl;
-    mc__::UserInterface ui("libmc--c example", world, player, events);
+    mc__::UserInterface ui("libmc--c example",
+        world, mobiles, player, events);
         
     //Run until user exits
     while (ui.run()) {

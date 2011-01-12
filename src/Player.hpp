@@ -2,7 +2,7 @@
   mc__::Player
     Represent 3D game player (or named entity) and their inventory
   
-  Copyright 2010 axus
+  Copyright 2010-20111 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -27,9 +27,6 @@
 #include "Entity.hpp"
 #include "Chunk.hpp"
 
-using mc__::Entity;
-using mc__::Item;
-
 //STL
 #include <string>
 
@@ -38,17 +35,39 @@ using mc__::Item;
 namespace mc__ {
   
     //Types
-    enum inv_type_t { INVTYPE_MAIN=0, INVTYPE_EQUIPPED=1, INVTYPE_CRAFTING=2,
-        INVTYPE_MAX };
-        
-    //Constants
-    const uint8_t invSlotsMax = 36;
-    const uint8_t invSlots[INVTYPE_MAX]={ invSlotsMax, 4, 4 };
     
-    class Player : public Entity {
+    //Window types
+    enum inv_window_t { INV_PLAYER=0, INV_WORKBENCH=1, INV_FURNACE=2,
+        INV_CHEST=3, INV_CHEST_BIG=4, INV_WINDOW_MAX };
+        
+    //Window specific slot enums
+    enum slot_equipment_t { SLOT_EQ_CREATED=0,
+        SLOT_EQ_CRAFT1=1, SLOT_EQ_CRAFT2=2, SLOT_EQ_CRAFT3=3, SLOT_EQ_CRAFT4=4,
+        SLOT_EQ_HEAD=5, SLOT_EQ_TORSO=6, SLOT_EQ_LEGS=7, SLOT_EQ_FEET=8,
+        SLOT_EQ_MAX };
+    
+    typedef struct {
+        uint16_t itemID;
+        uint8_t count;
+        uint8_t hitpoints;
+    } InvItem;
+    
+    //Player inventory max slot
+    const uint8_t player_backpack_slots=36;
+    const uint8_t player_inv_slots=SLOT_EQ_MAX + player_backpack_slots;
+        
+    //Number of window specific slots
+    const uint8_t invWindowSlots[INV_WINDOW_MAX]= {
+        SLOT_EQ_MAX, 10, 3, 27, 54};
+        
+    //Constant unsigned short value for empty slot
+    const uint16_t emptyID=0xFFFF;
+    
+    //Player class definition
+    class Player : public mc__::Entity {
         public:
             //Constructor
-            Player( const std::string& entity_name);
+            Player( uint32_t eid, const std::string& entity_name);
             
             //Movement and looking
             bool setPosition( double x, double y, double z, double h);
@@ -57,16 +76,15 @@ namespace mc__ {
                 float yaw_, float pitch_);
             
             //Inventory functions
-            bool addItem( const Item& item);
-            bool moveItem( inv_type_t from_type, uint8_t from_slot,
-                inv_type_t to_type, uint8_t to_slot);
-            bool removeItem( inv_type_t from_type, uint8_t from_slot);
+            bool addItem( const InvItem& item);
+            bool setSlotItem( uint8_t to_slot, uint16_t itemID,
+                uint8_t count, uint8_t used);
+            bool moveItem( uint8_t from_slot, uint8_t to_slot);
+            bool removeItem( uint8_t from_slot);
             
-            //Player inventory... access this directly to read/write inventory
-            Item inventory[INVTYPE_MAX][ invSlotsMax ];
-            
-            //Held item
-            Item held_item;
+            //Player inventory: equipment and backpack
+            mc__::InvItem inventory[ player_inv_slots];
+            uint8_t held_slot;    //index of item being wielded
             
             //Entity ID used as vehicle
             uint32_t VID;

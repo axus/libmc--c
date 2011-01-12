@@ -2,7 +2,7 @@
   mc__::Viewer
   Draw mc__::World objects using OpenGL
 
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -100,6 +100,7 @@ Viewer::Viewer(unsigned short width, unsigned short height):
     view_width(width), view_height(height),
     aspectRatio((GLfloat)width/height), fieldOfViewY(70),
     cam_yaw(0), cam_pitch(0), cam_vecX(0), cam_vecY(0), cam_vecZ(0),
+    item_rotation(0),
     use_mipmaps(true), use_blending(false), debugging(false)
 {
   
@@ -119,18 +120,28 @@ Viewer::Viewer(unsigned short width, unsigned short height):
 }
 
 //Start up OpenGL
-bool Viewer::init(const std::string &filename, bool mipmaps)
+bool Viewer::init(const std::string& filename,
+    const std::string& item_filename,
+    bool mipmaps)
 {
+
+    bool result=true;
 
     //Compare devIL DLL version to header version
     if (ilGetInteger(IL_VERSION_NUM) < IL_VERSION) {
         cerr << "DevIL wrong DLL version" << endl;
-        return 1;
+        return false;
     }
 
+    //DevIL textures
+    ILuint il_texture_map, il_icon_map;
+
+    //Graphics options
     use_mipmaps=mipmaps;
 
+    //Remember filenames
     texture_map_file = filename;
+    item_icon_file = item_filename;
 
     //Load game block information
     loadBlockInfo();
@@ -141,25 +152,45 @@ bool Viewer::init(const std::string &filename, bool mipmaps)
     //Start DevIL
     ilInit();
 
+    //Load item icon map, copy to openGL texture
+    il_icon_map = loadImageFile(item_icon_file);
+    if (il_icon_map == 0) {
+        result=false;
+        cerr << "Error loading " << item_icon_file << endl;
+    } else {
+        //glBind texture before assigning it
+        glBindTexture(GL_TEXTURE_2D, item_tex);
+        
+        //Copy current DevIL image to OpenGL image.
+        glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+            ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+            ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+    }
+
     //Load terrain texture map, bind it to current DevIL image
     il_texture_map = loadImageFile(texture_map_file);
     if (il_texture_map == 0) {
-        return 0;   //error, exit program
-    }
-
-    //glBind texture before assigning it
-    glBindTexture(GL_TEXTURE_2D, terrain_tex);
+        result = false;   //error, exit program
+        cerr << "Error loading " << texture_map_file << endl;
+    } else {
+        //glBind texture before assigning it
+        glBindTexture(GL_TEXTURE_2D, terrain_tex);
+        
+        //Copy current DevIL image to OpenGL image.
+        glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+            ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+            ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
     
-    //Copy current DevIL image to OpenGL image.
-    glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
-        ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
-        ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+    }
 
     //Change camera to model view mode
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
-    return true;
+    //Generate the ITEM, ENTITY, and PLAYER display lists
+    loadItemInfo();
+
+    return result;
 }
 
 //change back to texture if needed
@@ -413,7 +444,133 @@ void Viewer::drawCube( uint8_t blockID,
     setBlockColor( 0, (face_ID)0);
 }
 
-//Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotate)
+//Draw cactus... almost like a cube, but A, B, E, F are inset 1 pixel
+void Viewer::drawCactus( uint8_t blockID,
+    GLint x, GLint y, GLint z, uint8_t vflags)
+{
+    
+    //Face coordinates (in pixels)
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //For each face, use the appropriate texture offsets for the block ID
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //   Texture map was loaded upside down...
+    // 0.0 -------------> 1.0 (X)
+    // |
+    // |
+    // |
+    // |
+    // |
+    // |
+    // v
+    // 1.0
+    // (Y)
+    
+    //
+    // (tx_0, ty_1)      (tx_1, ty_1)
+    //
+    // (tx_0, ty_0)      (tx_1, ty_0)
+
+    // For cactus, the face coordinates are inset from the face
+
+    //A always visible
+        tx_0 = blockInfo[blockID].tx[WEST];
+        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
+        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
+        ty_1 = blockInfo[blockID].ty[WEST];
+        setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A+1, C, E);
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A+1, C, F);
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A+1, D, F);
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A+1, D, E);
+
+    //B
+        tx_0 = blockInfo[blockID].tx[EAST];
+        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
+        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
+        ty_1 = blockInfo[blockID].ty[EAST];
+        setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B-1, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B-1, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B-1, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B-1, D, F);  //Top left:    BDF
+    
+    //C not always visible
+    if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    }
+    
+    //D
+    if (!(vflags & 0x10)) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = blockInfo[blockID].tx[UP] + tmr;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+        setBlockColor(blockID, UP);  //Set leaf/grass color if needed
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+    
+    //E always visible
+        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[NORTH];
+        setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E+1);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E+1);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E+1);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E+1);  //Top left:    BDE
+    
+    //F
+        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+        ty_1 = blockInfo[blockID].ty[SOUTH];
+        setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F-1);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F-1);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F-1);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F-1);  //Top left:    ADF
+    
+    //Return color to normal
+    setBlockColor( 0, (face_ID)0);
+}
+
+
+//Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotation)
 void Viewer::drawScaledBlock( uint8_t blockID,
     GLint x, GLint y, GLint z, uint8_t vflags,
     GLfloat scale_x, GLfloat scale_y, GLfloat scale_z,
@@ -438,13 +595,17 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     GLfloat tx_0, tx_1, ty_0, ty_1;
     
     //Scaled texture map ratios (1/block length)
-    GLfloat tmr_x, tmr_y, tmr_z;
+    GLfloat tmr_x, tmr_y, tmr_z, tmr_off_x, tmr_off_y, tmr_off_z;
     if (scale_texture) {
         tmr_x  = scale_x * tmr;
         tmr_y = scale_y * tmr;
         tmr_z  = scale_z * tmr;
+        tmr_off_x = tmr*off_x/texmap_TILE_LENGTH;
+        tmr_off_y = tmr*off_y/texmap_TILE_LENGTH;
+        tmr_off_z = tmr*off_z/texmap_TILE_LENGTH;
     } else {
         tmr_x = tmr_y = tmr_z = tmr;
+        tmr_off_x =  tmr_off_y = tmr_off_z = 0;
     }
 
     //For each face, use the appropriate texture offsets for the block ID
@@ -474,10 +635,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
 
     //A
     if (!(vflags & 0x80) && (scale_y != 0.0 && scale_z != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[WEST];
-        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
-        ty_1 = blockInfo[blockID].ty[WEST];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[WEST] + tmr_off_z;
+        tx_1 = blockInfo[blockID].tx[WEST] + tmr_off_z + tmr_z;
+        ty_0 = blockInfo[blockID].ty[WEST] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[WEST] + tmr_off_y;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
@@ -487,10 +649,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
 
     //B
     if (!(vflags & 0x40) && (scale_y != 0.0 && scale_z != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[EAST];
-        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
-        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
-        ty_1 = blockInfo[blockID].ty[EAST];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[EAST] + tmr_off_z;
+        tx_1 = blockInfo[blockID].tx[EAST] + tmr_off_z + tmr_z;
+        ty_0 = blockInfo[blockID].ty[EAST] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[EAST] + tmr_off_y;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -500,10 +663,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     
     //C
     if (!(vflags & 0x20) && (scale_x != 0.0 && scale_z != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[DOWN];
-        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-        ty_1 = blockInfo[blockID].ty[DOWN];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[DOWN] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr_off_z + tmr_z;
+        ty_1 = blockInfo[blockID].ty[DOWN] + tmr_off_z;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -513,10 +677,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     
     //D
     if (!(vflags & 0x10) && (scale_x != 0.0 && scale_z != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[UP];
-        tx_1 = blockInfo[blockID].tx[UP] + tmr;
-        ty_0 = blockInfo[blockID].ty[UP] + tmr;
-        ty_1 = blockInfo[blockID].ty[UP];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[UP] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[UP] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr_off_z + tmr_z;
+        ty_1 = blockInfo[blockID].ty[UP] + tmr_off_z;
     
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
@@ -526,10 +691,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     
     //E
     if (!(vflags & 0x08) && (scale_x != 0.0 && scale_y != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[NORTH];
-        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
-        ty_1 = blockInfo[blockID].ty[NORTH];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[NORTH] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[NORTH] + tmr_off_y;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
@@ -539,10 +705,11 @@ void Viewer::drawScaledBlock( uint8_t blockID,
     
     //F
     if (!(vflags & 0x04) && (scale_x != 0.0 && scale_y != 0.0) ) {
-        tx_0 = blockInfo[blockID].tx[SOUTH];
-        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
-        ty_1 = blockInfo[blockID].ty[SOUTH];
+        //Use offsets and scaling for texture coordinates
+        tx_0 = blockInfo[blockID].tx[SOUTH] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[SOUTH] + tmr_off_y;
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
@@ -677,6 +844,7 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
     glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
 
+    //Intersecting plane
     tx_0 = blockInfo[blockID].tx[EAST];
     tx_1 = blockInfo[blockID].tx[EAST] + tmr;
     ty_0 = blockInfo[blockID].ty[EAST] + tmr;    //flip y
@@ -694,6 +862,47 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 
 }
 
+//Draw a dropped item that can be picked up (caller must translate to X,Y,Z)
+void Viewer::drawDroppedItem( uint16_t itemID )
+{
+
+    //To always face player, translate then rotate at camera(?)
+
+
+    //Scale the size of the item picture, and offset up by 2,2,2
+    GLint width, height, depth;
+    
+    width  = texmap_TILE_LENGTH >> 1;   //half openGL length = 8
+    height = texmap_TILE_LENGTH >> 1;
+    depth  = texmap_TILE_LENGTH >> 1;
+    
+    //Face coordinates (in pixels)
+    GLint A = -(texmap_TILE_LENGTH >> 2);  //offset 1/4 openGL length
+    GLint B = -(texmap_TILE_LENGTH >> 2) + width;
+    GLint C = 0;
+    GLint D = height;
+    GLint G = 0;    //No offset from middle
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Look up texture coordinates for the item
+    tx_0 = itemInfo[itemID].tx[WEST];
+    tx_1 = itemInfo[itemID].tx[WEST] + tmr;
+    ty_0 = itemInfo[itemID].ty[WEST] + tmr;    //flip y
+    ty_1 = itemInfo[itemID].ty[WEST];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+
+}
 
 
 //Draw a placed mc__::Block in openGL
@@ -708,11 +917,11 @@ void Viewer::drawBlock( const mc__::Block& block,
 
     //Drawing function depends on shape (as determined from properties)
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=fire
+    //              4=signpost, 5=ladder, 6=track, 7=fire
     //              8=portal, 9=fence, A=door, B=floorplate
-    //              C=1/3 block, D=wallsign, E=button, F=plant
+    //              C=snow cover, D=wallsign, E=button, F=plant
 
-//TODO: correct models
+    //Use different drawing function for different model types
     switch ( (blockInfo[block.blockID].properties & 0xF0)>>4 ) {
         case 0x0:
             //Cube
@@ -731,49 +940,65 @@ void Viewer::drawBlock( const mc__::Block& block,
             drawScaledBlock(4, x, y, z, 0,
                 0.25, 0.25, 0.5, true, 6, 0, 4);
             break;
-        case 0xF:   //Plant
-            drawItem(block.blockID, x, y, z);
-            break;
         case 0x3:   //half-block
             drawHalfBlock(block.blockID, x, y, z, vflags);
             break;
-        case 0xC:   //Snow
-            drawScaledBlock(block.blockID, x, y, z, vflags,
-                1, 0.25, 1);
-            break;
-        case 0x8:   //Portal
+        case 0x4:   //Signpost
+            //TODO: drawSignpost();
+            
+            //Sign
             drawScaledBlock(block.blockID, x, y, z, 0,
-                1.0, 1.0, 0.25, true, 0, 0, 8);
+                0.75, 0.5, 0.125, true, 2, 7, 8);
+                
+            //Post
+            drawScaledBlock(block.blockID, x, y, z, (vflags&0x30)|0x10,
+                0.125, 0.4375, 0.125, true, 7, 0, 8);
             break;
-        case 0xE:   //Button
-            drawScaledBlock(block.blockID, x, y, z, 0,
-                0.25, 0.25, 0.125, true, 0, 8, 0);
-            break;
-        case 0x4:   //Wallsign
         case 0x5:   //Ladder
         case 0x7:   //fire
         case 0xA:   //Door
-        case 0xD:   //Wallsign
             drawWallItem(block.blockID, x, y, z);
             break;
         case 0x6:   //Track
             drawTrack(block.blockID, x, y, z);
             break;
+        case 0x8:   //Portal
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                1.0, 1.0, 0.25, true, 0, 0, 8);
+            break;
         case 0x9:   //Fence
             //Top of fence
-            drawScaledBlock(block.blockID, x, y, z, vflags,
+            drawScaledBlock(block.blockID, x, y, z, vflags&0xC0,
                 1, 0.25, 0.25, true, 0, 6, 6);
             //Fence legs
-            drawScaledBlock(block.blockID, x, y, z, vflags,
+            drawScaledBlock(block.blockID, x, y, z, (vflags&0x30)|0x10,
                 0.25, 0.375, 0.25, true, 2, 0, 6);
-            drawScaledBlock(block.blockID, x, y, z, vflags,
+            drawScaledBlock(block.blockID, x, y, z, (vflags&0x30)|0x10,
                 0.25, 0.375, 0.25, true, 10, 0, 6);
             break;
         case 0xB:   //Floorplate
             drawScaledBlock(block.blockID, x, y, z, 0,
                 0.75, 0.125, 0.75, true, 2, 0, 2);
             break;
-        //TODO: test for other shapes
+        case 0xC:   //Snow
+            drawScaledBlock(block.blockID, x, y, z, vflags,
+                1, 0.25, 1);
+            break;
+        case 0xD:   //Wallsign
+            drawScaledBlock(block.blockID, x, y, z, (vflags&0x08),
+                0.75, 0.5, 0.125, true, 2, 7, 0);
+            break;
+        case 0xE:   //Button
+            drawScaledBlock(block.blockID, x, y, z, 0,
+                0.25, 0.25, 0.125, true, 8, 8, 0);
+            break;
+        case 0xF:   //Plant
+            if (block.blockID != 0x51) {
+                drawItem(block.blockID, x, y, z);
+            } else {    //Special case cactus
+                drawCactus(block.blockID, x, y, z, vflags);
+            }
+            break;
         default:    //Draw unknown types as a cube
             drawCube(block.blockID, x, y, z, vflags);
             break;
@@ -826,7 +1051,6 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         myChunk.flags |= MapChunk::UPDATED;
     }
 
-    
     //Compile GL list if needed (drawing to screen happens elsewhere)
     if (myChunk.flags & MapChunk::UPDATED) {
 
@@ -841,11 +1065,11 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         indexList_t& visibleIndices = myChunk.visibleIndices;
         indexList_t::const_iterator iter;
 
-        //Calculate facemask to apply to visflags, based on chunk X/Z
-        // WORK IN PROGRESS
+        //Chunk coordinates to compare... remove GL coordinate and last 4 bits
         GLint view_X = ((int)cam_X >> 8);
         GLint view_Z = ((int)cam_Z >> 8);
 
+        //Calculate facemask to apply to visflags, based on chunk X/Z
         //Mark faces player cannot see from their MapChunk as invisible
         uint8_t pvflags = 0;
         pvflags |= (X < view_X ? 0x80 : (X > view_X ? 0x40 : 0x00));
@@ -853,6 +1077,10 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
                 
         //Start the GL_COMPILING! Don't execute.
         glNewList(gl_list, GL_COMPILE);
+
+        //Rebind terrain png
+        glBindTexture( GL_TEXTURE_2D, terrain_tex);  
+
         glBegin(GL_QUADS);
         
         //Draw the visible blocks
@@ -879,8 +1107,70 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         //Finished drawing chunk, no longer "updated"
         myChunk.flags &= ~(MapChunk::UPDATED);
     }
-    
 }
+
+//Draw all moving objects (entities)
+bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
+{
+    itemMap_t::const_iterator item_iter;
+    
+    const itemMap_t& itemMap = mobiles.itemMap;
+    GLuint displayList;
+    
+    //Go through all items in the world that we know about
+    //  TODO: items in visible range
+    for (item_iter = itemMap.begin(); item_iter != itemMap.end(); item_iter++) {
+        //NO ERROR CHECKING HERE!  FOR GREAT JUSTICE
+        
+        //Get display list for item
+        const Item *item = item_iter->second;
+        displayList = itemModels[ item->itemID ];
+
+        //Translate world to item coordinates (offset from camera)
+        drawFromCamera();
+        glTranslatef( (item->X >> 1) + texmap_TILE_LENGTH/2,
+                      (item->Y >> 1) + 2,
+                      (item->Z >> 1) + texmap_TILE_LENGTH/2);
+        glRotatef( item->yaw + item_rotation, 0.0f, 1.0f, 0.0f);
+
+        //Draw the precompiled list
+        glCallList(displayList);
+
+    }
+
+    
+    return true;
+}
+
+/*
+bool Viewer::createEntityModels()
+{
+    //typeID    Description
+    //------    -----------
+    //0         Player
+                
+    //1         Boat
+    //10        MineCart
+    //11        ChestCart
+    //12        FurnaceCart
+    
+    //50        Creeper
+    //51        Skeleton
+    //52        Spider
+    //53        Giant Zombie
+    //54        Zombie
+    //55        Slime
+    //56        Ghast
+    //57        Zombie Pigman
+    
+    //90        Pig
+    //91        Sheep
+    //92        Cow
+    //93        Chicken
+
+    return true;
+}
+*/
 
 //Draw the megachunks in mc__::World
 void Viewer::drawMapChunks( const World& world)
@@ -924,32 +1214,18 @@ void Viewer::startOpenGL() {
     //Save the original viewpoint
     glPushMatrix(); 
 
+    //Create memory, set options for openGL terrain texture
     glGenTextures(1, &terrain_tex);
-    glBindTexture(GL_TEXTURE_2D, terrain_tex);    //bind empty texture
+    configureTexture(terrain_tex);
     
-    //Set out-of-range texture coordinates
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
-
-    //Make textures "blocky" when up close
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    //...for item texture
+    glGenTextures(1, &item_tex);
+    configureTexture(item_tex);
     
-    //MipMap setting
-    if (use_mipmaps) {
-        //Create OpenGL texture
-        glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_FASTEST);//Quick mipmaps
-        
-        //Use texture mipmaps when far away
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
-            GL_NEAREST_MIPMAP_NEAREST);
+    //...for entity textures
+    glGenTextures(entity_type_MAX, entity_tex);
+    //TODO: configureTexture for each one
     
-        //Generate mipmaps
-        glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
-    } else {
-        //Use nearest texture when far away
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-    }
-
     //Blending setting
     if (!use_blending) {
         glDisable(GL_BLEND);
@@ -991,13 +1267,48 @@ ILuint Viewer::loadImageFile( const string &imageFilename) {
     return il_texture;
 }
 
-
-//OpenGL rendering of cubes.  No update to camera.
-bool Viewer::drawWorld(const World& world)
+//Set texture parameters
+bool Viewer::configureTexture(GLuint texture_ID)
 {
-    //Erase openGL world
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+    glBindTexture(GL_TEXTURE_2D, texture_ID);
+    
+    //Set out-of-range texture coordinates
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
 
+    //Make textures "blocky" when up close
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    
+    //MipMap setting for far away textures
+    if (use_mipmaps) {
+        //Create OpenGL texture
+        glHint(GL_GENERATE_MIPMAP_HINT_SGIS, GL_NICEST);//Nice mipmaps
+        
+        //Use texture mipmaps when far away
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER,
+            GL_NEAREST_MIPMAP_NEAREST);
+    
+        //Generate mipmaps
+        glTexParameteri(GL_TEXTURE_2D,GL_GENERATE_MIPMAP_SGIS,GL_TRUE);
+    } else {
+        //Use nearest texture when far away
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    }
+    
+    //TODO: Check OpenGL error
+    return true;
+}
+
+
+//Clear old polygons and colors
+void Viewer::clear() 
+{
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
+}
+
+//Offset model view from current camera position
+void Viewer::drawFromCamera()
+{
     //Reset camera
     glLoadIdentity();
     glRotatef( cam_yaw, 0.0f, 1.0f, 0.0f);
@@ -1007,13 +1318,17 @@ bool Viewer::drawWorld(const World& world)
     
     //Bring the world to the camera, not the camera to the world
     glTranslatef( -cam_X, -cam_Y, -cam_Z );
-    
-    //Draw the mega-chunks
-    drawMapChunks(world);
+}
 
-    //Debug :)    
-    //mc__::Block block1 = {58, 0, 0};   //Workbench
-    //drawBlock( block1, 0, 0, 2);
+
+//OpenGL rendering of cubes.  No update to camera.
+bool Viewer::drawWorld(const World& world)
+{
+    //Reset camera
+    drawFromCamera();
+    
+    //Draw the map-chunks
+    drawMapChunks(world);
     
     return true;
 }
@@ -1056,7 +1371,7 @@ void Viewer::setBlockInfo( uint8_t index,
     
     //Assign properties
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=fire?,
+    //              4=signpost, 5=ladder, 6=track, 7=fire?,
     //              8=portal, 9=fence, A=door, B=floorplate
     //              C=1/3 block, D=wallsign, E=button, F=plant
     //0x08: Bright: 0=dark, 1=lightsource
@@ -1064,6 +1379,94 @@ void Viewer::setBlockInfo( uint8_t index,
     //0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
     blockInfo[index].properties = properties;
 }
+
+//Map item ID to texture coordinates and appropriate texture map (properties)
+void Viewer::setItemInfo( uint16_t index, uint8_t A, uint8_t properties)
+{
+    //A - F contain texture ID of the corresponding face (textureID = 0 - 255)
+    BlockInfo& iteminf = itemInfo[index];
+    
+    //For each face,  precompute OpenGL texture offsets in texture map
+    // (Remember that texture map was loaded upside down!)
+    iteminf.textureID[0] = A;
+    iteminf.tx[0] = float(A & (texmap_TILES-1))/((float)texmap_TILES);
+    iteminf.ty[0] = float(A/texmap_TILES)/((float)texmap_TILES);
+
+    //Copy properties
+    iteminf.properties = properties;
+
+    //draw to openGL model
+    createItemModel(index);
+    
+    //createItemTexture(index);
+}
+
+//Create texture and model for item
+bool Viewer::createItemModel( uint16_t index)
+{
+    BlockInfo& iteminf = itemInfo[index];
+
+    //Create display list for item model
+    itemModels[index] = glGenLists(1);
+    glNewList(itemModels[index], GL_COMPILE);
+
+    //Draw model to display list
+    switch (iteminf.properties & 0x03) {
+        case 0:
+            //Terrain cube (as item 75% size)
+            glBindTexture( GL_TEXTURE_2D, terrain_tex);
+            glBegin(GL_QUADS);
+            //Centered at current position
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25,
+                false, -2, 0, -2);
+            glEnd();
+            break;
+        case 1:
+            //Terrain item (as item 75% size)
+            glBindTexture( GL_TEXTURE_2D, terrain_tex);
+            glBegin(GL_QUADS);
+            //Centered at current position
+            drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25,
+                false, -2, 0, -2);
+            glEnd();
+            break;
+        case 2:
+            //Inventory item
+            glBindTexture( GL_TEXTURE_2D, item_tex);
+            glBegin(GL_QUADS);
+            drawDroppedItem( index);
+            glEnd();
+            break;
+        case 3:
+            //Special inventory item
+            glBindTexture( GL_TEXTURE_2D, item_tex);
+            glBegin(GL_QUADS);
+            drawDroppedItem( index);
+            glEnd();
+            break;
+        default:
+            break;
+    }
+    
+    glEndList();
+    
+    return true;
+}
+
+/*
+//Create the display lists that will be used for drawing mobiles
+bool Viewer::createItemModels()
+{
+    uint16_t ID;
+    
+    //Block item models
+    for (ID=1; ID < Chunk::maxBlockID; ID++) {
+        createItemModel(ID);
+    }
+    
+    return true;
+}
+*/
 
 //Map block ID to block type information
 bool Viewer::loadBlockInfo()
@@ -1088,7 +1491,7 @@ ADF ---- BDF |
 ACF ---- BCF
 
 //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-//              4=wallsign, 5=ladder, 6=track, 7=1/4 block
+//              4=signpost, 5=ladder, 6=track, 7=1/4 block
 //              8=portal, 9=fence, A=door, B=floorplate
 //              C=snow?, D=wallsign, E=button, F=planted
 //0x08: Bright: 0=dark, 1=lightsource
@@ -1172,7 +1575,7 @@ Normal block = 0x00: cube, dark, opaque, solid
         //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
     setBlockInfo( 79, 67, 67, 67, 67, 67, 67, 0x04);    //Ice
     setBlockInfo( 80, 66, 66, 66, 66, 66, 66, 0x00);    //SnowBlock
-    setBlockInfo( 81, 70, 70, 71, 69, 70, 70, 0x00);    //Cactus
+    setBlockInfo( 81, 70, 70, 71, 69, 70, 70, 0xF0);    //Cactus
     setBlockInfo( 82, 72, 72, 72, 72, 72, 72, 0x00);    //Clay
     setBlockInfo( 83, 73, 73, 73, 73, 73, 73, 0xF7);    //Reed (*)
     setBlockInfo( 84, 74, 74, 43, 75, 74, 74, 0x00);    //Jukebox
@@ -1194,6 +1597,229 @@ Normal block = 0x00: cube, dark, opaque, solid
 
     return true;
 }
+
+//Map item ID to item information
+bool Viewer::loadItemInfo()
+{
+    uint16_t ID;
+
+    //  properties:
+    // 0x00 = terrain cube (icon is single terrain cube)
+    // 0x01 = terrain item (icon is single terrain texture)
+    // 0x02 = item (icon is single tile from items.png)
+    // 0x03 = special icon
+    // 0x04 = unstackable
+    // 0x08 = biome colored
+    // 0x10 = chest
+    // 0x20 = lever
+    // 0x40 = sign
+    // 0x50 = furnace
+    // 0x60 = workbench
+    // 0xFF = air
+
+// 11 is the transparent texture
+
+    //Set "cube" blocks: ID, texture, properties
+    setItemInfo( 0, 11, 0xFF);     //Air   (should not be drawn!)
+    setItemInfo( 1, 1,  0x00);     //Stone
+    setItemInfo( 2, 3,  0x08);     //Grass
+    setItemInfo( 3, 2,  0x00);     //Dirt
+    setItemInfo( 4, 16, 0x00);     //Cobble
+    setItemInfo( 5, 4,  0x00);     //Wood
+    setItemInfo( 6, 15, 0x01);     //Sapling
+    setItemInfo( 7, 17, 0x00);     //Bedrock
+    setItemInfo( 8, 0xCE, 0x00);     //Water(*)
+    setItemInfo( 9, 0xCD, 0x00);     //WaterStill
+    setItemInfo( 10, 0xEE,0x00);    //Lava(*)
+    setItemInfo( 11, 0xED,0x00);    //LavaStill
+    setItemInfo( 12, 18, 0x00);    //Sand
+    setItemInfo( 13, 19, 0x00);    //Gravel
+    setItemInfo( 14, 32, 0x00);    //GoldOre
+    setItemInfo( 15, 33, 0x00);    //IronOre
+    setItemInfo( 16, 34, 0x00);    //CoalOre
+    setItemInfo( 17, 20, 0x00);    //Log
+    setItemInfo( 18, 52, 0x08);    //Leaves
+    setItemInfo( 19, 48, 0x00);    //Sponge
+    setItemInfo( 20, 49, 0x00);    //Glass
+    
+    for (ID = 21; ID < 37; ID++) {
+        setItemInfo( ID, 64, 0x00);   //Cloth
+    }
+    setItemInfo( 37, 13, 0x01);    //Flower
+    setItemInfo( 38, 12, 0x01);    //Rose
+    setItemInfo( 39, 29, 0x01);    //BrownShroom
+    setItemInfo( 40, 28, 0x01);    //RedShroom
+    setItemInfo( 41, 39, 0x00);    //GoldBlock
+    setItemInfo( 42, 38, 0x00);    //IronBlock
+    setItemInfo( 43, 5,  0x00);    //DoubleStep
+    setItemInfo( 44, 5,  0x00);    //Step
+    setItemInfo( 45, 7,  0x00);    //Brick
+    setItemInfo( 46, 8,  0x00);    //TNT
+    setItemInfo( 47, 35, 0x00);    //Bookshelf
+    setItemInfo( 48, 36, 0x00);    //Mossy
+    setItemInfo( 49, 37, 0x00);    //Obsidian
+    setItemInfo( 50, 80, 0x01);    //Torch
+    setItemInfo( 51, 30, 0x03);    //Fire
+    setItemInfo( 52, 65, 0x00);    //Spawner
+    setItemInfo( 53, 4,  0x00);    //WoodStairs
+    setItemInfo( 54, 26, 0x10);    //Chest
+    setItemInfo( 55, 84, 0x01);    //Wire
+    setItemInfo( 56, 50, 0x00);    //DiamondOre
+    setItemInfo( 57, 40, 0x00);    //DiamondBlock
+    setItemInfo( 58, 60, 0x60);    //Workbench
+    setItemInfo( 59, 90, 0x01);    //Crops
+    setItemInfo( 60, 2,  0x00);    //Soil
+    setItemInfo( 61, 45, 0x50);    //Furnace
+    setItemInfo( 62, 45, 0x53);    //LitFurnace
+    setItemInfo( 63, 42, 0x03);    //SignPost
+    setItemInfo( 64, 43, 0x02);    //WoodDoor
+    setItemInfo( 65, 83, 0x01);    //Ladder
+    setItemInfo( 66, 112,0x01);    //Track
+    setItemInfo( 67, 16, 0x00);    //CobbleStairs
+    setItemInfo( 68, 42, 0x02);    //WallSign
+    setItemInfo( 69, 96, 0x00);    //Lever
+    setItemInfo( 70, 1,  0x00);    //StonePlate
+    setItemInfo( 71, 44, 0x02);    //IronDoor
+    setItemInfo( 72, 4,  0x00);    //WoodPlate
+    setItemInfo( 73, 51, 0x00);    //RedstoneOre
+    setItemInfo( 74, 51, 0x00);    //RedstoneOreLit
+    setItemInfo( 75, 115,0x01);    //RedstoneTorch
+    setItemInfo( 76, 99, 0x01);    //RedstoneTorchLit
+    setItemInfo( 77, 1,  0x00);    //StoneButton
+    setItemInfo( 78, 66, 0x00);    //SnowLayer
+    setItemInfo( 79, 67, 0x00);    //Ice
+    setItemInfo( 80, 66, 0x00);    //SnowBlock
+    setItemInfo( 81, 70, 0x00);    //Cactus
+    setItemInfo( 82, 72, 0x00);    //Clay Block
+    setItemInfo( 83, 73, 0x01);    //Reed
+    setItemInfo( 84, 74, 0x00);    //Jukebox
+    setItemInfo( 85, 4,  0x00);    //Fence
+    setItemInfo( 86, 118,0x00);    //Pumpkin
+    setItemInfo( 87, 103,0x00);    //Netherstone
+    setItemInfo( 88, 104,0x00);    //SlowSand
+    setItemInfo( 89, 105,0x00);    //Lightstone
+    setItemInfo( 90, 49, 0x03);    //Portal
+    setItemInfo( 91, 118,0x00);    //PumpkinLit
+
+    //Set default item information to sponge!
+    for (ID = 92; ID < 256; ID++) {
+        setItemInfo( ID, 48, 0x00);
+    }
+
+    //Set inventory items info: ID, texture, properties
+    setItemInfo(256, 82,0x02);//    Iron Shovel
+    setItemInfo(257, 98,0x02);//    Iron Pick
+    setItemInfo(258,114,0x02);//    Iron Axe
+    setItemInfo(259,  5,0x02);//    Flint n Steel
+    setItemInfo(260, 10,0x02);//    Apple
+    setItemInfo(261, 21,0x02);//    Bow
+    setItemInfo(262, 37,0x02);//    Arrow
+    setItemInfo(263,  7,0x02);//    Coal
+    setItemInfo(264, 55,0x02);//    Diamond
+    setItemInfo(265, 23,0x02);//    Iron Ingot
+    setItemInfo(266, 39,0x02);//    Gold Ingot
+    setItemInfo(267, 66,0x02);//    Iron Sword
+    setItemInfo(268, 64,0x02);//    Wooden Sword
+    setItemInfo(269, 80,0x02);//    Wooden Shovel
+    setItemInfo(270, 96,0x02);//    Wooden Pickaxe
+    setItemInfo(271,112,0x02);//    Wooden Axe
+    setItemInfo(272, 65,0x02);//    Stone Sword
+    setItemInfo(273, 81,0x02);//    Stone Shovel
+    setItemInfo(274, 97,0x02);//    Stone Pickaxe
+    setItemInfo(275,113,0x02);//    Stone Axe
+    setItemInfo(276, 67,0x02);//    Diamond Sword
+    setItemInfo(277, 83,0x02);//    Diamond Shovel
+    setItemInfo(278, 99,0x02);//    Diamond Pickaxe
+    setItemInfo(279,115,0x02);//    Diamond Axe
+    setItemInfo(280, 53,0x02);//    Stick
+    setItemInfo(281, 71,0x02);//    Bowl
+    setItemInfo(282, 72,0x02);//    Mushroom Soup
+    setItemInfo(283, 68,0x02);//    Gold Sword
+    setItemInfo(284, 84,0x02);//    Gold Shovel
+    setItemInfo(285,100,0x02);//    Gold Pickaxe
+    setItemInfo(286,116,0x02);//    Gold Axe
+    setItemInfo(287,  8,0x02);//    String
+    setItemInfo(288, 24,0x02);//    Feather
+    setItemInfo(289, 40,0x02);//    Sulphur
+    setItemInfo(290,128,0x02);//    Wooden Hoe
+    setItemInfo(291,129,0x02);//    Stone Hoe
+    setItemInfo(292,130,0x02);//    Iron Hoe
+    setItemInfo(293,131,0x02);//    Diamond Hoe
+    setItemInfo(294,132,0x02);//    Gold Hoe
+    setItemInfo(295,  9,0x02);//    Seeds
+    setItemInfo(296, 25,0x02);//    Wheat
+    setItemInfo(297, 41,0x02);//    Bread
+    setItemInfo(298,  0,0x02);//    Leather Helmet
+    setItemInfo(299, 16,0x02);//    Leather Chestplate
+    setItemInfo(300, 32,0x02);//    Leather Leggings
+    setItemInfo(301, 48,0x02);//    Leather Boots
+    setItemInfo(302,  1,0x02);//    Chainmail Helmet
+    setItemInfo(303, 17,0x02);//    Chainmail Chestplate
+    setItemInfo(304, 33,0x02);//    Chainmail Leggings
+    setItemInfo(305, 49,0x02);//    Chainmail Boots
+    setItemInfo(306,  2,0x02);//    Iron Helmet
+    setItemInfo(307, 18,0x02);//    Iron Chestplate
+    setItemInfo(308, 34,0x02);//    Iron Leggings
+    setItemInfo(309, 50,0x02);//    Iron Boots
+    setItemInfo(310,  3,0x02);//    Diamond Helmet
+    setItemInfo(311, 19,0x02);//    Diamond Chestplate
+    setItemInfo(312, 35,0x02);//    Diamond Leggings
+    setItemInfo(313, 51,0x02);//    Diamond Boots
+    setItemInfo(314,  4,0x02);//    Gold Helmet
+    setItemInfo(315, 20,0x02);//    Gold Chestplate
+    setItemInfo(316, 36,0x02);//    Gold Leggings
+    setItemInfo(317, 52,0x02);//    Gold Boots
+    setItemInfo(318,  6,0x02);//    Flint
+    setItemInfo(319, 87,0x02);//    Raw Porkchop
+    setItemInfo(320, 88,0x02);//    Cooked Porkchop
+    setItemInfo(321, 26,0x02);//    Paintings
+    setItemInfo(322, 11,0x02);//    Golden apple
+    setItemInfo(323, 42,0x02);//    Sign
+    setItemInfo(324, 43,0x02);//    Wooden door
+    setItemInfo(325, 74,0x02);//    Bucket
+    setItemInfo(326, 75,0x02);//    Water bucket
+    setItemInfo(327, 76,0x02);//    Lava bucket
+    setItemInfo(328,135,0x02);//    Mine cart
+    setItemInfo(329,104,0x02);//    Saddle
+    setItemInfo(330, 44,0x02);//    Iron door
+    setItemInfo(331, 56,0x02);//    Redstone
+    setItemInfo(332, 14,0x02);//    Snowball
+    setItemInfo(333,136,0x02);//    Boat
+    setItemInfo(334,103,0x02);//    Leather
+    setItemInfo(335, 77,0x02);//    Milk
+    setItemInfo(336, 22,0x02);//    Clay Brick
+    setItemInfo(337, 57,0x02);//    Clay Balls
+    setItemInfo(338, 27,0x02);//    Reed
+    setItemInfo(339, 58,0x02);//    Paper
+    setItemInfo(340, 59,0x02);//    Book
+    setItemInfo(341, 30,0x02);//    Slimeball
+    setItemInfo(342,141,0x02);//    Storage Minecart
+    setItemInfo(343,157,0x02);//    Powered Minecart
+    setItemInfo(344, 12,0x02);//    Egg
+    setItemInfo(345, 54,0x03);//    Compass
+    setItemInfo(346, 69,0x02);//    Fishing Rod
+    setItemInfo(347, 70,0x03);//    Clock
+    setItemInfo(348, 73,0x02);//    Glowstone Dust
+    setItemInfo(349, 89,0x02);//    Raw Fish
+    setItemInfo(350, 90,0x02);//    Cooked Fish
+
+    //Set unimplemented item information to saddle
+    for (ID = 351; ID < 2256; ID++) {
+        setItemInfo( ID,104, 0x02);    //[Unimplemented item]
+    }
+
+    setItemInfo(2256,240,0x02);//   Gold Record
+    setItemInfo(2257,241,0x02);//   Green Record
+
+    //  properties:
+    // 0x00 = terrain cube (icon is single terrain cube)
+    // 0x01 = terrain item (icon is single terrain texture)
+    // 0x02 = item (icon is single tile from items.png)
+    // 0x03 = special icon (not from just terrain.png/items.png)
+
+    return true;
+}
+
 
 //Write binary data of uncompressed chunk
 bool Viewer::writeChunkBin( mc__::Chunk *chunk, const string& filename) const
@@ -1429,8 +2055,8 @@ bool Viewer::splitTextureMap( ILuint texmap, ILuint tiles_x, ILuint tiles_y)
                 ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
 
             //Set out-of-range texture coordinates
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP);
-            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
         
             //Make textures "blocky" when up close
             glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);

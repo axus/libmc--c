@@ -2,7 +2,7 @@
   libmc--c UserInterface
   User Interface for mc--c library test program
 
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -55,16 +55,18 @@ const float UI_mouse_sensitivity=2.8;   //Mouselook sensitivity, high is slower
 
 //Constructor
 UserInterface::UserInterface(
-        const string& name, World& w, Player& p, Events& ev, bool dbg):
+        const string& name, World& w, Mobiles& m,
+            Player& p, Events& ev, bool dbg):
 
     //initialize objects here
     texture_map_filename("terrain.png"),    //block textures
+    item_icon_filename("items.png"),        //item icons
     mouseSensitivity(UI_mouse_sensitivity), //Mouselook sensitivity
     Settings(UI_bpp, 0, 0),                 //32bpp, 0 stencil, 0 anti-aliasing
     App(sf::VideoMode(UI_width, UI_height, UI_bpp), //860x480, 32-bit color
         name, sf::Style::Resize|sf::Style::Close, Settings),    //Resizable
     viewer(UI_width, UI_height),
-    world(w), player(p), events(ev), debugging(dbg),
+    world(w), mobiles(m), player(p), events(ev), debugging(dbg),
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window
     keys_typed(0),                                //Empty keypress buffer
@@ -94,8 +96,8 @@ UserInterface::UserInterface(
     status_string.SetSize(20);
     status_string.Move(10.f, 10.f);
 
-    //Load terrain.png
-    viewer.init(texture_map_filename, true);   //TODO: configurable
+    //Load textures   //TODO: configurable
+    viewer.init(texture_map_filename, item_icon_filename, true);
 
     //Reset camera
     resetCamera();
@@ -112,9 +114,11 @@ UserInterface::UserInterface(
     // Do you want to live forever?
     //App.PreserveOpenGLStates(true);
 
-    //Draw the world once
     App.SetActive();
-    viewer.drawWorld(world);
+
+    //Clear the window
+    viewer.clear();
+    //viewer.drawWorld(world);
 
     App.Display();
 }
@@ -164,8 +168,20 @@ bool UserInterface::run()
     //Handle mouse position changes (if there were inputs)
     if (inputs && handleMouse()) {;}
 
-    //Redraw the world       
-    viewer.drawWorld(world);
+    //Increment item spin
+    viewer.item_rotation += 0.5;
+    if (viewer.item_rotation >= 360) {
+        viewer.item_rotation = 0.0;
+    }
+
+    //Clear the view
+    viewer.clear();
+
+    //Redraw the entities, items, etc.
+    viewer.drawMobiles(mobiles);
+    
+    //Redraw the world (terrain)
+    viewer.drawWorld(world);    
 
     //2D overlay
     //Update status display
@@ -192,8 +208,6 @@ bool UserInterface::run()
         //Reload attribute bits
         glPopAttrib( );
         
-        //Rebind texture
-        viewer.rebindTerrain();
     }
 
     
@@ -493,6 +507,7 @@ bool UserInterface::handleKeys()
     for( index = 0; index < keys_typed; index++) {
       
         //Game in "PLAYING" state... Do something else for text input
+        //  if (inputState == PLAYING)
         switch ( key_buffer[index]) {
             //Quit
             case sf::Key::Escape:
@@ -551,15 +566,8 @@ bool UserInterface::handleKeys()
                 cout << "Recalculating visibility of all chunks" << endl;
                 world.redraw();
                 break;
-            case sf::Key::Tilde:
-                //Write chunk data to files
-                viewer.saveChunks(world);
-                break;
-            case sf::Key::BackSlash:
-                //Print chunk information to stdout
-                viewer.printChunks(world);
-                break;
             default:
+                customHandleKey(key_buffer[index]);
                 break;
         }
     }
@@ -646,4 +654,38 @@ bool UserInterface::handleKeys()
     }
     
     return result;
+}
+
+//Responses to keys read from key buffer during PLAYING (not CHAT or CONFIG)
+void UserInterface::customHandleKey(sf::Key::Code keycode)
+{
+    switch (keycode) {
+        case sf::Key::Tilde:
+            //Write chunk data to files
+            viewer.saveChunks(world);
+            break;
+        case sf::Key::BackSlash:
+            //Print chunk information to stdout
+            viewer.printChunks(world);
+            break;
+        case sf::Key::J:
+        {
+            //Drop inventory item to world
+            mc__::InvItem& item = player.inventory[player.held_slot];
+            if (item.itemID != mc__::emptyID) {
+              
+                //Add item at player openGL coordinates + offset from yaw
+                mobiles.addItem( mobiles.newEID(), item.itemID, item.count,
+                    /* item.hitpoints */
+                    player.X,
+                    player.Y,
+                    player.Z, 0x20);
+            }
+            cout << "Dropping item ID " << item.itemID << " @ "
+                << player.abs_X << "," << player.abs_Y << "," << player.abs_Z << endl;
+        }
+            break;
+        default:
+            break;
+    }
 }

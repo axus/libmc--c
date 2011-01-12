@@ -2,7 +2,7 @@
   mc__::World
     Store chunks comprising a voxel game world
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -29,6 +29,7 @@
 //STL
 #include <unordered_map>      //map / unordered_map / hash_map
 #include <vector>
+#include <string>
 
 //Define class inside mc__ namespace
 namespace mc__ {
@@ -49,6 +50,9 @@ namespace mc__ {
             //Genesis
             World();
             
+            //Mitosis
+            World( const World& w);
+            
             //Armageddon
             ~World();
             
@@ -59,6 +63,8 @@ namespace mc__ {
             
             //Return chunk at X,Y,Z
             mc__::MapChunk* getChunk(int32_t X, int32_t Z);
+            const mc__::MapChunk* getChunk(int32_t X, int32_t Z) const;
+            mc__::MapChunk copyChunk(int32_t X, int32_t Z) const;
             
             //Return new chunk at X,Y,Z, erasing old chunk
             mc__::Chunk* newChunk(int32_t X, int8_t Y, int32_t Z,
@@ -112,6 +118,9 @@ namespace mc__ {
             int32_t spawn_X;
             int8_t spawn_Y;
             int32_t spawn_Z;
+            
+            //Name for this world
+            std::string name;
             
             //TODO: list of warp points?
             

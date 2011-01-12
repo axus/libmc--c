@@ -2,7 +2,7 @@
   mc__::Chunk
   Chunk of voxel blocks.  Also, Block and Item definitions.
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -72,11 +72,6 @@ namespace mc__ {
     typedef struct {
         uint8_t blockID; uint8_t metadata; uint8_t lighting; uint8_t padding;
     } Block;
-    
-    //Item properties, on ground or in inventory
-    typedef struct {
-        uint16_t itemID; uint8_t  count; uint16_t health;
-    } Item;
 
     class Chunk {
 
@@ -97,6 +92,10 @@ namespace mc__ {
             
             //Deallocate chunk space
             ~Chunk();                               
+
+            //Copy constructor: copy all pointed to memory
+            Chunk( const Chunk& ch);
+            Chunk& operator=( const Chunk& ch);
 
             //Set world block coordinates
             void setCoord(int32_t x, int8_t y, int32_t z);
@@ -122,7 +121,7 @@ namespace mc__ {
             void deleteByteArray();
 
             //Copy compressed data to chunk
-            void copyZip( uint32_t length, uint8_t *data);
+            void copyZip( uint32_t length, const uint8_t *data);
             
             //Compress the packed byte_array to *compressed
             bool zip();
@@ -162,6 +161,7 @@ namespace mc__ {
             static const uint8_t maxBlockID=96;
             static const bool isOpaque[];
             static const bool isCube[]; //item = !cube
+            static const char *Name[];  //block name
     };
 }
 

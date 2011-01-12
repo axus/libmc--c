@@ -2,7 +2,7 @@
   mc__::World
     Store chunks comprising a voxel game world
   
-  Copyright 2010 axus
+  Copyright 2010 - 2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -33,12 +33,53 @@ using mc__::World;
 using mc__::Chunk;
 using mc__::Block;
 
-//using mc__::chunkIterator;
-
 //Create empty world
-World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0), debugging(false)
+World::World(): spawn_X(0), spawn_Y(0), spawn_Z(0),
+    name("My World"), debugging(false)
 {
 }
+
+//Mitosis
+World::World( const World& w):
+    /* coordMapChunks( w.coordMapChunks), mapChunks( w.mapChunks),
+    chunkUpdates( w.chunkUpdates),*/
+    spawn_X( w.spawn_X), spawn_Y( w.spawn_Y), spawn_Z( w.spawn_Z),
+    name( w.name), debugging(w.debugging)
+    
+{
+
+    //Copy all map chunks
+    XZMapChunk_t::const_iterator iter_xz;  
+    for (iter_xz = w.coordMapChunks.begin();
+        iter_xz != w.coordMapChunks.end(); iter_xz++) {
+          
+        MapChunk* mc = iter_xz->second;
+        
+        if (mc != NULL) {
+            //Add X|Z -> MapChunk*
+            mc = new MapChunk(*mc);
+            
+            //Add to list of MapChunk*
+            mapChunks.push_back(mc);
+            
+            //Add to our coordMapChunks
+            coordMapChunks.insert(XZMapChunk_t::value_type(iter_xz->first, mc));
+        }
+    }
+
+    //Copy all unused mini-chunks
+    chunkSet_t::const_iterator iter_chunk;
+    for (iter_chunk = w.chunkUpdates.begin();
+         iter_chunk != w.chunkUpdates.end(); iter_chunk++)
+    {
+        Chunk* chunk = *iter_chunk;
+        if ( chunk != NULL) {
+            chunk = new Chunk(*chunk);
+            chunkUpdates.insert( chunk );
+        }
+    }
+}
+
 
 //Destroy world
 World::~World()
@@ -141,6 +182,36 @@ mc__::MapChunk* World::getChunk(int32_t X, int32_t Z)
     
     return result;
 }
+
+//Constant pointer getChunk
+const mc__::MapChunk* World::getChunk(int32_t X, int32_t Z) const
+{    
+    uint64_t key = getKey(X, Z);
+    XZMapChunk_t::const_iterator iter_xz = coordMapChunks.find(key);
+    if (iter_xz != coordMapChunks.end()) {
+        const mc__::MapChunk* result=iter_xz->second;
+        return result;
+    } else {
+        return NULL;
+    }
+}
+
+//Return MapChunk copy at X,Y,Z if it exists, empty chunk otherwise
+mc__::MapChunk World::copyChunk(int32_t X, int32_t Z) const
+{
+
+    uint64_t key = getKey(X, Z);
+    XZMapChunk_t::const_iterator iter_xz = coordMapChunks.find(key);
+    if (iter_xz != coordMapChunks.end()) {
+        //TODO: Chunk and MapChunk copy constructor
+        const mc__::MapChunk *result = iter_xz->second; 
+        return *result;
+    } else {
+        cerr << "copyChunk: not found @ " << X << "," << Z << endl;
+        return MapChunk(0x07FFFFFF, 0x07FFFFFF);
+    }    
+}
+
 
 //Allocate new chunk on to-be-added list
 mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
@@ -328,7 +399,7 @@ bool World::updateMapChunks(bool cleanup)
                 }
             } else {
                 cerr << "Error updating chunk to map @ X=" << chunk->X
-                << " Y=" << (int)chunk->Y << "Z=" << chunk->Z << endl;
+                << " Y=" << (int)chunk->Y << " Z=" << chunk->Z << endl;
             }
             
             //Delete the mini-chunk
@@ -378,11 +449,13 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
             firstBlockArray[index].blockID = (ID_y|ID_x);
         }
     }
+    
+    //Add top to doors
+    firstBlockArray[3].blockID = 64;
+    firstBlockArray[3 + size_Y*7].blockID = 71;
+    
 
-    //Pack blocks in chunk and zip
-    //testChunk->packBlocks();
-    //testChunk->zip();
-
+    //Add chunk to map
     bool result=addMapChunk(testChunk );
 
     return result;
