@@ -56,7 +56,7 @@ namespace mc__ {
             //  Durability, dye type, wood type
 
             //Static functions
-            static std::string getString(uint16_t iid);
+            static std::string getString(uint16_t iid, uint8_t offset=0);
 
     };
 }

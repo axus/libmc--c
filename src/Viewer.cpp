@@ -1605,7 +1605,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 89, 105,105,105,105,105,105,0x08);    //Lightstone
     setBlockInfo( 90, 49, 49, 49, 49, 49, 49, 0x8F);    //Portal (??)
     setBlockInfo( 91, 118,118,118,102,118,120,0x08);    //PumpkinLit
-    setBlockInfo( 92, 122,122,124,121,123,123,0xF0);    //Cake (*)
+    setBlockInfo( 92, 122,122,124,121,123,123,0x30);    //Cake (*)
     
 
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,

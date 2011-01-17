@@ -36,16 +36,23 @@ Item::Item( uint16_t iid, uint8_t c, uint8_t d, uint32_t eid):
 //Get name for this item's ID
 string Item::getName() const
 {
-    return getString(itemID);
+    //Check for special cases
+    uint16_t ID = itemID;
+    switch (itemID) {
+        case 351: ID = 1520 + hitpoints; break;
+        default: break;
+    }
+    
+    return getString(ID);
 }
 
 //(static function) Get string for an item ID
-string Item::getString( uint16_t iid)
+string Item::getString( uint16_t iid, uint8_t offset)
 {
     string result;
     
     //String depends on itemID
-    switch(iid) {
+    switch(iid + offset) {
         case 0: result =  "Air"; break;
         case 1: result =  "Stone"; break;
         case 2: result =  "Grass"; break;
@@ -234,7 +241,10 @@ string Item::getString( uint16_t iid)
         case 348: result = "Glowstone Dust"; break;
         case 349: result = "Raw Fish"; break;
         case 350: result = "Cooked Fish"; break;
-        case 351: result = "Dye"; break;    //Jump to 1520 + hitpoints
+        case 351: 
+            //Offset should have been 1520!
+            result = "Dye"; break;
+            break;
         case 352: result = "Bone"; break;
         case 353: result = "Sugar"; break;
         case 354: result = "Cake"; break;
