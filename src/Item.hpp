@@ -52,7 +52,8 @@ namespace mc__ {
             //Number of item in stack
             uint8_t count;
             
-            //hitpoints: Number of times items used
+            //See "hitpoints" derived from Entity
+            //  Durability, dye type, wood type
 
             //Static functions
             static std::string getString(uint16_t iid);

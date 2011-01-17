@@ -398,7 +398,12 @@ const bool mc__::Chunk::isOpaque[] = {
     false,  //18 Leaves
     true,   //19 Sponge
     false,  //20 Glass
-    true, true, true, true, true, true, true, true, //Cloth
+    true,   //21 Lapis Ore
+    true,   //22 Lapis Block
+    true,   //23 Dispenser
+    true,   //24 Sandstone
+    true,   //25 Note Block
+    true, true, true, //Cloth
     true, true, true, true, true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
@@ -446,7 +451,7 @@ const bool mc__::Chunk::isOpaque[] = {
     true,   //80 Snow
     false,  //81 Cactus
     true,   //82 Clay
-    false,  //83 Reed (*)
+    false,  //83 Sugarcane (*)
     true,   //84 Jukebox
     false,  //85 Fence (*)
     true,   //86 Pumpkin
@@ -455,7 +460,7 @@ const bool mc__::Chunk::isOpaque[] = {
     true,   //89 Lightstone
     false,  //90 Portal (??)
     true,   //91 PumpkinLit
-    true,   //92
+    false,  //92 Cake
     true,   //93
     true,   //94
     true    //95
@@ -485,7 +490,12 @@ const bool mc__::Chunk::isCube[] = {
     true,  //18 Leaves
     true,   //19 Sponge
     true,  //20 Glass
-    true, true, true, true, true, true, true, true, //Cloth
+    true,   //21 Lapis Ore
+    true,   //22 Lapis Block
+    true,   //23 Dispenser
+    true,   //24 Sandstone
+    true,   //25 Note Block
+    true, true, true, //Cloth
     true, true, true, true, true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
@@ -533,7 +543,7 @@ const bool mc__::Chunk::isCube[] = {
     true,   //80 Snow
     false,  //81 Cactus (top and bottom are)
     true,   //82 Clay
-    false,  //83 Reed (*)
+    false,  //83 Sugarcane (*)
     true,   //84 Jukebox
     false,  //85 Fence (*)
     true,   //86 Pumpkin
@@ -542,7 +552,7 @@ const bool mc__::Chunk::isCube[] = {
     true,   //89 Lightstone
     false,  //90 Portal (??)
     true,   //91 PumpkinLit
-    true,   //92
+    false,  //92 Cake
     true,   //93
     true,   //94
     true    //95
@@ -571,11 +581,11 @@ const char* Chunk::Name[] = {
     "Leaves",
     "Sponge",
     "Glass",
-    "Red Cloth",
-    "Orange Cloth",
-    "Yellow Cloth",
-    "Lime Cloth",
-    "Green Cloth",
+    "Lapis Ore",
+    "Lapis Block",
+    "Dispesner",
+    "Sandstone",
+    "Note Block",
     "Aqua-green Cloth",
     "Cyan Cloth",
     "Blue Cloth",
@@ -584,9 +594,9 @@ const char* Chunk::Name[] = {
     "Violet Cloth",
     "Magenta Cloth",
     "Pink Cloth",
-    "Black Cloth",
-    "Gray Cloth",
-    "White Cloth",
+    "Black Wool",
+    "Gray Wool",
+    "White Wool",
     "Yellow flower",
     "Red rose",
     "Brown Mushroom",
@@ -633,7 +643,7 @@ const char* Chunk::Name[] = {
     "Snow Block",
     "Cactus",
     "Clay",
-    "Reed",
+    "Sugarcane",
     "Jukebox",
     "Fence",
     "Pumpkin",
@@ -642,7 +652,7 @@ const char* Chunk::Name[] = {
     "Glowstone",
     "Portal",
     "Jack-O-Lantern",
-    "Unknown",
+    "Cake",
     "Unknown",
     "Unknown",
     "Unknown",
