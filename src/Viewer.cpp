@@ -868,7 +868,6 @@ void Viewer::drawDroppedItem( uint16_t itemID )
 
     //To always face player, translate then rotate at camera(?)
 
-
     //Scale the size of the item picture, and offset up by 2,2,2
     GLint width, height, depth;
     
@@ -980,7 +979,7 @@ void Viewer::drawBlock( const mc__::Block& block,
             drawScaledBlock(block.blockID, x, y, z, 0,
                 0.75, 0.125, 0.75, true, 2, 0, 2);
             break;
-        case 0xC:   //Snow
+        case 0xC:   //Snow, Cake, Cactus (other special semi-cubes)
             drawScaledBlock(block.blockID, x, y, z, vflags,
                 1, 0.25, 1);
             break;
@@ -1122,9 +1121,18 @@ bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
     for (item_iter = itemMap.begin(); item_iter != itemMap.end(); item_iter++) {
         //NO ERROR CHECKING HERE!  FOR GREAT JUSTICE
         
+        
         //Get display list for item
         const Item *item = item_iter->second;
-        displayList = itemModels[ item->itemID ];
+        
+        //item ID might depend on "damage" field.
+        uint16_t itemID = item->itemID;
+        if (itemInfo[item->itemID].dataOffset != 0) {
+            itemID = itemInfo[item->itemID].dataOffset + item->hitpoints;
+        }
+        
+        //Draw the 
+        displayList = itemModels[ itemID ];
 
         //Translate world to item coordinates (offset from camera)
         drawFromCamera();
@@ -1381,7 +1389,7 @@ void Viewer::setBlockInfo( uint8_t index,
 }
 
 //Map item ID to texture coordinates and appropriate texture map (properties)
-void Viewer::setItemInfo( uint16_t index, uint8_t A, uint8_t properties)
+void Viewer::setItemInfo( uint16_t index, uint8_t A, uint8_t properties, uint16_t offset)
 {
     //A - F contain texture ID of the corresponding face (textureID = 0 - 255)
     BlockInfo& iteminf = itemInfo[index];
@@ -1394,6 +1402,7 @@ void Viewer::setItemInfo( uint16_t index, uint8_t A, uint8_t properties)
 
     //Copy properties
     iteminf.properties = properties;
+    iteminf.dataOffset = offset;
 
     //draw to openGL model
     createItemModel(index);
@@ -1411,7 +1420,7 @@ bool Viewer::createItemModel( uint16_t index)
     glNewList(itemModels[index], GL_COMPILE);
 
     //Draw model to display list
-    switch (iteminf.properties & 0x03) {
+    switch (iteminf.properties & 0x07) {
         case 0:
             //Terrain cube (as item 75% size)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
@@ -1430,7 +1439,8 @@ bool Viewer::createItemModel( uint16_t index)
                 false, -2, 0, -2);
             glEnd();
             break;
-        case 2:
+        case 2:     //Regular item icon :)
+        case 6:     //Item icon depends on damage field, change ID at run time
             //Inventory item
             glBindTexture( GL_TEXTURE_2D, item_tex);
             glBegin(GL_QUADS);
@@ -1444,6 +1454,7 @@ bool Viewer::createItemModel( uint16_t index)
             drawDroppedItem( index);
             glEnd();
             break;
+            
         default:
             break;
     }
@@ -1526,16 +1537,23 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 18, 52, 52, 52, 53, 52, 52, 0x04);    //Leaves
     setBlockInfo( 19, 48, 48, 48, 48, 48, 48, 0x00);    //Sponge
     setBlockInfo( 20, 49, 49, 49, 49, 49, 49, 0x04);    //Glass
+    setBlockInfo( 21,160,160,160,160,160,160, 0x00);    //Lapis Ore
+    setBlockInfo( 22,144,144,144,144,144,144, 0x00);    //Lapis Block
+    setBlockInfo( 23, 45, 45, 62, 62, 45, 46, 0x00);    //Dispenser (*)
+    setBlockInfo( 24,192,192,208,176,192,192, 0x00);    //Sandstone
+    setBlockInfo( 25, 74, 74, 74, 74, 74, 74, 0x00);    //Note Block
     
-    for (ID = 21; ID < 37; ID++) {
-        setBlockInfo( ID, 64, 64, 64, 64, 64, 64, 0x00);   //Cloth
+    for (ID = 26; ID < 37; ID++) {
+        setBlockInfo( ID, 64, 64, 64, 64, 64, 64, 0x00);   //Cloth (only 1 used)
     }
     setBlockInfo( 37, 13, 13, 13, 13, 13, 13, 0xF7);    //Flower
     setBlockInfo( 38, 12, 12, 12, 12, 12, 12, 0xF7);    //Rose
     setBlockInfo( 39, 29, 29, 29, 29, 29, 29, 0xF7);    //BrownShroom
     setBlockInfo( 40, 28, 28, 28, 28, 28, 28, 0xF7);    //RedShroom
-    setBlockInfo( 41, 39, 39, 55, 23, 39, 39, 0x00);    //GoldBlock
-    setBlockInfo( 42, 38, 38, 54, 22, 38, 38, 0x00);    //IronBlock
+//    setBlockInfo( 41, 39, 39, 55, 23, 39, 39, 0x00);    //GoldBlock
+//    setBlockInfo( 42, 38, 38, 54, 22, 38, 38, 0x00);    //IronBlock
+    setBlockInfo( 41, 23, 23, 23, 23, 23, 23, 0x00);    //GoldBlock
+    setBlockInfo( 42, 22, 22, 22, 22, 22, 22, 0x00);    //IronBlock
     setBlockInfo( 43, 5,  5,  6,  6,  5,  5,  0x00);    //DoubleStep
     setBlockInfo( 44, 5,  5,  6,  6,  5,  5,  0x30);    //Step
     setBlockInfo( 45, 7,  7,  7,  7,  7,  7,  0x00);    //Brick
@@ -1544,18 +1562,19 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 48, 36, 36, 16, 36, 36, 36, 0x00);    //Mossy
     setBlockInfo( 49, 37, 37, 37, 37, 37, 37, 0x00);    //Obsidian
     setBlockInfo( 50, 80, 80, 80, 80, 80, 80, 0xFF);    //Torch
-    setBlockInfo( 51, 30, 31, 47, 47, 30, 31, 0x7F);    //Fire
+    setBlockInfo( 51, 31, 31, 47, 47, 31, 31, 0x7F);    //Fire
     setBlockInfo( 52, 65, 65, 65, 65, 65, 65, 0x04);    //Spawner
     setBlockInfo( 53, 4,  4,  4,  4,  4,  4,  0x10);    //WoodStairs
     setBlockInfo( 54, 26, 26, 25, 25, 26, 27, 0x00);    //Chest (*)
     setBlockInfo( 55, 84, 85, 84, 100,100,101,0x6F);    //Wire (*)
     setBlockInfo( 56, 50, 50, 50, 50, 50, 50, 0x00);    //DiamondOre
-    setBlockInfo( 57, 40, 40, 56, 24, 40, 40, 0x00);    //DiamondBlock
+//    setBlockInfo( 57, 40, 40, 56, 24, 40, 40, 0x00);    //DiamondBlock
+    setBlockInfo( 57, 24, 24, 24, 24, 24, 24, 0x00);    //DiamondBlock
     setBlockInfo( 58, 60, 60, 43, 43, 59, 59, 0x00);    //Workbench
     setBlockInfo( 59, 90, 91, 92, 93, 94, 95, 0xF7);    //Crops (*)
     setBlockInfo( 60, 2,  2,  2,  86, 2,  2,  0x00);    //Soil
-    setBlockInfo( 61, 45, 45, 45, 45, 45, 44, 0x00);    //Furnace
-    setBlockInfo( 62, 45, 45, 45, 45, 45, 61, 0x08);    //LitFurnace
+    setBlockInfo( 61, 45, 45, 62, 62, 45, 44, 0x00);    //Furnace (+)
+    setBlockInfo( 62, 45, 45, 62, 62, 45, 61, 0x08);    //LitFurnace (+)
     setBlockInfo( 63, 4,  4,  4,  4,  4,  4,  0x47);    //SignPost (*)
     setBlockInfo( 64, 97, 81, 97, 81, 97, 81, 0xA7);    //WoodDoor (*)
     setBlockInfo( 65, 83, 83, 83, 83, 83, 83, 0x57);    //Ladder (*)
@@ -1577,7 +1596,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 80, 66, 66, 66, 66, 66, 66, 0x00);    //SnowBlock
     setBlockInfo( 81, 70, 70, 71, 69, 70, 70, 0xF0);    //Cactus
     setBlockInfo( 82, 72, 72, 72, 72, 72, 72, 0x00);    //Clay
-    setBlockInfo( 83, 73, 73, 73, 73, 73, 73, 0xF7);    //Reed (*)
+    setBlockInfo( 83, 73, 73, 73, 73, 73, 73, 0xF7);    //Sugarcane (*)
     setBlockInfo( 84, 74, 74, 43, 75, 74, 74, 0x00);    //Jukebox
     setBlockInfo( 85, 4,  4,  4,  4,  4,  4,  0x94);    //Fence (*)
     setBlockInfo( 86, 118,118,118,102,118,119,0x00);    //Pumpkin
@@ -1586,6 +1605,8 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 89, 105,105,105,105,105,105,0x08);    //Lightstone
     setBlockInfo( 90, 49, 49, 49, 49, 49, 49, 0x8F);    //Portal (??)
     setBlockInfo( 91, 118,118,118,102,118,120,0x08);    //PumpkinLit
+    setBlockInfo( 92, 122,122,124,121,123,123,0x30);    //Cake (*)
+    
 
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
 //              4=signpost, 5=ladder, 6=track, 7=fire
@@ -1608,7 +1629,7 @@ bool Viewer::loadItemInfo()
     // 0x01 = terrain item (icon is single terrain texture)
     // 0x02 = item (icon is single tile from items.png)
     // 0x03 = special icon
-    // 0x04 = unstackable
+    // 0x04 = item depends on damage data (0x06 for dyes)
     // 0x08 = biome colored
     // 0x10 = chest
     // 0x20 = lever
@@ -1641,9 +1662,16 @@ bool Viewer::loadItemInfo()
     setItemInfo( 18, 52, 0x08);    //Leaves
     setItemInfo( 19, 48, 0x00);    //Sponge
     setItemInfo( 20, 49, 0x00);    //Glass
+
+    setItemInfo( 21, 140, 0x00);    //Lapis Ore
+    setItemInfo( 22, 128, 0x00);    //Lapis Block
+    setItemInfo( 23, 46, 0x00);    //Dispenser
+    setItemInfo( 24, 156, 0x00);    //Sandstone
+    setItemInfo( 25, 90, 0x00);    //Note Block
     
-    for (ID = 21; ID < 37; ID++) {
+    for (ID = 26; ID < 37; ID++) {
         setItemInfo( ID, 64, 0x00);   //Cloth
+        //TODO: unsure which item IDs are in the game for cloth
     }
     setItemInfo( 37, 13, 0x01);    //Flower
     setItemInfo( 38, 12, 0x01);    //Rose
@@ -1669,8 +1697,8 @@ bool Viewer::loadItemInfo()
     setItemInfo( 58, 60, 0x60);    //Workbench
     setItemInfo( 59, 90, 0x01);    //Crops
     setItemInfo( 60, 2,  0x00);    //Soil
-    setItemInfo( 61, 45, 0x50);    //Furnace
-    setItemInfo( 62, 45, 0x53);    //LitFurnace
+    setItemInfo( 61, 44, 0x50);    //Furnace
+    setItemInfo( 62, 61, 0x53);    //LitFurnace
     setItemInfo( 63, 42, 0x03);    //SignPost
     setItemInfo( 64, 43, 0x02);    //WoodDoor
     setItemInfo( 65, 83, 0x01);    //Ladder
@@ -1691,7 +1719,7 @@ bool Viewer::loadItemInfo()
     setItemInfo( 80, 66, 0x00);    //SnowBlock
     setItemInfo( 81, 70, 0x00);    //Cactus
     setItemInfo( 82, 72, 0x00);    //Clay Block
-    setItemInfo( 83, 73, 0x01);    //Reed
+    setItemInfo( 83, 73, 0x01);    //Sugarcane
     setItemInfo( 84, 74, 0x00);    //Jukebox
     setItemInfo( 85, 4,  0x00);    //Fence
     setItemInfo( 86, 118,0x00);    //Pumpkin
@@ -1700,9 +1728,10 @@ bool Viewer::loadItemInfo()
     setItemInfo( 89, 105,0x00);    //Lightstone
     setItemInfo( 90, 49, 0x03);    //Portal
     setItemInfo( 91, 118,0x00);    //PumpkinLit
+    setItemInfo( 92, 119,0x00);    //Cake block
 
     //Set default item information to sponge!
-    for (ID = 92; ID < 256; ID++) {
+    for (ID = 93; ID < 256; ID++) {
         setItemInfo( ID, 48, 0x00);
     }
 
@@ -1789,7 +1818,7 @@ bool Viewer::loadItemInfo()
     setItemInfo(335, 77,0x02);//    Milk
     setItemInfo(336, 22,0x02);//    Clay Brick
     setItemInfo(337, 57,0x02);//    Clay Balls
-    setItemInfo(338, 27,0x02);//    Reed
+    setItemInfo(338, 27,0x02);//    Sugarcane
     setItemInfo(339, 58,0x02);//    Paper
     setItemInfo(340, 59,0x02);//    Book
     setItemInfo(341, 30,0x02);//    Slimeball
@@ -1802,9 +1831,36 @@ bool Viewer::loadItemInfo()
     setItemInfo(348, 73,0x02);//    Glowstone Dust
     setItemInfo(349, 89,0x02);//    Raw Fish
     setItemInfo(350, 90,0x02);//    Cooked Fish
+    setItemInfo(351, 78,0x06, 1520);//Dyes -> Refer to 1520 - 1535
+    setItemInfo(352, 28,0x02);//    Bone
+    setItemInfo(353, 13,0x02);//    Sugar
+    setItemInfo(354, 29,0x02);//    Cake item
 
     //Set unimplemented item information to saddle
-    for (ID = 351; ID < 2256; ID++) {
+    for (ID = 355; ID < 1520; ID++) {
+        setItemInfo( ID,104, 0x02);    //[Unimplemented item]
+    }
+
+    //Set phony dye item info
+    setItemInfo(1520, 78,0x02);//    "Ink Sack"
+    setItemInfo(1521, 94,0x02);//    "Rose Dye"
+    setItemInfo(1522,110,0x02);//    "Cactus Dye"
+    setItemInfo(1523,126,0x02);//    "Cocoa Dye"
+    setItemInfo(1524,142,0x02);//    "Lapis Dye"
+    setItemInfo(1525,158,0x02);//    "Purple Dye"
+    setItemInfo(1526,174,0x02);//    "Cyan Dye"
+    setItemInfo(1527,190,0x02);//    "Light Gray Dye"
+    setItemInfo(1528, 79,0x02);//    "Gray Dye"
+    setItemInfo(1529, 95,0x02);//    "Pink Dye"
+    setItemInfo(1530,111,0x02);//    "Lime Dye"
+    setItemInfo(1531,127,0x02);//    "Yellow Dye"
+    setItemInfo(1352,143,0x02);//    "Light Blue Dye"
+    setItemInfo(1353,159,0x02);//    "Magenta Dye"
+    setItemInfo(1354,175,0x02);//    "Orange Dye"
+    setItemInfo(1355,191,0x02);//    "Bone Meal"
+
+    //Set unimplemented item information to saddle
+    for (ID = 1536; ID < 2256; ID++) {
         setItemInfo( ID,104, 0x02);    //[Unimplemented item]
     }
 
@@ -1816,6 +1872,7 @@ bool Viewer::loadItemInfo()
     // 0x01 = terrain item (icon is single terrain texture)
     // 0x02 = item (icon is single tile from items.png)
     // 0x03 = special icon (not from just terrain.png/items.png)
+    // 0x06 = item (icon from items.png depends on damage data)
 
     return true;
 }

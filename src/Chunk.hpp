@@ -26,7 +26,7 @@
     //Block IDs and associated metadata
     Decimal     Hex       Name              Data        Range
     2           0x02      Grass             
-    5           0x05      Wood
+    5           0x05      Wood              Type        0-2
     6           0x06      Sapling           Growth      0-15
     8           0x08      Water (moving)    Spread      0-7
     9           0x09      Water
@@ -34,11 +34,15 @@
     11          0x0B      Lava
     12          0x0C      Sand
     18          0x12      Leaves
+    23          0x17      Dispenser         Orientation 2-5
+    36          0x24      Wool              Color       0-15
     46          0x2E      TNT
     50          0x32      Torch             Orientation 1-5
     53          0x35      Wood Stairs       Orientation 0-9
     59          0x3B      Crops             Growth      0-7
-    60          0x3C      Dirt              Irrigation  0-7
+    60          0x3C      Dirt/Soil         Irrigation  0-8
+    61          0x3D      Furnace           Orientation 2-5
+    62          0x3D      Lit Furnace       Orientation 2-5
     63          0x3F      SignPost          Orientation 0-15
     65          0x41      Ladder            Orientation 2-5
     66          0x42      Tracks            Orientation 0-9
@@ -47,8 +51,9 @@
     78          0x4E      Snow
     79          0x4F      Ice
     81          0x51      Cactus            Growth      0-15
-    83          0x53      Reed              Growth      0-15
+    83          0x53      Sugarcane         Growth      0-15
     91          0x5B      Jack-O-Lantern
+    92          0x5C      Cake              Eaten?      0-6 ?
 */
 
 

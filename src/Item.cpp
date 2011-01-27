@@ -36,16 +36,23 @@ Item::Item( uint16_t iid, uint8_t c, uint8_t d, uint32_t eid):
 //Get name for this item's ID
 string Item::getName() const
 {
-    return getString(itemID);
+    //Check for special cases
+    uint16_t ID = itemID;
+    switch (itemID) {
+        case 351: ID = 1520 + hitpoints; break;
+        default: break;
+    }
+    
+    return getString(ID);
 }
 
 //(static function) Get string for an item ID
-string Item::getString( uint16_t iid)
+string Item::getString( uint16_t iid, uint8_t offset)
 {
     string result;
     
     //String depends on itemID
-    switch(iid) {
+    switch(iid + offset) {
         case 0: result =  "Air"; break;
         case 1: result =  "Stone"; break;
         case 2: result =  "Grass"; break;
@@ -67,11 +74,11 @@ string Item::getString( uint16_t iid)
         case 18: result = "Leaves"; break;
         case 19: result = "Sponge"; break;
         case 20: result = "Glass"; break;
-        case 21: result = "Red Cloth"; break;
-        case 22: result = "Orange Cloth"; break;
-        case 23: result = "Yellow Cloth"; break;
-        case 24: result = "Lime Cloth"; break;
-        case 25: result = "Green Cloth"; break;
+        case 21: result = "Lapis Ore"; break;
+        case 22: result = "Lapis Block"; break;
+        case 23: result = "Dispenser"; break;
+        case 24: result = "Sandstone"; break;
+        case 25: result = "Note Block"; break;
         case 26: result = "Aqua Cloth"; break;
         case 27: result = "Cyan Cloth"; break;
         case 28: result = "Blue Cloth"; break;
@@ -80,9 +87,9 @@ string Item::getString( uint16_t iid)
         case 31: result = "Violet Cloth"; break;
         case 32: result = "Magenta Cloth"; break;
         case 33: result = "Pink Cloth"; break;
-        case 34: result = "Black Cloth"; break;
-        case 35: result = "Gray Cloth"; break;
-        case 36: result = "White Cloth"; break;
+        case 34: result = "Black Wool"; break;
+        case 35: result = "Gray Wool"; break;
+        case 36: result = "White Wool"; break;
         case 37: result = "Yellow flower"; break;
         case 38: result = "Red rose"; break;
         case 39: result = "Brown Mushroom"; break;
@@ -138,6 +145,7 @@ string Item::getString( uint16_t iid)
         case 89: result = "Glowstone"; break;
         case 90: result = "Portal"; break;
         case 91: result = "Jack-O-Lantern"; break;
+        case 92: result = "Cake"; break;
         case 256: result = "Iron Shovel"; break;
         case 257: result = "Iron Pickaxe"; break;
         case 258: result = "Iron Axe"; break;
@@ -233,6 +241,33 @@ string Item::getString( uint16_t iid)
         case 348: result = "Glowstone Dust"; break;
         case 349: result = "Raw Fish"; break;
         case 350: result = "Cooked Fish"; break;
+        case 351: 
+            //Offset should have been 1520!
+            result = "Dye"; break;
+            break;
+        case 352: result = "Bone"; break;
+        case 353: result = "Sugar"; break;
+        case 354: result = "Cake"; break;
+        case 397: result = "Record"; break; //Not really in the game ;)
+        
+        //Mad hax time: (("Item ID" - 256) * 16) + damage = fake ID
+        case 1520: result = "Ink Sack"; break;
+        case 1521: result = "Rose Dye"; break;
+        case 1522: result = "Cactus Dye"; break;
+        case 1523: result = "Cocoa Dye"; break;
+        case 1524: result = "Lapis Dye"; break;
+        case 1525: result = "Purple Dye"; break;
+        case 1526: result = "Cyan Dye"; break;
+        case 1527: result = "Light Gray Dye"; break;
+        case 1528: result = "Gray Dye"; break;
+        case 1529: result = "Pink Dye"; break;
+        case 1530: result = "Lime Dye"; break;
+        case 1531: result = "Yellow Dye"; break;
+        case 1532: result = "Light Blue Dye"; break;
+        case 1533: result = "Magenta Dye"; break;
+        case 1534: result = "Orange Dye"; break;
+        case 1535: result = "Bone Meal"; break;
+        
         case 2256: result = "Gold Record"; break;
         case 2257: result = "Green Record"; break;
 
@@ -439,6 +474,10 @@ uint8_t Item::maxUses() const
         case 348: result = 0; break;
         case 349: result = 0; break;
         case 350: result = 1; break;
+        case 351: result = 0; break;    //Dye
+        case 352: result = 0; break;
+        case 353: result = 0; break;
+        case 354: result = 6; break;
         case 2256: result = 0; break;
         case 2257: result = 0; break;
 
@@ -477,11 +516,11 @@ uint8_t Item::maxUses() const
 	 18	 12	Leaves
 	 19	 13	Sponge
 	 20	 14	Glass
-	 21	 15	Red Cloth
-	 22	 16	Orange Cloth
-	 23	 17	Yellow Cloth
-	 24	 18	Lime Cloth
-	 25	 19	Green Cloth
+	 21	 15	Lapis Ore
+	 22	 16	Lapis Block
+	 23	 17	Dispenser
+	 24	 18	Sandstone
+	 25	 19	Note Block
 	 26	 1A	Aqua green Cloth
 	 27	 1B	Cyan Cloth
 	 28	 1C	Blue Cloth
@@ -554,4 +593,5 @@ uint8_t Item::maxUses() const
 	 89	 59	Glowstone
 	 90	 5A	Portal
 	 91	 5B	Jack-O-Lantern D
+	 92  5C Cake
 */

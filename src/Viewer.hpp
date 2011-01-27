@@ -55,6 +55,7 @@ namespace mc__ {
         GLfloat tx[FACE_MAX];          //X texture coordinate (0.0 - 1.0)
         GLfloat ty[FACE_MAX];          //Y texture coordinate (0.0 - 1.0)
         uint8_t  properties;
+        uint16_t dataOffset;            //If != 0, ID = dataOffset + hitpoints
     //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
     //              4=wallsign, 5=ladder, 6=track, 7=fire
     //              8=portal, 9=fence, A=door, B=floorplate
@@ -229,7 +230,8 @@ namespace mc__ {
             void startOpenGL();
             void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
                 uint8_t D, uint8_t E, uint8_t F, uint8_t properties);
-            void setItemInfo( uint16_t index, uint8_t A, uint8_t properties);
+            void setItemInfo( uint16_t index, uint8_t A,
+                uint8_t properties, uint16_t offset=0);
             bool loadBlockInfo();
             bool loadItemInfo();
 

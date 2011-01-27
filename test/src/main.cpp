@@ -148,6 +148,15 @@ void addItems( mc__::Mobiles& mobiles, const mc__::World& world) {
         (world.spawn_X ) << 5,
         (world.spawn_Y ) << 5,
         (world.spawn_Z - 3) << 5, 0x2B);
+    
+    //Add ALL the items
+    for (uint16_t i = 256; i < 355; i++) {
+        mobiles.addItem( mobiles.newEID(), i, 1,
+            (world.spawn_X - 256 + i ) << 5,
+            (world.spawn_Y ) << 5,
+            (world.spawn_Z - 3) << 5, 0x2B);
+    }
+        
 }
 
 //Give some items to player
