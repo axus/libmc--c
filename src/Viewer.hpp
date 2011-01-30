@@ -28,6 +28,7 @@
 //mc__
 #include "World.hpp"
 #include "Mobiles.hpp"
+#include "BlockDrawer.hpp"
 
 //DevIL
 #include <IL/il.h>
@@ -46,36 +47,6 @@ namespace mc__ {
 
     //Library version checker in mc__ namespace
     unsigned long getVersion();
-    
-    enum face_ID { WEST=0, EAST=1, DOWN=2, UP=3, NORTH=4, SOUTH=5, FACE_MAX};
-        
-    //Physical properties, to associate with blockID (internal to engine)
-    typedef struct {
-        uint16_t textureID[FACE_MAX];  //texture of faces A, B, C, D, E, F
-        GLfloat tx[FACE_MAX];          //X texture coordinate (0.0 - 1.0)
-        GLfloat ty[FACE_MAX];          //Y texture coordinate (0.0 - 1.0)
-        uint8_t  properties;
-        uint16_t dataOffset;            //If != 0, ID = dataOffset + hitpoints
-    //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=fire
-    //              8=portal, 9=fence, A=door, B=floorplate
-    //              C=snow, D=wallsign, E=button, F=plant
-    //0x08: Bright: 0=dark, 1=lightsource
-    //0x04: Vision: 0=opqaue, 1=see-through
-    //0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
-    } BlockInfo;
-
-    //Re-use BlockInfo type for iteminfo.  Use these values for properties:
-    // 0x00 = terrain cube
-    // 0x01 = terrain item
-    // 0x02 = non-placeable item (items.png)
-    // 0x04 = stackable
-    // 0x10 = chest
-    // 0x20 = lever
-    // 0x30 = double-chest
-    // 0x40 = sign
-    // 0x50 = furnace
-    // 0x60 = workbench
 
     //Constants
     const size_t texmap_TILE_LENGTH = 16;   //openGL coords per tile
@@ -98,11 +69,10 @@ namespace mc__ {
             //Constructor
             Viewer(unsigned short width, unsigned short height);
             
-            //Map block ID to block information
-            BlockInfo blockInfo[block_id_MAX];
-            
             //Map item ID to item information
             BlockInfo itemInfo[item_id_MAX];
+            
+            BlockDrawer blockDraw;  //use this to draw individual blocks
             
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
@@ -131,32 +101,6 @@ namespace mc__ {
             //Single block drawing functions
             void drawBlock(const mc__::Block& block,
                 GLint x, GLint y, GLint z, uint8_t visflags=0);
-
-            //Specific block drawing functions
-            //      (able to use same function pointer for each)
-            void drawCube( uint8_t blockID, uint8_t meta,
-                GLint x, GLint y, GLint z, uint8_t visflags=0);
-            void drawHalfBlock( uint8_t blockID, uint8_t meta,
-                GLint x, GLint y, GLint z, uint8_t visflags=0);
-            void drawItem( uint8_t blockID, uint8_t meta,
-                GLint x, GLint y, GLint z, uint8_t visflags=0);
-            void drawTrack( uint8_t blockID, uint8_t meta,
-                GLint x, GLint y, GLint z, uint8_t visflags=0);
-            void drawWallItem( uint8_t blockID, uint8_t meta,
-                GLint x, GLint y, GLint z, uint8_t visflags=0);
-            void drawCactus( uint8_t blockID, uint8_t meta,
-                GLint x, GLint y, GLint z, uint8_t visflags=0);
-            void drawCake( uint8_t blockID, uint8_t meta,
-                GLint x, GLint y, GLint z, uint8_t visflags=0);
-
-
-            //Draw a cube with dimensions scaled and location offset
-            //  scale factor is multiplier, use 0 - 1
-            void drawScaledBlock( uint8_t blockID,
-                GLint x, GLint y, GLint z, uint8_t visflags=0,
-                GLfloat scale_x=1, GLfloat scale_y=1, GLfloat scale_z=1,
-                bool scale_textures=true,
-                GLint off_x=0, GLint off_y=0, GLint off_z=0);
 
             //dropped item drawing function (for display lists)
             void drawDroppedItem( uint16_t blockID, uint8_t meta=0);
@@ -235,11 +179,8 @@ namespace mc__ {
 
             //Init functions
             void startOpenGL();
-            void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
-                uint8_t D, uint8_t E, uint8_t F, uint8_t properties);
             void setItemInfo( uint16_t index, uint8_t A,
                 uint8_t properties, uint16_t offset=0);
-            bool loadBlockInfo();
             bool loadItemInfo();
 
             //Create display list for ID after loadItemInfo has been called

@@ -444,6 +444,132 @@ void Viewer::drawCube( uint8_t blockID, uint8_t meta,
     setBlockColor( 0, (face_ID)0);
 }
 
+
+//variation of solid cube drawing, with one "face"
+// METADATA: 2 = east, 3 = west, 4 = north, 5 = south
+void Viewer::drawFacingCube( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags)
+{
+    
+    //Face coordinates (in pixels)
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //For each face, use the appropriate texture offsets for the block ID
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //Use "WEST" as "side", "SOUTH" as "face" setBlock
+    mc__::face_ID west=WEST, east=WEST, north=WEST, south=WEST;
+    
+    //Choose face depending on metadata
+    switch (meta) {
+        case 2:
+            east = SOUTH; break;
+        case 3:
+            west = SOUTH; break;
+        case 4:
+            north = SOUTH; break;
+        case 5:
+            south = SOUTH; break;
+        default:
+            south = SOUTH; break;
+    }
+
+    //A
+    if (!(vflags & 0x80)) {
+        tx_0 = blockInfo[blockID].tx[west];
+        tx_1 = blockInfo[blockID].tx[west] + tmr;
+        ty_0 = blockInfo[blockID].ty[west] + tmr;    //flip y
+        ty_1 = blockInfo[blockID].ty[west];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+
+    //B
+    if (!(vflags & 0x40)) {
+        tx_0 = blockInfo[blockID].tx[east];
+        tx_1 = blockInfo[blockID].tx[east] + tmr;
+        ty_0 = blockInfo[blockID].ty[east] + tmr;
+        ty_1 = blockInfo[blockID].ty[east];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
+    }
+    
+    //C
+    if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    }
+    
+    //D
+    if (!(vflags & 0x10)) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = blockInfo[blockID].tx[UP] + tmr;
+        ty_0 = blockInfo[blockID].ty[UP] + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+    
+    //E
+    if (!(vflags & 0x08)) {
+        tx_0 = blockInfo[blockID].tx[north];
+        tx_1 = blockInfo[blockID].tx[north] + tmr;
+        ty_0 = blockInfo[blockID].ty[north] + tmr;
+        ty_1 = blockInfo[blockID].ty[north];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    }
+    
+    //F
+    if (!(vflags & 0x04)) {
+        tx_0 = blockInfo[blockID].tx[south];
+        tx_1 = blockInfo[blockID].tx[south] + tmr;
+        ty_0 = blockInfo[blockID].ty[south] + tmr;
+        ty_1 = blockInfo[blockID].ty[south];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    }
+    
+}
+
+
 //Draw cactus... almost like a cube, but A, B, E, F are inset 1 pixel
 void Viewer::drawCactus( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags)
@@ -1634,9 +1760,9 @@ ADF ---- BDF |
 ACF ---- BCF
 
 //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-//              4=signpost, 5=ladder, 6=track, 7=1/4 block
+//              4=signpost, 5=ladder, 6=track, 7=fire
 //              8=portal, 9=fence, A=door, B=floorplate
-//              C=snow?, D=wallsign, E=button, F=planted
+//              C=short, D=wallsign, E=button, F=planted
 //0x08: Bright: 0=dark, 1=lightsource
 //0x04: Vision: 0=opqaue, 1=see-through
 //0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
