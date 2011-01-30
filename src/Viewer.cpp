@@ -314,8 +314,8 @@ void Viewer::setBlockColor(uint8_t blockID, face_ID face)
 }
 
 //Use OpenGL to draw a solid cube with appropriate textures for blockID
-void Viewer::drawCube( uint8_t blockID,
-    GLint x, GLint y, GLint z, uint8_t vflags, uint8_t meta)
+void Viewer::drawCube( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
     
     //Face coordinates (in pixels)
@@ -445,8 +445,8 @@ void Viewer::drawCube( uint8_t blockID,
 }
 
 //Draw cactus... almost like a cube, but A, B, E, F are inset 1 pixel
-void Viewer::drawCactus( uint8_t blockID,
-    GLint x, GLint y, GLint z, uint8_t vflags, uint8_t meta)
+void Viewer::drawCactus( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
     
     //Face coordinates (in pixels)
@@ -570,8 +570,8 @@ void Viewer::drawCactus( uint8_t blockID,
 }
 
 //Draw a placed cake block (use metadata to determine how much is eaten)
-void Viewer::drawCake( uint8_t blockID,
-    GLint x, GLint y, GLint z, uint8_t meta)
+void Viewer::drawCake( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
     // For cake, the face coordinates are inset from the face
     const size_t offset = texmap_TILE_LENGTH/16;
@@ -844,15 +844,16 @@ void Viewer::drawScaledBlock( uint8_t blockID,
 }
 
 //Draw half a block
-void Viewer::drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
-    uint8_t visflags, uint8_t meta)
+void Viewer::drawHalfBlock( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
     //TODO: metadata to determine which half!
-    drawScaledBlock( blockID, x, y, z, visflags, 1, 0.5, 1);
+    drawScaledBlock( blockID, x, y, z, vflags, 1, 0.5, 1);
 }
 
 //Draw item blockID which is placed flat on the ground
-void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t meta)
+void Viewer::drawTrack( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
     //TODO: metadata to determine track type and orientation
 
@@ -892,7 +893,8 @@ void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t meta
 }
 
 //Draw item blockID which is placed flat on the wall
-void Viewer::drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t meta)
+void Viewer::drawWallItem( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
     //TODO: metadata
 
@@ -935,7 +937,8 @@ void Viewer::drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t m
 }
 
 //Draw item blockID which is placed as a block
-void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t meta)
+void Viewer::drawItem( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags)
 {
 
     //TODO: quad always faces player somehow
@@ -1049,23 +1052,23 @@ void Viewer::drawBlock( const mc__::Block& block,
     switch ( (blockInfo[block.blockID].properties & 0xF0)>>4 ) {
         case 0x0:
             //Cube
-            drawCube(block.blockID, x, y, z, vflags);
+            drawCube(block.blockID, block.metadata, x, y, z, vflags);
             break;
         case 0x1:
             //Stairs
             drawScaledBlock(block.blockID, x, y, z, vflags,
                 1, 0.5, 0.5, true, 0, 8, 0);
-            drawHalfBlock(block.blockID, x, y, z, vflags);
+            drawHalfBlock(block.blockID, block.metadata, x, y, z, vflags);
             break;
         case 0x2:   //Lever
-            drawItem(block.blockID, x, y, z);
+            drawItem(block.blockID, block.metadata, x, y, z);
             
             //Cobblestone base
             drawScaledBlock(4, x, y, z, 0,
                 0.25, 0.25, 0.5, true, 6, 0, 4);
             break;
         case 0x3:   //half-block
-            drawHalfBlock(block.blockID, x, y, z, vflags);
+            drawHalfBlock(block.blockID, block.metadata, x, y, z, vflags);
             break;
         case 0x4:   //Signpost
             //TODO: drawSignpost();
@@ -1081,10 +1084,10 @@ void Viewer::drawBlock( const mc__::Block& block,
         case 0x5:   //Ladder
         case 0x7:   //fire
         case 0xA:   //Door
-            drawWallItem(block.blockID, x, y, z);
+            drawWallItem(block.blockID, block.metadata, x, y, z);
             break;
         case 0x6:   //Track
-            drawTrack(block.blockID, x, y, z);
+            drawTrack(block.blockID, block.metadata, x, y, z);
             break;
         case 0x8:   //Portal
             drawScaledBlock(block.blockID, x, y, z, 0,
@@ -1109,7 +1112,7 @@ void Viewer::drawBlock( const mc__::Block& block,
                 drawScaledBlock(block.blockID, x, y, z, vflags,
                     1, 0.25, 1);
             } else {
-                drawCake(92, x, y, z, block.metadata);
+                drawCake(92, block.metadata, x, y, z);
             }
             break;
         case 0xD:   //Wallsign
@@ -1122,13 +1125,13 @@ void Viewer::drawBlock( const mc__::Block& block,
             break;
         case 0xF:   //Plant
             if (block.blockID != 0x51) {
-                drawItem(block.blockID, x, y, z);
+                drawItem(block.blockID, block.metadata, x, y, z);
             } else {    //Special case cactus
-                drawCactus(block.blockID, x, y, z, vflags);
+                drawCactus(block.blockID, block.metadata, x, y, z, vflags);
             }
             break;
         default:    //Draw unknown types as a cube
-            drawCube(block.blockID, x, y, z, vflags);
+            drawCube(block.blockID, block.metadata, x, y, z, vflags);
             break;
     }
 
