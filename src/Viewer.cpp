@@ -569,13 +569,16 @@ void Viewer::drawCactus( uint8_t blockID,
     setBlockColor( 0, (face_ID)0);
 }
 
+//Draw a placed cake block (use metadata to determine how much is eaten)
 void Viewer::drawCake( uint8_t blockID,
     GLint x, GLint y, GLint z, uint8_t meta)
 {
     // For cake, the face coordinates are inset from the face
     const size_t offset = texmap_TILE_LENGTH/16;
     const size_t half = texmap_TILE_LENGTH/2;
-    const size_t eaten = offset * 2 * meta;
+    
+    //Number of "pixels" eaten depends on metadata
+    const size_t eaten = (meta == 0 ? 0 : offset * (1 + (meta<<1)));
     float tmr_eat = tmr * eaten/16;
     
     //Face coordinates (in pixels)
@@ -617,25 +620,23 @@ void Viewer::drawCake( uint8_t blockID,
     // (tx_0, ty_0)      (tx_1, ty_0)
 
     //A
-    //side texture to use depends on metadata
+    mc__::face_ID leftTex = EAST;       //"unsliced" side texture
+    GLint A_offset = A + offset;    //Offset by 1 for transparent texture
     if (meta > 0) {
-        //A always visible
-        tx_0 = blockInfo[blockID].tx[0];
-        tx_1 = blockInfo[blockID].tx[0] + tmr;
-        ty_0 = blockInfo[blockID].ty[0] + tmr;    //flip y
-        ty_1 = blockInfo[blockID].ty[0];
-    } else {
-        //A always visible
-        tx_0 = blockInfo[blockID].tx[1];
-        tx_1 = blockInfo[blockID].tx[1] + tmr;
-        ty_0 = blockInfo[blockID].ty[1] + tmr;    //flip y
-        ty_1 = blockInfo[blockID].ty[1];
-    }
+        leftTex = WEST; //Use "sliced" texture on left side, if eaten
+        A_offset = A;   //No offset for transparent texture
+    } 
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A + offset, C - half, E);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( A + offset, C - half, F);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( A + offset, D - half, F);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A + offset, D - half, E);
+    //Texture coordinates
+    tx_0 = blockInfo[blockID].tx[leftTex];
+    tx_1 = blockInfo[blockID].tx[leftTex] + tmr;
+    ty_0 = blockInfo[blockID].ty[leftTex] + tmr;    //flip y
+    ty_1 = blockInfo[blockID].ty[leftTex];
+    
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A_offset, C - half, E);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A_offset, C - half, F);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A_offset, D - half, F);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A_offset, D - half, E);
 
     //B
     tx_0 = blockInfo[blockID].tx[EAST];

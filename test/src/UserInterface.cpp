@@ -627,24 +627,30 @@ bool UserInterface::handleKeys()
         viewer.leaf_color[2] += 2;
     }
 
+    //Movement speed, changes if Shift key is held
+    GLfloat moveRate = 4.0;
+    if (key_held[sf::Key::LShift] || key_held[sf::Key::RShift]) {
+        moveRate = 2.0;
+    }
+
     //Finally, move the viewer based on movement options
     if (movement[MOVE_BACK]) {
-        viewer.move(0, 0, -4);
+        viewer.move(0, 0, -moveRate);
     }
     if (movement[MOVE_FORWARD]) {
-        viewer.move(0, 0, 4);
+        viewer.move(0, 0, moveRate);
     }
     if (movement[MOVE_LEFT]) {
-        viewer.move(-4, 0, 0);
+        viewer.move(-moveRate, 0, 0);
     }
     if (movement[MOVE_RIGHT]) {
-        viewer.move(4, 0, 0);
+        viewer.move(moveRate, 0, 0);
     }
     if (movement[MOVE_UP]) {
-        viewer.move(0, 4, 0);
+        viewer.move(0, moveRate, 0);
     }
     if (movement[MOVE_DOWN]) {
-        viewer.move(0, -4, 0);
+        viewer.move(0, -moveRate, 0);
     }
     if (movement[TURN_LEFT]) {
         viewer.turn(-5);
