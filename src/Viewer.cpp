@@ -315,7 +315,7 @@ void Viewer::setBlockColor(uint8_t blockID, face_ID face)
 
 //Use OpenGL to draw a solid cube with appropriate textures for blockID
 void Viewer::drawCube( uint8_t blockID,
-    GLint x, GLint y, GLint z, uint8_t vflags)
+    GLint x, GLint y, GLint z, uint8_t vflags, uint8_t meta)
 {
     
     //Face coordinates (in pixels)
@@ -446,7 +446,7 @@ void Viewer::drawCube( uint8_t blockID,
 
 //Draw cactus... almost like a cube, but A, B, E, F are inset 1 pixel
 void Viewer::drawCactus( uint8_t blockID,
-    GLint x, GLint y, GLint z, uint8_t vflags)
+    GLint x, GLint y, GLint z, uint8_t vflags, uint8_t meta)
 {
     
     //Face coordinates (in pixels)
@@ -569,6 +569,130 @@ void Viewer::drawCactus( uint8_t blockID,
     setBlockColor( 0, (face_ID)0);
 }
 
+void Viewer::drawCake( uint8_t blockID,
+    GLint x, GLint y, GLint z, uint8_t meta)
+{
+    // For cake, the face coordinates are inset from the face
+    const size_t offset = texmap_TILE_LENGTH/16;
+    const size_t half = texmap_TILE_LENGTH/2;
+    const size_t eaten = offset * 2 * meta;
+    float tmr_eat = tmr * eaten/16;
+    
+    //Face coordinates (in pixels)
+    GLint A = (x << 4) + eaten;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //For each face, use the appropriate texture offsets for the block ID
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //   Texture map was loaded upside down...
+    // 0.0 -------------> 1.0 (X)
+    // |
+    // |
+    // |
+    // |
+    // |
+    // |
+    // v
+    // 1.0
+    // (Y)
+    
+    //
+    // (tx_0, ty_1)      (tx_1, ty_1)
+    //
+    // (tx_0, ty_0)      (tx_1, ty_0)
+
+    //A
+    //side texture to use depends on metadata
+    if (meta > 0) {
+        //A always visible
+        tx_0 = blockInfo[blockID].tx[0];
+        tx_1 = blockInfo[blockID].tx[0] + tmr;
+        ty_0 = blockInfo[blockID].ty[0] + tmr;    //flip y
+        ty_1 = blockInfo[blockID].ty[0];
+    } else {
+        //A always visible
+        tx_0 = blockInfo[blockID].tx[1];
+        tx_1 = blockInfo[blockID].tx[1] + tmr;
+        ty_0 = blockInfo[blockID].ty[1] + tmr;    //flip y
+        ty_1 = blockInfo[blockID].ty[1];
+    }
+    
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A + offset, C - half, E);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A + offset, C - half, F);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A + offset, D - half, F);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A + offset, D - half, E);
+
+    //B
+    tx_0 = blockInfo[blockID].tx[EAST];
+    tx_1 = blockInfo[blockID].tx[EAST] + tmr;
+    ty_0 = blockInfo[blockID].ty[EAST] + tmr;
+    ty_1 = blockInfo[blockID].ty[EAST];
+    
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B - offset, C - half, F);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B - offset, C - half, E);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B - offset, D - half, E);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B - offset, D - half, F);
+
+    //C always visible
+    tx_0 = blockInfo[blockID].tx[DOWN] + tmr_eat;
+    tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+    ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+    ty_1 = blockInfo[blockID].ty[DOWN];
+    
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);
+
+    //D
+    tx_0 = blockInfo[blockID].tx[UP] + tmr_eat;
+    tx_1 = blockInfo[blockID].tx[UP] + tmr;
+    ty_0 = blockInfo[blockID].ty[UP] + tmr;
+    ty_1 = blockInfo[blockID].ty[UP];
+
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, D - half, F);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, D - half, F);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D - half, E);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D - half, E);
+
+    //E always visible
+    tx_0 = blockInfo[blockID].tx[NORTH];
+    tx_1 = blockInfo[blockID].tx[NORTH] + tmr - tmr_eat;
+    ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+    ty_1 = blockInfo[blockID].ty[NORTH];
+    
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C - half, E + offset);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C - half, E + offset);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D - half, E + offset);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D - half, E + offset);
+
+    //F
+    tx_0 = blockInfo[blockID].tx[SOUTH] + tmr_eat;
+    tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+    ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+    ty_1 = blockInfo[blockID].ty[SOUTH];
+    
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C - half, F - offset);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C - half, F - offset);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D - half, F - offset);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D - half, F - offset);
+    
+}
 
 //Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotation)
 void Viewer::drawScaledBlock( uint8_t blockID,
@@ -720,14 +844,14 @@ void Viewer::drawScaledBlock( uint8_t blockID,
 
 //Draw half a block
 void Viewer::drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
-    uint8_t visflags)
+    uint8_t visflags, uint8_t meta)
 {
     //TODO: metadata to determine which half!
     drawScaledBlock( blockID, x, y, z, visflags, 1, 0.5, 1);
 }
 
 //Draw item blockID which is placed flat on the ground
-void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z)
+void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t meta)
 {
     //TODO: metadata to determine track type and orientation
 
@@ -767,7 +891,7 @@ void Viewer::drawTrack( uint8_t blockID, GLint x, GLint y, GLint z)
 }
 
 //Draw item blockID which is placed flat on the wall
-void Viewer::drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z)
+void Viewer::drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t meta)
 {
     //TODO: metadata
 
@@ -810,7 +934,7 @@ void Viewer::drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z)
 }
 
 //Draw item blockID which is placed as a block
-void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
+void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z, uint8_t meta)
 {
 
     //TODO: quad always faces player somehow
@@ -863,7 +987,7 @@ void Viewer::drawItem( uint8_t blockID, GLint x, GLint y, GLint z)
 }
 
 //Draw a dropped item that can be picked up (caller must translate to X,Y,Z)
-void Viewer::drawDroppedItem( uint16_t itemID )
+void Viewer::drawDroppedItem( uint16_t itemID, uint8_t meta )
 {
 
     //To always face player, translate then rotate at camera(?)
@@ -980,8 +1104,12 @@ void Viewer::drawBlock( const mc__::Block& block,
                 0.75, 0.125, 0.75, true, 2, 0, 2);
             break;
         case 0xC:   //Snow, Cake, Cactus (other special semi-cubes)
-            drawScaledBlock(block.blockID, x, y, z, vflags,
-                1, 0.25, 1);
+            if (block.blockID != 92) {
+                drawScaledBlock(block.blockID, x, y, z, vflags,
+                    1, 0.25, 1);
+            } else {
+                drawCake(92, x, y, z, block.metadata);
+            }
             break;
         case 0xD:   //Wallsign
             drawScaledBlock(block.blockID, x, y, z, (vflags&0x08),
@@ -1074,7 +1202,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         pvflags |= (X < view_X ? 0x80 : (X > view_X ? 0x40 : 0x00));
         pvflags |= (Z < view_Z ? 0x08 : (Z > view_Z ? 0x04 : 0x00));
                 
-        //Start the GL_COMPILING! Don't execute.
+        //Start the GL_COMPILING! Don't execute, that will happen next frame
         glNewList(gl_list, GL_COMPILE);
 
         //Rebind terrain png
@@ -1096,7 +1224,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
             uint8_t vflags = myChunk.visflags[index];
             
             //Draw the block (based on block type)
-            drawBlock(myChunk.block_array[index], X, Y, Z, vflags/*pvflags|*/);
+            drawBlock(myChunk.block_array[index],X, Y, Z, vflags/*pvflags|*/);
             //Uncomment pvflags to hide faces player can't see
         }
         //End the list
@@ -1605,7 +1733,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 89, 105,105,105,105,105,105,0x08);    //Lightstone
     setBlockInfo( 90, 49, 49, 49, 49, 49, 49, 0x8F);    //Portal (??)
     setBlockInfo( 91, 118,118,118,102,118,120,0x08);    //PumpkinLit
-    setBlockInfo( 92, 122,122,124,121,123,123,0x30);    //Cake (*)
+    setBlockInfo( 92, 123,122,124,121,122,122,0xC4);    //Cake block (*)
     
 
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
@@ -1728,7 +1856,7 @@ bool Viewer::loadItemInfo()
     setItemInfo( 89, 105,0x00);    //Lightstone
     setItemInfo( 90, 49, 0x03);    //Portal
     setItemInfo( 91, 118,0x00);    //PumpkinLit
-    setItemInfo( 92, 119,0x00);    //Cake block
+    setItemInfo( 92, 119,0x00);    //Cake item
 
     //Set default item information to sponge!
     for (ID = 93; ID < 256; ID++) {

@@ -133,15 +133,22 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0);
 
             //Specific block drawing functions
-            void drawCube( uint8_t blockID, GLint x, GLint y, GLint z,
-                uint8_t visflags=0);
-            void drawHalfBlock( uint8_t blockID, GLint x, GLint y, GLint z,
-                uint8_t visflags=0);
-            void drawItem( uint8_t blockID, GLint x, GLint y, GLint z);
-            void drawTrack( uint8_t blockID, GLint x, GLint y, GLint z);
-            void drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z);
+            void drawCube( uint8_t blockID,
+                GLint x, GLint y, GLint z, 
+                uint8_t visflags=0, uint8_t meta=0);
+            void drawHalfBlock( uint8_t blockID,
+                GLint x, GLint y, GLint z,
+                uint8_t visflags=0, uint8_t meta=0);
+            void drawItem( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t meta=0);
+            void drawTrack( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t meta=0);
+            void drawWallItem( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t meta=0);
             void drawCactus( uint8_t blockID, GLint x, GLint y, GLint z,
-                uint8_t visflags=0);
+                uint8_t visflags=0, uint8_t meta=0);
+            void drawCake( uint8_t blockID, GLint x, GLint y, GLint z,
+                uint8_t meta=0);
 
             //Draw a cube with dimensions scaled and location offset
             //  scale factor is multiplier, use 0 - 1
@@ -152,7 +159,7 @@ namespace mc__ {
                 GLint off_x=0, GLint off_y=0, GLint off_z=0);
 
             //dropped item drawing function (for display lists)
-            void drawDroppedItem( uint16_t blockID);
+            void drawDroppedItem( uint16_t blockID, uint8_t meta=0);
 
             //Draw minichunks only
             void drawChunks( const mc__::World& world);

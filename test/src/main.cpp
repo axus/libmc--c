@@ -113,9 +113,28 @@ void genWorld(World& world)
     
     //Single workbench made from block put in chunk
     mc__::Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
-    chunk1 = new mc__::Chunk(0, 0, 0, 7, 64, 13);    //location
+    chunk1 = new mc__::Chunk(0, 0, 0, 7, 64, 13);    //1x1x1, location
     chunk1->block_array[0] = workbench1;
     
+    //Add the single chunk to 0,0 MapChunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
+    
+    //Table with cakes
+    mc__::Block cake1 = { 92, 0, 0, 0};
+    chunk1 = new mc__::Chunk(10, 1, 2, 17, 64, 17);    //1x1x1, location
+    for (gen_X = 0; gen_X <= 10; gen_X++) {
+        for (gen_Z = 0; gen_Z <= 2; gen_Z++) {
+            //Y=0 is table
+            chunk1->block_array[ gen_X*3*2 + gen_Z*2] = workbench1;
+            
+            //Place cake at intervals on table
+            if (gen_Z == 1 && (gen_X & 1) == 0) {
+                chunk1->block_array[ gen_X*3*2 + gen_Z*2 + 1] = cake1;
+                cake1.metadata += 1;    //Ate a little cake...
+            }
+        }
+    }
     //Add the single chunk to 0,0 MapChunk
     world.addMapChunk(chunk1);
     delete chunk1;
@@ -186,6 +205,7 @@ int main(int argc, char** argv)
             break;
     }
     
+    //Default player name
     string player_name("axus");
 
     //Game world
