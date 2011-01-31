@@ -146,7 +146,7 @@ void BlockDrawer::setBlockColor(uint8_t blockID, face_ID face) const
     }
 }
 
-//Draw me
+//Draw me, using function pointer assigned for block ID
 void BlockDrawer::draw( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t visflags) const
 {
@@ -417,6 +417,13 @@ void BlockDrawer::drawFaceCube( uint8_t blockID, uint8_t meta,
     
 }
 
+//Draw "treasure" chest (meta affects direction, large chest)
+void BlockDrawer::drawChest( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    drawFaceCube(blockID, meta, x, y, z, vflags);
+    //TODO: textures change depending on meta
+}
 
 //Draw cactus... almost like a cube, but A, B, E, F are inset 1 pixel
 void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
@@ -825,7 +832,7 @@ void BlockDrawer::drawHalfBlock( uint8_t blockID, uint8_t meta,
     drawScaledBlock( blockID, meta, x, y, z, vflags, 1, 0.5, 1);
 }
 
-//Draw item blockID which is placed flat on the ground
+//Draw minecart track (meta affects angle, direction, intersection)
 void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -884,30 +891,26 @@ void BlockDrawer::drawWallItem( uint8_t blockID, uint8_t meta,
     GLint F = (z << 4) + 1;
 
     //E
-    //if (!(vflags & 0x08)) {
-        tx_0 = blockInfo[blockID].tx[NORTH];
-        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
-        ty_1 = blockInfo[blockID].ty[NORTH];
-        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
-        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
-        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
-        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
-    //}
+    tx_0 = blockInfo[blockID].tx[NORTH];
+    tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
+    ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+    ty_1 = blockInfo[blockID].ty[NORTH];
+    
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
     
     //F
-    //if (!(vflags & 0x04)) {
-        tx_0 = blockInfo[blockID].tx[SOUTH];
-        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
-        ty_1 = blockInfo[blockID].ty[SOUTH];
-        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
-    //}
+    tx_0 = blockInfo[blockID].tx[SOUTH];
+    tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
+    ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+    ty_1 = blockInfo[blockID].ty[SOUTH];
+    
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
 }
 
 //Draw item blockID which is placed as a block
@@ -964,7 +967,7 @@ void BlockDrawer::drawItem( uint8_t blockID, uint8_t meta,
 
 }
 
-//Draw item blockID which is placed as a block
+//Draw torch, on ground or wall
 void BlockDrawer::drawTorch( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -996,7 +999,7 @@ void BlockDrawer::drawCrops( uint8_t blockID, uint8_t meta,
     drawItem(blockID, meta, x, y, z, vflags);
 }
 
-//Draw planted crops (meta affects texture)
+//Draw part of door (meta affects top/bottom, side of block)
 void BlockDrawer::drawDoor( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -1111,11 +1114,11 @@ void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
         0.75, 0.5, 0.125, true, 2, 7, 0);
 }
 
-//Draw tree log (meta affects texture)
+//Draw wall button
 void BlockDrawer::drawButton( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: meta affects which wall the button is on
+    //TODO: meta affects which wall the button is on, and pressed/not pressed
     drawScaledBlock( blockID, meta, x, y, z, 0,
         0.25, 0.25, 0.125, true, 8, 8, 0);
 
@@ -1160,66 +1163,7 @@ void BlockDrawer::setBlockInfo( uint8_t index,
     blockInfo[index].ty[5] = float(F/texmap_TILES)/((float)texmap_TILES);
     
     drawFunction[index] = drawFunc;
-    /*
-    //Assign properties
-    //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=signpost, 5=ladder, 6=track, 7=fire?,
-    //              8=portal, 9=fence, A=door, B=floorplate
-    //              C=1/3 block, D=wallsign, E=button, F=plant
-    //0x08: Bright: 0=dark, 1=lightsource
-    //0x04: Vision: 0=opqaue, 1=see-through
-    //0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
-    blockInfo[index].properties = properties;
 
-    //Use different drawing function for different model types
-    switch ( (blockInfo[index].properties & 0xF0)>>4 ) {
-        case 0x0:
-            //Cube
-            break;
-        case 0x1:
-            //Stairs
-            break;
-        case 0x2:
-            //Lever
-            break;
-        case 0x3:
-            //half-block
-            break;
-        case 0x4:
-            //Signpost            
-            break;
-        case 0x5:   //Ladder
-        case 0x7:   //fire
-        case 0xA:   //Door
-            //Wall item
-            break;
-        case 0x6:
-            //Track
-            break;
-        case 0x8:
-            //Portal
-            break;
-        case 0x9:
-            //Fence
-            break;
-        case 0xB:
-            //Floorplate
-            break;
-        case 0xC:
-            //Snow, Cake, Cactus (other special semi-cubes)
-            //QuarterBlock
-            break;
-        case 0xD:   //Wallsign
-            break;
-        case 0xE:   //Button
-            break;
-        case 0xF:   //Plant (item or cactus)
-            break;
-        default:    //Draw unknown types as a cube
-            drawCube(block.blockID, block.metadata, x, y, z, vflags);
-            break;
-    }
-    */
 }
 
 //Map block ID to block type information
@@ -1317,7 +1261,8 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 52, 65, 65, 65, 65, 65, 65, 0x04);    //Spawner
         //WoodStairs
     setBlockInfo( 53, 4,  4,  4,  4,  4,  4,  0x10,&BlockDrawer::drawStairs);
-    setBlockInfo( 54, 26, 26, 25, 25, 26, 27, 0x00);    //Chest (*)
+        //Chest (*)
+    setBlockInfo( 54, 26, 26, 25, 25, 26, 27, 0x00,&BlockDrawer::drawChest);
         //Wire (*)
     setBlockInfo( 55, 84, 85, 84, 100,100,101,0x6F,&BlockDrawer::drawWire);
     setBlockInfo( 56, 50, 50, 50, 50, 50, 50, 0x00);    //DiamondOre
@@ -1383,13 +1328,6 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Cake block (*)
     setBlockInfo( 92, 123,122,124,121,122,122,0xC4,&BlockDrawer::drawCake);
     
-    //Drawing function depends on shape (as determined from properties)
-    //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=signpost, 5=ladder, 6=track, 7=fire
-    //              8=portal, 9=fence, A=door, B=floorplate
-    //              C=snow cover, D=wallsign, E=button, F=plant
-
-
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
 //              4=signpost, 5=ladder, 6=track, 7=fire
 //              8=portal, 9=fence, A=door, B=floorplate

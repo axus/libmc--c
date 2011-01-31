@@ -126,6 +126,9 @@ namespace mc__ {
             //Cube with 3 sides same, and one "face"
             void drawFaceCube(uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawChest(uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            
             void drawPortal( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFence( uint8_t blockID, uint8_t meta,
