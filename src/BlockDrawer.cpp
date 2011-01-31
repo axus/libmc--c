@@ -983,6 +983,15 @@ void BlockDrawer::drawFire( uint8_t blockID, uint8_t meta,
     //TODO: draw on wall(s) depending on meta
 }
 
+//Draw dyed block (use item texture, determined by meta)
+void BlockDrawer::drawDyed( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    drawCube(blockID, meta, x, y, z, vflags);
+    //TODO: change texture depending on meta
+}
+
+
 //Draw redstone wire (active or inactive
 void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
@@ -1229,12 +1238,14 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 20, 49, 49, 49, 49, 49, 49, 0x04);    //Glass
     setBlockInfo( 21,160,160,160,160,160,160, 0x00);    //Lapis Ore
     setBlockInfo( 22,144,144,144,144,144,144, 0x00);    //Lapis Block
-    setBlockInfo( 23, 45, 45, 62, 62, 45, 46, 0x00);    //Dispenser (*)
+        //Dispenser (*)
+    setBlockInfo( 23, 45, 45, 62, 62, 45, 46, 0x00,&BlockDrawer::drawFaceCube);
     setBlockInfo( 24,192,192,208,176,192,192, 0x00);    //Sandstone
     setBlockInfo( 25, 74, 74, 74, 74, 74, 74, 0x00);    //Note Block
     
     for (ID = 26; ID < 37; ID++) {
-        setBlockInfo( ID, 64, 64, 64, 64, 64, 64, 0x00);   //Cloth (only 1 used)
+         //Cloth (only 1 used, with 16 metadata types)
+        setBlockInfo( ID, 64, 64, 64, 64, 64, 64, 0x00,&BlockDrawer::drawDyed);
     }
         //Flower
     setBlockInfo( 37, 13, 13, 13, 13, 13, 13, 0xF7,&BlockDrawer::drawItem);

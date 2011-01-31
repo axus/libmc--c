@@ -721,8 +721,8 @@ bool Viewer::createItemModel( uint16_t index)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
             glBegin(GL_QUADS);
             //Centered at current position
-            blockDraw->drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25,
-                false, -2, 0, -2);
+            blockDraw->drawScaledBlock( index&0xFF, 0/*meta*/, 0, 0, 0, 0,
+                0.25, 0.25, 0.25, false, -2, 0, -2);
             glEnd();
             break;
         case 1:
@@ -730,8 +730,8 @@ bool Viewer::createItemModel( uint16_t index)
             glBindTexture( GL_TEXTURE_2D, terrain_tex);
             glBegin(GL_QUADS);
             //Centered at current position
-            blockDraw->drawScaledBlock( index&0xFF, 0, 0, 0, 0, 0.25, 0.25, 0.25,
-                false, -2, 0, -2);
+            blockDraw->drawScaledBlock( index&0xFF, 0/*meta*/, 0, 0, 0, 0,
+                0.25, 0.25, 0.25, false, -2, 0, -2);
             glEnd();
             break;
         case 2:     //Regular item icon :)

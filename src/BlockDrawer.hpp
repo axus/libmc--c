@@ -109,6 +109,8 @@ namespace mc__ {
             //      (able to use same function pointer for each)
             void drawCube( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawDyed( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawStairs( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawLever( uint8_t blockID, uint8_t meta,
