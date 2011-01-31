@@ -48,17 +48,6 @@ namespace mc__ {
     //Library version checker in mc__ namespace
     unsigned long getVersion();
 
-    //Constants
-    const size_t texmap_TILE_LENGTH = 16;   //openGL coords per tile
-    const size_t texmap_TILES = 16;         //tiles in map (1D)
-    const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
-    const uint16_t block_id_MAX = 256;
-    const uint16_t item_id_MAX = 2304;
-    const uint16_t entity_type_MAX = 128;
-
-    //Texture map ratio:  tile:texmap length
-    const float tmr = 1.0f/((float)texmap_TILES);
-
     class Viewer {
         public:
 
@@ -72,7 +61,7 @@ namespace mc__ {
             //Map item ID to item information
             BlockInfo itemInfo[item_id_MAX];
             
-            BlockDrawer blockDraw;  //use this to draw individual blocks
+            BlockDrawer *blockDraw;  //use this to draw individual blocks
             
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
@@ -103,7 +92,7 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0);
 
             //dropped item drawing function (for display lists)
-            void drawDroppedItem( uint16_t blockID, uint8_t meta=0);
+            void drawDroppedItem( uint16_t blockID );
 
             //Draw minichunks only
             void drawChunks( const mc__::World& world);

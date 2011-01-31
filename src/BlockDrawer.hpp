@@ -57,7 +57,19 @@ namespace mc__ {
     //0x04: Vision: 0=opqaue, 1=see-through
     //0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
     } BlockInfo;
-        
+
+    //Constants
+    const size_t texmap_TILE_LENGTH = 16;   //openGL coords per tile
+    const size_t texmap_TILES = 16;         //tiles in map (1D)
+    const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
+    const uint16_t block_id_MAX = 256;
+    const uint16_t item_id_MAX = 2304;
+    const uint16_t entity_type_MAX = 128;
+
+    //Texture map ratio:  tile:texmap length
+    const float tmr = 1.0f/((float)texmap_TILES);
+
+       
     class BlockDrawer {
         public:
 
@@ -89,45 +101,82 @@ namespace mc__ {
             //Constructor        
             BlockDrawer( GLuint t_tex, GLuint i_tex );
 
-            bool loadBlockInfo();
-            void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
-                uint8_t D, uint8_t E, uint8_t F, uint8_t properties);
+            //Draw a block ID, choose it's drawing function and change metadata
+            void draw( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
 
-            //Use terrain texture again
-            void rebindTerrain();
-            
-            //Use biome color on block face
-            void setBlockColor(uint8_t blockID, face_ID face);
-            
             //Specific block drawing functions
             //      (able to use same function pointer for each)
             void drawCube( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawStairs( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawLever( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawHalfBlock( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
-            void drawItem( uint8_t blockID, uint8_t meta,
+            void drawSignpost( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawWallItem( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawDoor( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTrack( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
-            void drawWallItem( uint8_t blockID, uint8_t meta,
+            //Cube with 3 sides same, and one "face"
+            void drawFaceCube(uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawPortal( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawFence( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawFloorplate( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void draw4thBlock( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawLog( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawWallSign( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawButton( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawCactus( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawCake( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
-                //Cube with 3 sides same, and one "face"
-            void drawFacingCube(uint8_t blockID, uint8_t meta,
+            void drawItem( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawTorch( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawFire( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawWire( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawCrops( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
 
-        protected:
             //Draw a cube with dimensions scaled and location offset
             //  scale factor is multiplier, use 0 - 1
-            void drawScaledBlock( uint8_t blockID,
+            void drawScaledBlock( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0,
                 GLfloat scale_x=1, GLfloat scale_y=1, GLfloat scale_z=1,
                 bool scale_textures=true,
-                GLint off_x=0, GLint off_y=0, GLint off_z=0);
+                GLint off_x=0, GLint off_y=0, GLint off_z=0) const;
 
+            //Use terrain texture again
+            void rebindTerrain();
+            
+            //Use biome color on block face
+            void setBlockColor(uint8_t blockID, face_ID face) const;
+            
+            //Initialization functions
+            bool loadBlockInfo();
+            void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
+                uint8_t D, uint8_t E, uint8_t F, uint8_t properties,
+                drawBlock_f drawFunc = &mc__::BlockDrawer::drawCube);
+                //12 men died to bring me knowledge of class function pointers
+                
+        protected:
             //RGB settings for leaves, grass. TODO: use biome flag from MapChunk
             GLubyte leaf_color[4];
             GLubyte grass_color[4];
