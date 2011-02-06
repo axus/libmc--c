@@ -165,7 +165,8 @@ void BlockDrawer::draw( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawCube( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    
+    drawCubeMeta(blockID, meta, x, y, z, vflags);
+    /*
     //Face coordinates (in pixels)
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
@@ -207,9 +208,9 @@ void BlockDrawer::drawCube( uint8_t blockID, uint8_t meta,
     //A
     if (!(vflags & 0x80)) {
         tx_0 = blockInfo[blockID].tx[WEST];
-        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
+        tx_1 = tx_0 + tmr;
         ty_1 = blockInfo[blockID].ty[WEST];
+        ty_0 = ty_1 + tmr;    //flip y
         setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
@@ -280,6 +281,138 @@ void BlockDrawer::drawCube( uint8_t blockID, uint8_t meta,
         tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
         ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
         ty_1 = blockInfo[blockID].ty[SOUTH];
+        setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    }
+    
+    //Return color to normal
+    setBlockColor( 0, (face_ID)0);
+    */
+}
+
+//Use OpenGL to draw a solid cube with appropriate textures for blockID
+void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    
+    //Face coordinates (in pixels)
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //For each face, use the appropriate texture offsets for the block ID
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //   Texture map was loaded upside down...
+    // 0.0 -------------> 1.0 (X)
+    // |
+    // |
+    // |
+    // |
+    // |
+    // |
+    // v
+    // 1.0
+    // (Y)
+    
+    //
+    // (tx_0, ty_1)      (tx_1, ty_1)
+    //
+    // (tx_0, ty_0)      (tx_1, ty_0)
+
+    //A
+    if (!(vflags & 0x80)) {
+        tx_0 = blockInfo[blockID].tx[WEST];
+        tx_1 = tx_0 + tmr;
+        ty_1 = blockInfo[blockID].ty[WEST];
+        ty_0 = ty_1 + tmr;    //flip y
+        setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+
+    //B
+    if (!(vflags & 0x40)) {
+        tx_0 = blockInfo[blockID].tx[EAST];
+        tx_1 = tx_0 + tmr;
+        ty_1 = blockInfo[blockID].ty[EAST];
+        ty_0 = ty_1 + tmr;    //flip y
+        setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
+    }
+    
+    //C
+    if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_1 = tx_0 + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        ty_0 = ty_1 + tmr;    //flip y
+        setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    }
+    
+    //D
+    if (!(vflags & 0x10)) {
+        tx_0 = blockInfo[blockID].tx[UP];
+        tx_1 = tx_0 + tmr;
+        ty_1 = blockInfo[blockID].ty[UP];
+        ty_0 = ty_1 + tmr;    //flip y
+        setBlockColor(blockID, UP);  //Set leaf/grass color if needed
+    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+    
+    //E
+    if (!(vflags & 0x08)) {
+        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_1 = tx_0 + tmr;
+        ty_1 = blockInfo[blockID].ty[NORTH];
+        ty_0 = ty_1 + tmr;    //flip y
+        setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    }
+    
+    //F
+    if (!(vflags & 0x04)) {
+        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_1 = tx_0 + tmr;
+        ty_1 = blockInfo[blockID].ty[SOUTH];
+        ty_0 = ty_1 + tmr;    //flip y
         setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
@@ -416,6 +549,31 @@ void BlockDrawer::drawFaceCube( uint8_t blockID, uint8_t meta,
     }
     
 }
+
+//Alternate face cube type for pumpkins
+void BlockDrawer::drawFaceCube2( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    //Convert to "standard" face cube function
+    uint8_t newmeta=0;
+    switch (meta) {
+        case 0:
+            newmeta = 2; break;
+        case 1:
+            newmeta = 5; break;
+        case 2:
+            newmeta = 3; break;
+        case 3:
+            newmeta = 4; break;
+        default:
+            newmeta = 5; break;
+    }
+    
+    //Draw with the converted metadata
+    drawFaceCube( blockID, newmeta, x, y, z, vflags);
+
+}
+
 
 //Draw "treasure" chest (meta affects direction, large chest)
 void BlockDrawer::drawChest( uint8_t blockID, uint8_t meta,
@@ -1004,8 +1162,49 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawCrops( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: change texture depending on meta
-    drawItem(blockID, meta, x, y, z, vflags);
+    //Crop textures in terrain.png are 86 - 93
+    uint8_t cropTexture = blockInfo[blockID].textureID[0] + (meta & 0x7);
+    
+    //Texture map coordinates in terrain.png (0.0 - 1.0)
+    GLfloat tx_0 = float(cropTexture & (texmap_TILES-1))/((float)texmap_TILES);
+    GLfloat tx_1 = tx_0 + tmr;
+    GLfloat ty_1 = float(cropTexture/texmap_TILES)/((float)texmap_TILES);
+    GLfloat ty_0 = ty_1 + tmr;
+
+    //Object boundaries... 2 crossed squares inside a clear cube
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    GLint G = (z << 4) + (texmap_TILE_LENGTH/2);    //half-way through z 
+    GLint H = (x << 4) + (texmap_TILE_LENGTH/2);    //half-way through x
+
+
+    //Apply texture to planted item face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+
+    //Intersecting plane
+    glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left:  HCF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left:    HDF
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left:  HCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left:    HDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
 }
 
 //Draw part of door (meta affects top/bottom, side of block)
@@ -1106,12 +1305,24 @@ void BlockDrawer::draw4thBlock( uint8_t blockID, uint8_t meta,
         1, 0.25, 1);
 }
 
-//Draw tree log (meta affects texture)
-void BlockDrawer::drawLog( uint8_t blockID, uint8_t meta,
+//Draw tree log or leaf (meta affects texture)
+void BlockDrawer::drawTree( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
     //Use meta to change texture of cube
-    drawCube(blockID, meta, x, y, z, vflags);
+    uint16_t ID = blockID;
+    switch( meta ) {
+        case 1:
+            ID = blockID + 256;
+            break;
+        case 2:
+            ID = blockID + 512;
+            break;
+        default:
+            ID = blockID;
+            break;
+    }
+    drawCubeMeta(ID, meta, x, y, z, vflags);
 }
 
 //Draw sign on a wall
@@ -1136,7 +1347,7 @@ void BlockDrawer::drawButton( uint8_t blockID, uint8_t meta,
 
 
 //Copy block info to struct
-void BlockDrawer::setBlockInfo( uint8_t index,
+void BlockDrawer::setBlockInfo( uint16_t index,
     uint8_t A, uint8_t B,
     uint8_t C, uint8_t D,
     uint8_t E, uint8_t F,
@@ -1230,10 +1441,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 14, 32, 32, 32, 32, 32, 32, 0x00);    //GoldOre
     setBlockInfo( 15, 33, 33, 33, 33, 33, 33, 0x00);    //IronOre
     setBlockInfo( 16, 34, 34, 34, 34, 34, 34, 0x00);    //CoalOre
-    
         //Log
-    setBlockInfo( 17, 20, 20, 21, 21, 20, 20, 0x00,&BlockDrawer::drawLog);
-    setBlockInfo( 18, 52, 52, 52, 53, 52, 52, 0x04);    //Leaves
+    setBlockInfo( 17, 20, 20, 21, 21, 20, 20, 0x00,&BlockDrawer::drawTree);
+        //Leaves
+    setBlockInfo( 18, 52, 52, 52, 53, 52, 52, 0x04,&BlockDrawer::drawTree);
     setBlockInfo( 19, 48, 48, 48, 48, 48, 48, 0x00);    //Sponge
     setBlockInfo( 20, 49, 49, 49, 49, 49, 49, 0x04);    //Glass
     setBlockInfo( 21,160,160,160,160,160,160, 0x00);    //Lapis Ore
@@ -1280,7 +1491,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 57, 24, 24, 24, 24, 24, 24, 0x00);    //DiamondBlock
     setBlockInfo( 58, 60, 60, 43, 43, 59, 59, 0x00);    //Workbench
         //Crops (*)
-    setBlockInfo( 59, 90, 91, 92, 93, 94, 95, 0xF7,&BlockDrawer::drawCrops);
+    setBlockInfo( 59, 88, 89, 90, 91, 93, 95, 0xF7,&BlockDrawer::drawCrops);
     setBlockInfo( 60, 2,  2,  2,  86, 2,  2,  0x00);    //Soil
         //Furnace (+)
     setBlockInfo( 61, 45, 45, 62, 62, 45, 44, 0x00,&BlockDrawer::drawFaceCube);
@@ -1328,16 +1539,28 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Fence (*)
     setBlockInfo( 85, 4,  4,  4,  4,  4,  4,  0x94,&BlockDrawer::drawFence);
         //Pumpkin
-    setBlockInfo( 86, 118,118,118,102,118,119,0x00,&BlockDrawer::drawFaceCube);
+    setBlockInfo( 86, 118,118,118,102,118,119,0x00,&BlockDrawer::drawFaceCube2);
     setBlockInfo( 87, 103,103,103,103,103,103,0x00);    //Netherstone
     setBlockInfo( 88, 104,104,104,104,104,104,0x01);    //SlowSand
     setBlockInfo( 89, 105,105,105,105,105,105,0x08);    //Lightstone
         //Portal
     setBlockInfo( 90, 49, 49, 49, 49, 49, 49, 0x8F,&BlockDrawer::drawPortal);
         //PumpkinLit
-    setBlockInfo( 91, 118,118,118,102,118,120,0x08,&BlockDrawer::drawFaceCube);
+    setBlockInfo( 91, 118,118,118,102,118,120,0x08,&BlockDrawer::drawFaceCube2);
         //Cake block (*)
     setBlockInfo( 92, 123,122,124,121,122,122,0xC4,&BlockDrawer::drawCake);
+    
+    
+    //extra info for metadata blocks
+    
+    //Redwood tree
+    setBlockInfo( 256 + 17, 116, 116, 21, 21, 116, 116, 0x00);
+    setBlockInfo( 256 + 18, 132, 132, 132, 132, 132, 132, 0x00);
+    //Birch tree
+    setBlockInfo( 512 + 17, 117, 117, 21, 21, 117, 117, 0x00);
+    setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133, 0x00);
+    
+    
     
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
 //              4=signpost, 5=ladder, 6=track, 7=fire

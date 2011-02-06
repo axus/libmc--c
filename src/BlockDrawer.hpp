@@ -88,11 +88,11 @@ namespace mc__ {
             //GL IDs for textures loaded by viewer
             GLuint terrain_tex, item_tex;
 
-            //Texture information for ID
-            BlockInfo blockInfo[256];
+            //Texture information for ID (> 256 are my own shortcuts)
+            BlockInfo blockInfo[768];
             
-            //Block drawing function for ID
-            drawBlock_f drawFunction[256];
+            //Block drawing function for ID (> 256 are my own shortcuts)
+            drawBlock_f drawFunction[768];
 
             //
             // Functions
@@ -128,6 +128,9 @@ namespace mc__ {
             //Cube with 3 sides same, and one "face"
             void drawFaceCube(uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            //Variation of "face cube" used for pumpkins
+            void drawFaceCube2(uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawChest(uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             
@@ -139,7 +142,7 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void draw4thBlock( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
-            void drawLog( uint8_t blockID, uint8_t meta,
+            void drawTree( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawWallSign( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
@@ -160,6 +163,10 @@ namespace mc__ {
             void drawCrops( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
 
+            //Draw using IDs higher than 256
+            void drawCubeMeta( uint16_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;                
+
             //Draw a cube with dimensions scaled and location offset
             //  scale factor is multiplier, use 0 - 1
             void drawScaledBlock( uint8_t blockID, uint8_t meta,
@@ -176,7 +183,7 @@ namespace mc__ {
             
             //Initialization functions
             bool loadBlockInfo();
-            void setBlockInfo( uint8_t index, uint8_t A, uint8_t B, uint8_t C,
+            void setBlockInfo( uint16_t index, uint8_t A, uint8_t B, uint8_t C,
                 uint8_t D, uint8_t E, uint8_t F, uint8_t properties,
                 drawBlock_f drawFunc = &mc__::BlockDrawer::drawCube);
                 //12 men died to bring me knowledge of class function pointers

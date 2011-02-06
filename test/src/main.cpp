@@ -83,14 +83,13 @@ void genWorld(World& world)
     }
     
     //Grow some trees
-    if (!world.genTree(11, 64, 5)) {
-        cout << "Error: genTree ";
-        debugKey(world, 9, 64, 3);
-    }
-    if (!world.genTree(4, 64, 7, 3, 10, 3)) {
-        cout << "Error: genTree ";
-        debugKey(world, 3, 64, 6);
-    }
+    world.genTree(11, 64, 5);
+    world.genTree(4, 64, 7, 3, 10, 3);
+
+    //Other tree types (metadata 1, 2)
+    world.genTree(4, 64, 19, 5, 12, 5, 1);
+    world.genTree(12, 64, 19, 5, 8, 5, 2);
+
 
     //Glass pillar
     if (!world.genWall(24, 64, 2, 2, 17, 2, 20)) {
@@ -107,7 +106,7 @@ void genWorld(World& world)
     mc__::Chunk *chunk1 = new mc__::Chunk(0, 0, 0, 26, 65, 3);//location
     chunk1->block_array[0] = sign1;
     
-    //Add the single chunk to 0,0 MapChunk
+    //Add the chunk with the wallsign
     world.addMapChunk(chunk1);
     delete chunk1;
     
@@ -116,7 +115,7 @@ void genWorld(World& world)
     chunk1 = new mc__::Chunk(0, 0, 0, 7, 64, 13);    //1x1x1, location
     chunk1->block_array[0] = workbench1;
     
-    //Add the single chunk to 0,0 MapChunk
+    //Add the chunk with the workbench
     world.addMapChunk(chunk1);
     delete chunk1;
     
@@ -135,11 +134,67 @@ void genWorld(World& world)
             }
         }
     }
-    //Add the single chunk to 0,0 MapChunk
+    //Add the chunk with cake
     world.addMapChunk(chunk1);
     delete chunk1;
     
+    //Add crops with metadata 0-7
+    mc__::Block crops = {59, 0, 0, 0};
+    chunk1 = new mc__::Chunk(7, 0, 0, 4, 64, 18);   //Row of 8 crops
+    for (gen_X = 0; gen_X < 8; gen_X++) {
+        //Increase metadata for each crop
+        crops.metadata = gen_X;
+        chunk1->block_array[ gen_X ] = crops;
+    }
+    //Add the chunk with crops
+    world.addMapChunk(chunk1);
+    delete chunk1;
+    
+    //
+    //Facecube test: dispenser, furnace, litfurnace, pumpkin, jack-o-lantern
+    //
+    chunk1 = new mc__::Chunk(13, 0, 1, 1, 64, 21);   //5 groups of 4 face items
+
+    //Dispenser
+    mc__::Block faceCube = {23, 4, 0, 0};
+    faceCube.metadata = 4; chunk1->block_array[0] = faceCube;
+    faceCube.metadata = 3; chunk1->block_array[1] = faceCube;
+    faceCube.metadata = 2; chunk1->block_array[2] = faceCube;
+    faceCube.metadata = 5; chunk1->block_array[3] = faceCube;
+    
+    //Furnace
+    faceCube.blockID = 61;
+    faceCube.metadata = 4; chunk1->block_array[6] = faceCube;
+    faceCube.metadata = 3; chunk1->block_array[7] = faceCube;
+    faceCube.metadata = 2; chunk1->block_array[8] = faceCube;
+    faceCube.metadata = 5; chunk1->block_array[9] = faceCube;
+    
+    //Lit furnace
+    faceCube.blockID = 62;
+    faceCube.metadata = 4; chunk1->block_array[12] = faceCube;
+    faceCube.metadata = 3; chunk1->block_array[13] = faceCube;
+    faceCube.metadata = 2; chunk1->block_array[14] = faceCube;
+    faceCube.metadata = 5; chunk1->block_array[15] = faceCube;
+    
+    //Pumpkin
+    faceCube.blockID = 86;
+    faceCube.metadata = 3; chunk1->block_array[18] = faceCube;
+    faceCube.metadata = 2; chunk1->block_array[19] = faceCube;
+    faceCube.metadata = 0; chunk1->block_array[20] = faceCube;
+    faceCube.metadata = 1; chunk1->block_array[21] = faceCube;
+    
+    //Jack-o-Lantern
+    faceCube.blockID = 91;
+    faceCube.metadata = 3; chunk1->block_array[24] = faceCube;
+    faceCube.metadata = 2; chunk1->block_array[25] = faceCube;
+    faceCube.metadata = 0; chunk1->block_array[26] = faceCube;
+    faceCube.metadata = 1; chunk1->block_array[27] = faceCube;
+
+    world.addMapChunk(chunk1);    
+    
+    //
     //Move the world in these directions at start
+    //
     world.spawn_X = 8;
     world.spawn_Y = 64;
     world.spawn_Z = 16;

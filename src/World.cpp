@@ -612,13 +612,14 @@ bool World::genWall(int32_t X, int8_t Y, int32_t Z,
 
 //Generate a leafy tree with base at (X,Y,Z), chunk origin will be different
 bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
-    uint8_t size_X, uint8_t size_Y, uint8_t size_Z, uint8_t leavesID)
+    uint8_t size_X, uint8_t size_Y, uint8_t size_Z, uint8_t metadata)
 {
     //Offsets
     uint8_t off_x, off_y, off_z;
     
     //Block ID for log
     const uint8_t logID=17;
+    const uint8_t leavesID=18;
     
     //Calculate chunk origin
     int32_t origin_X = X - size_X/2;
@@ -637,7 +638,7 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
         origin_X, Y, origin_Z);
     
     //Allocate array of blocks
-    Block *&firstBlockArray = treeChunk->block_array;
+    Block *&blocks = treeChunk->block_array;
 
     //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
     size_t index=0;
@@ -674,15 +675,12 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
                 }
         
                 //Assign block ID and increment
-                firstBlockArray[index].blockID = ID;
+                blocks[index].blockID = ID;
+                blocks[index].metadata = metadata;
                 index++;
             }
         }
     }
-
-    //Pack blocks in chunk, and zip
-    //treeChunk->packBlocks();
-    //treeChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
     bool result=addMapChunk(treeChunk );
