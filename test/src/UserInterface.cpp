@@ -503,7 +503,7 @@ bool UserInterface::handleKeys()
     bool movement[MOVE_COUNT] = {false, false, false, false, false, false, false, false};
     
     //Handle single keypresses in order
-    if (keys_typed >= 1024) { keys_typed = 1024; }
+    if (keys_typed >= 1024) { keys_typed = 1024; }  //Can anyone type that fast?
     for( index = 0; index < keys_typed; index++) {
       
         //Game in "PLAYING" state... Do something else for text input
@@ -560,6 +560,11 @@ bool UserInterface::handleKeys()
             //Toggle status display
             case sf::Key::F3:
                 showStatus = !showStatus;
+                break;
+            //Write block information near camera
+            case sf::Key::F4:
+                viewer.saveLocalBlocks(world);
+                cout << "Wrote nearby block info to local_blocks.txt" << endl;
                 break;
             //Redraw everything
             case sf::Key::F5:
@@ -662,7 +667,7 @@ bool UserInterface::handleKeys()
     return result;
 }
 
-//Responses to keys read from key buffer during PLAYING (not CHAT or CONFIG)
+//Additional key responses.  Override this if you don't want to rewrite
 void UserInterface::customHandleKey(sf::Key::Code keycode)
 {
     switch (keycode) {

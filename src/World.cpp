@@ -174,7 +174,7 @@ mc__::MapChunk* World::getChunk(int32_t X, int32_t Z)
 {
     mc__::MapChunk* result=NULL;
     
-    uint64_t key = getKey(X, Z);
+    uint64_t key = getKey(X&0xFFFFFFF0, Z&0xFFFFFFF0);
     XZMapChunk_t::const_iterator iter_xz = coordMapChunks.find(key);
     if (iter_xz != coordMapChunks.end()) {
         result = iter_xz->second;
@@ -674,9 +674,12 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
                     }
                 }
         
-                //Assign block ID and increment
+                //Assign block ID
                 blocks[index].blockID = ID;
-                blocks[index].metadata = metadata;
+                //Assign metadata if not "air"
+                if (ID != 0) {
+                    blocks[index].metadata = metadata;
+                }
                 index++;
             }
         }

@@ -162,18 +162,18 @@ void Chunk::packBlocks()
         
         //Pack the metadata and sky (don't care if odd number of blocks)
         if (!half_byte) {
-            byte_array[off_meta] |= (block->metadata << 4);
-            byte_array[off_sky] = (block->lighting << 4);
+            byte_array[off_meta] |= (block->metadata & 0x0F);
+            byte_array[off_sky] |= (block->lighting & 0x0F);
         } else {
-            byte_array[off_meta] |= (block->metadata & 0x0F); off_meta++;
-            byte_array[off_sky] |= (block->lighting & 0x0F); off_sky++;
+            byte_array[off_meta] |= (block->metadata << 4); off_meta++;
+            byte_array[off_sky] = (block->lighting << 4); off_sky++;
         }
         
         //Pack block light (depends on odd number of blocks)
         if (half_byte ^ odd_size) {
-            byte_array[off_light] |= (block->lighting >> 4); off_light++;
+            byte_array[off_light] |= (block->lighting & 0xF0); off_light++;
         } else {
-            byte_array[off_light] |= (block->lighting & 0xF0);
+            byte_array[off_light] |= (block->lighting >> 4);
         }
                 
         //Toggle half-byte status, go to next block
@@ -210,6 +210,26 @@ bool Chunk::unpackBlocks(bool free_packed)
         block = block_array + index;
         block->blockID = byte_array[index];
 
+        //Unpack half-bytes: low 4 bits first, high 4 bits second
+        //Unpack the metadata, light, and sky, according to half-byte
+        if (!half_byte) {
+            block->metadata = (byte_array[off_meta] & 0x0F);
+            block->lighting = (byte_array[off_sky] & 0x0F);
+        } else {
+            block->metadata = (byte_array[off_meta] >> 4);
+            block->lighting = (byte_array[off_sky] >> 4);
+            off_meta++;
+            off_sky++;
+        }
+
+        //Unpack block light depending on odd_size and half-byte
+        if (half_byte ^ odd_size) {
+            block->lighting |= (byte_array[off_light] & 0xF0);
+            off_light++;
+        } else {
+            block->lighting |= ((byte_array[off_light] & 0x0F) << 4);
+        }
+/*
         //Unpack the metadata, light, and sky, according to half-byte
         if (!half_byte) {
             block->metadata = (byte_array[off_meta] >> 4);
@@ -228,7 +248,7 @@ bool Chunk::unpackBlocks(bool free_packed)
         } else {
             block->lighting |= (byte_array[off_light] & 0xF0);
         }
-        
+*/
         //Toggle half-byte status, go to next block
         half_byte = !half_byte;
     }

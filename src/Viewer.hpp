@@ -130,7 +130,8 @@ namespace mc__ {
                 const std::string& filename) const;
             void printChunks(const mc__::World& world) const;
             bool saveChunks(const mc__::World& world) const;
-            
+            bool saveLocalBlocks(const mc__::World& world) const;
+
             //RGB settings for leaves, grass. TODO: use biome flag from MapChunk
             GLubyte leaf_color[4];
             GLubyte grass_color[4];

@@ -82,12 +82,15 @@ using std::hex;
 using std::dec;
 using std::setw;
 using std::setfill;
+using std::uppercase;
 using std::ofstream;
 using std::ios;
 using std::flush;
 
 using std::string;
 using std::stringstream;
+
+using std::set;
 
 const float Viewer::PI = std::atan(1.0)*4;
 
@@ -1111,6 +1114,74 @@ bool Viewer::saveChunks(const mc__::World& world) const
     return true;
 }
 
+//Dump text information for block IDs and metadata near camera
+bool Viewer::saveLocalBlocks(const mc__::World& world) const
+{
+    //block and camera position
+    int32_t X, Z, center_X, center_Z;
+    int8_t Y, center_Y;
+    stringstream filename;
+    const uint8_t radius = 5;
+    
+    //Remember the blocks we've seen
+    set<uint8_t> seenBlocks;
+    
+    //Convert camera coords
+    center_X = (int32_t)cam_X >> 4;
+    center_Y = ((int32_t)cam_Y >> 4)&0xFF;
+    center_Z = (int32_t)cam_Z >> 4;
+
+    //Open file, and header
+    ofstream logfile( "local_blocks.txt", ios::out);
+    logfile << "Blocks/metadata @ "
+        << (int)center_X << "," << (int)center_Y << ","<< (int)center_Z
+        << endl << endl;
+
+    //Repeat for bounded range around camera
+    for (Y = center_Y - 2; Y <= (center_Y + 1) && Y != 127; Y++) {
+        //HEADER FOR Y VALUE
+        logfile << "Y=" << setw(2) << (int)Y;
+        for (Z = center_Z - radius; Z <= center_Z + radius; Z++) {
+            logfile << " Z=" << setw(2) << (int)(Z);
+        }
+        logfile << endl;
+    for (X = center_X - radius; X <= center_X + radius; X++) {
+        logfile << "X=" << setw(2) << (int)X << flush;
+    for (Z = center_Z - radius; Z <= center_Z + radius; Z++) {
+        //Lookup the chunk(s) camera is in
+        const Chunk *chunk = world.getChunk( X&0xFFFFFFF0, Z&0xFFFFFFF0);
+        if (chunk != NULL)
+        {
+            //Get block @ X,Y,Z
+            uint16_t index = ((X&0xF)<<11)|((Z&0xF)<<7)|(Y&0x7F);
+            mc__::Block& block = chunk->block_array[index];
+            seenBlocks.insert(block.blockID);
+            
+            //Print block info
+            logfile << " " << hex << setw(2) << setfill('0') << uppercase
+                    << (short)block.blockID << ":" << (short)block.metadata;
+        }
+    }
+        logfile << dec << endl;
+    }
+        logfile << endl;
+    }
+
+    //Write a list of blocks we've seen, so player doesn't have to look it up!
+    logfile << "Block data values" << endl << "=================" << endl;
+    set<uint8_t>::const_iterator iter;
+    for (iter = seenBlocks.begin(); iter != seenBlocks.end(); iter++) {
+        logfile << hex << setw(2) << setfill('0') << uppercase << (int)*iter
+                << ": " << Item::getString(*iter) << endl;
+    }
+
+    //Close the logfile
+    logfile.close();
+
+    return true;
+}
+
+
 //List all the Map Chunks to stdout
 void Viewer::printChunks(const mc__::World& world) const
 {
@@ -1142,6 +1213,7 @@ void Viewer::printChunks(const mc__::World& world) const
             cout << ", " << mc->array_length << " blocks, "
             << mc->byte_length << " bytes unzipped";
         }
+        cout << endl;
     }
     
     //For all mini-chunks
@@ -1163,6 +1235,7 @@ void Viewer::printChunks(const mc__::World& world) const
             cout << ", " << myChunk.array_length << " blocks, "
             << myChunk.byte_length << " bytes unzipped";
         }
+        cout << endl;
     }
 
 }
