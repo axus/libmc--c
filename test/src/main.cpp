@@ -218,7 +218,7 @@ void genWorld(World& world)
     //
     //Move the world in these directions at start
     //
-    world.spawn_X = 8;
+    world.spawn_X = -12;
     world.spawn_Y = 64;
     world.spawn_Z = 16;
 
@@ -308,7 +308,7 @@ int main(int argc, char** argv)
     //Add a player at the spawn point, and make a reference to it
     Player& player = *(mobiles.addPlayer(playerEID, player_name,
         world.spawn_X << 5, world.spawn_Y << 5, world.spawn_Z << 5,
-        128, 0));
+        -64/*yaw*/, 0/*pitch*/));
 
     //Give the player some items
     genInventory(player);

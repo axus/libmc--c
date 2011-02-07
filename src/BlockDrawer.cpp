@@ -1158,39 +1158,39 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     //Compare to adjacent blocks
     uint8_t mask=0;
     if (world != NULL) {
-        //A
+        //A neighbor
         Block block = world->getBlock(x - 1, y, z);
         if (Chunk::isLogic[block.blockID]) {
-            mask |= 8;
+            mask |= 1;
         }
-        //B
+        //B neighbor
         block = world->getBlock(x + 1, y, z);
-        if (Chunk::isLogic[block.blockID]) {
-            mask |= 4;
-        }
-        //E
-        block = world->getBlock(x, y, z - 1);
         if (Chunk::isLogic[block.blockID]) {
             mask |= 2;
         }
-        //F
+        //E neighbor
+        block = world->getBlock(x, y, z - 1);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 4;
+        }
+        //F neighbor
         block = world->getBlock(x, y, z + 1);
         if (Chunk::isLogic[block.blockID]) {
-            mask |= 1;
+            mask |= 8;
         }
     }
         
     //If metadata > 0, wire is active
-    uint8_t wireFace = 0;   //crossing
+    uint8_t wireFace = 0;   //'+' shape
     if (meta > 0) {
-        wireFace = 2;       //crossing, lit
+        wireFace = 2;       //'+' shape, lit
     }
     
 
-    uint8_t rotate = 0;
+    const GLfloat scale = 11.0/16.0;    //Ratio for truncated wires
+    const GLfloat offset = 5.0/16.0;    //Offset for truncated wires
     GLfloat scale_x = 1.0, scale_y = 1.0, off_x=0.0, off_y=0.0;
-    const GLfloat scale = 11.0/16.0;    //Multiply by tmr for textures
-    const GLfloat offset = 5.0/16.0;       //Multiply by tmr for textures
+    uint8_t rotate = 0;                 //Number of texture rotations
     
     //Wire drawing depends on mask
     switch (mask) {
@@ -1199,13 +1199,13 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
         case 3:
             //Horizontal line
             wireFace++;
-            rotate = 1;
             break;
         case 4:
         case 8:
         case 12:
             //Vertical line
             wireFace++;
+            rotate = 1;
             break;
         case 5:  //Top-left angle
             scale_x = scale_y = scale;
@@ -1213,6 +1213,9 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
         case 6: //Top-right angle
             off_x = offset;
             scale_x = scale_y = scale;
+            break;
+        case 7:  //Top T-shape
+            scale_y = scale;
             break;
         case 9:  //Bottom-left angle
             off_y = offset;
@@ -1222,18 +1225,15 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
             off_x = off_y = offset;
             scale_x = scale_y = scale;
             break;
-        case 7:  //Top T-shape
-            scale_y = scale;
-            break;
-        case 14: //Right T-shape
-            off_x = offset;
-            scale_x = scale;
-            break;
         case 11: //Bottom T-shape
             off_y = offset;
             scale_y = scale;
             break;
         case 13: //Left T-shape
+            scale_x = scale;
+            break;
+        case 14: //Right T-shape
+            off_x = offset;
             scale_x = scale;
             break;
         case 0:
@@ -1271,16 +1271,18 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     GLint E = (z << 4) + (off_y * texmap_TILE_LENGTH);
     GLint F = E + (scale_y * texmap_TILE_LENGTH);
 
-    //C
-    glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, E);  //Lower right: BCE
-    glTexCoord2f(tx[2],ty[2]); glVertex3i( B, C, F);  //Top right:   BCF
-    glTexCoord2f(tx[3],ty[3]); glVertex3i( A, C, F);  //Top left:    ACF
-
+    //Top face (seen by player)
     glTexCoord2f(tx[0],ty[0]); glVertex3i( A, D, F);  //Lower left:  ADF
     glTexCoord2f(tx[1],ty[1]); glVertex3i( B, D, F);  //Lower right: BDF
     glTexCoord2f(tx[2],ty[2]); glVertex3i( B, D, E);  //Top right:   BDE
     glTexCoord2f(tx[3],ty[3]); glVertex3i( A, D, E);  //Top left:    ADE
+
+    //Bottom face (only seen from below a glass floor)
+    glTexCoord2f(tx[3],ty[3]); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2f(tx[2],ty[2]); glVertex3i( B, C, E);  //Lower right: BCE
+    glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, F);  //Top right:   BCF
+    glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, F);  //Top left:    ACF
+
 
 }
 
