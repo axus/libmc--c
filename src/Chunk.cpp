@@ -697,3 +697,94 @@ const char* Chunk::Name[] = {
     "Unknown",
     "Unknown",
 };
+
+//Check if block is part of redstone circuit
+const bool mc__::Chunk::isLogic[] = {
+    false,  // 0 Air
+    false,  // 1 Stone
+    false,  // 2 Grass
+    false,  // 3 Dirt
+    false,  // 4 Cobble
+    false,  // 5 Wood
+    false,  // 6 Sapling
+    false,  // 7 Bedrock
+    false,  // 8 Water(*)
+    false,  // 9 WaterStill
+    false,  //10 Lava(*)
+    false,  //11 LavaStill
+    false,  //12 Sand
+    false,  //13 Gravel
+    false,  //14 GoldOre
+    false,  //15 IronOre
+    false,  //16 CoalOre
+    false,  //17 Log
+    false,  //18 Leaves
+    false,  //19 Sponge
+    false,  //20 Glass
+    false,  //21 Lapis Ore
+    false,  //22 Lapis Block
+    false,  //23 Dispenser
+    false,  //24 Sandstone
+    false,  //25 Note Block
+    false, false, false, //Cloth
+    false, false, false, false, false, false, false, false, //Cloth
+    false,  //37 Flower
+    false,  //38 Rose
+    false,  //39 BrownShroom
+    false,  //40 RedShroom
+    false,  //41 GoldBlock
+    false,  //42 IronBlock
+    false,  //43 DoubleStep
+    false,  //44 Step
+    false,  //45 Brick
+    false,  //46 TNT
+    false,  //47 Bookshelf
+    false,  //48 Mossy
+    false,  //49 Obsidian
+    false,  //50 Torch
+    false,  //51 Fire
+    false,  //52 Spawner
+    false,  //53 WoodStairs
+    false,  //54 Chest (*)
+    true,   //55 Wire (*)
+    false,  //56 DiamondOre
+    false,  //57 DiamondBlock
+    false,  //58 Workbench
+    false,  //59 Crops (*)
+    false,  //60 Soil
+    false,  //61 Furnace
+    false,  //62 LitFurnace
+    false,  //63 SignPost (*)
+    false,  //64 WoodDoor (*)
+    false,  //65 Ladder (*)
+    false,  //66 Track (*)
+    false,  //67 CobbleStairs
+    false,  //68 WallSign (*)
+    true,   //69 Lever
+    true,   //70 StonePlate
+    false,  //71 IronDoor (*)
+    true,   //72 WoodPlate
+    true,   //73 RedstoneOre
+    true,   //74 RedstoneOreLit(*)
+    true,   //75 RedstoneTorch
+    true,   //76 RedstoneTorchLit
+    true,   //77 StoneButton
+    false,  //78 SnowCover
+    false,  //79 Ice
+    false,  //80 Snow
+    false,  //81 Cactus
+    false,  //82 Clay
+    false,  //83 Sugarcane (*)
+    false,  //84 Jukebox
+    false,  //85 Fence (*)
+    false,  //86 Pumpkin
+    false,  //87 Netherstone
+    false,  //88 91 SlowSand
+    false,  //89 Lightstone
+    false,  //90 Portal (??)
+    false,  //91 PumpkinLit
+    false,  //92 Cake
+    false,  //93
+    false,  //94
+    false   //95
+};

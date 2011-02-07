@@ -53,7 +53,7 @@ void debugKey(const World& world, int32_t X, int8_t Y, int32_t Z)
 }
 
 //
-//Create game chunk(s)
+//Create game chunk(s) for test world
 //
 void genWorld(World& world)
 {
@@ -191,6 +191,29 @@ void genWorld(World& world)
     faceCube.metadata = 1; chunk1->block_array[27] = faceCube;
 
     world.addMapChunk(chunk1);    
+    delete chunk1;
+    
+    //
+    //  Redstone wire test
+    //
+    chunk1 = new mc__::Chunk(5, 0, 2, -8, 64, 21);   //3x6 wire chunk
+
+    //Wire
+    mc__::Block wireBlock = {55, 0, 0, 0};
+    mc__::Block wireTorch = {76, 5, 0, 0};
+    //Square of 9 wires
+    for (size_t i = 0; i < 9; i++) {
+        wireBlock.metadata = i; chunk1->block_array[i] = wireBlock;
+    }
+    //3 wires around a redstone torch
+    wireBlock.metadata = 12; chunk1->block_array[12] = wireBlock;
+    wireTorch.metadata = 5;  chunk1->block_array[13] = wireTorch;
+    wireBlock.metadata = 14; chunk1->block_array[14] = wireBlock;
+    wireBlock.metadata = 15; chunk1->block_array[16] = wireBlock;
+    //Add the chunk
+    world.addMapChunk(chunk1);    
+    delete chunk1;
+
     
     //
     //Move the world in these directions at start

@@ -167,6 +167,7 @@ namespace mc__ {
             static const bool isOpaque[];
             static const bool isCube[]; //item = !cube
             static const char *Name[];  //block name
+            static const bool isLogic[];//Used in redstone circuit
     };
 }
 

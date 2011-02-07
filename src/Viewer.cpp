@@ -83,6 +83,7 @@ using std::dec;
 using std::setw;
 using std::setfill;
 using std::uppercase;
+using std::left;
 using std::ofstream;
 using std::ios;
 using std::flush;
@@ -1114,7 +1115,7 @@ bool Viewer::saveChunks(const mc__::World& world) const
     return true;
 }
 
-//Dump text information for block IDs and metadata near camera
+//Dump information for block IDs and metadata near camera
 bool Viewer::saveLocalBlocks(const mc__::World& world) const
 {
     //block and camera position
@@ -1133,16 +1134,18 @@ bool Viewer::saveLocalBlocks(const mc__::World& world) const
 
     //Open file, and header
     ofstream logfile( "local_blocks.txt", ios::out);
-    logfile << "Blocks/metadata @ "
+    logfile << "Block:metadata @ "
         << (int)center_X << "," << (int)center_Y << ","<< (int)center_Z
+        << " on " << world.name << endl;
+    logfile << "Coordinates are in decimal, block IDs are in hexidecimal."
         << endl << endl;
 
     //Repeat for bounded range around camera
     for (Y = center_Y - 2; Y <= (center_Y + 1) && Y != 127; Y++) {
         //HEADER FOR Y VALUE
-        logfile << "Y=" << setw(2) << (int)Y;
+        logfile << "Y=" << left << setw(3) << (int)Y;
         for (Z = center_Z - radius; Z <= center_Z + radius; Z++) {
-            logfile << " Z=" << setw(2) << (int)(Z);
+            logfile << " Z=" << left << setw(3) << (int)(Z);
         }
         logfile << endl;
     for (X = center_X - radius; X <= center_X + radius; X++) {
@@ -1158,11 +1161,11 @@ bool Viewer::saveLocalBlocks(const mc__::World& world) const
             seenBlocks.insert(block.blockID);
             
             //Print block info
-            logfile << " " << hex << setw(2) << setfill('0') << uppercase
+            logfile << "  " << hex << setw(2) << setfill('0') << uppercase
                     << (short)block.blockID << ":" << (short)block.metadata;
         }
     }
-        logfile << dec << endl;
+        logfile << dec << setfill(' ') << endl;
     }
         logfile << endl;
     }

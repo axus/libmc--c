@@ -1150,12 +1150,43 @@ void BlockDrawer::drawDyed( uint8_t blockID, uint8_t meta,
 }
 
 
-//Draw redstone wire (active or inactive
+//Draw redstone wire (active or inactive)
 void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: change texture and rotation depending on meta
-    drawFloorplate(blockID, meta, x, y, z, vflags);
+    //If metadata > 0, wire is active
+    uint8_t wireFace = 0;   //crossing
+    if (meta > 0) {
+        wireFace = 2;       //crossing, lit
+    }
+    
+    //TODO: Wire drawing depends on adjacent blocks
+
+    //Object boundaries... flat square 1 pixel off the ground
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + 1;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0 = blockInfo[blockID].tx[wireFace];
+    GLfloat tx_1 = tx_0 + tmr;
+    GLfloat ty_1 = blockInfo[blockID].ty[wireFace];
+    GLfloat ty_0 = ty_1 + tmr;
+    
+    //C
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+
 }
 
 //Draw planted crops (meta affects texture)
@@ -1486,7 +1517,7 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Chest (*)
     setBlockInfo( 54, 26, 26, 25, 25, 26, 27, 0x00,&BlockDrawer::drawChest);
         //Wire (*)
-    setBlockInfo( 55, 84, 85, 84, 100,100,101,0x6F,&BlockDrawer::drawWire);
+    setBlockInfo( 55, 84, 85, 100,101,84,100, 0x6F,&BlockDrawer::drawWire);
     setBlockInfo( 56, 50, 50, 50, 50, 50, 50, 0x00);    //DiamondOre
     setBlockInfo( 57, 24, 24, 24, 24, 24, 24, 0x00);    //DiamondBlock
     setBlockInfo( 58, 60, 60, 43, 43, 59, 59, 0x00);    //Workbench
