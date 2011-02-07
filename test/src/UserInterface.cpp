@@ -65,7 +65,7 @@ UserInterface::UserInterface(
     Settings(UI_bpp, 0, 0),                 //32bpp, 0 stencil, 0 anti-aliasing
     App(sf::VideoMode(UI_width, UI_height, UI_bpp), //860x480, 32-bit color
         name, sf::Style::Resize|sf::Style::Close, Settings),    //Resizable
-    viewer(UI_width, UI_height),
+    viewer(&w, UI_width, UI_height),
     world(w), mobiles(m), player(p), events(ev), debugging(dbg),
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window

@@ -99,8 +99,8 @@ const float Viewer::PI = std::atan(1.0)*4;
 //Library version info
 unsigned long mc__::getVersion() { return MC__VIEWER_VERSION; }
 
-Viewer::Viewer(unsigned short width, unsigned short height):
-    blockDraw(NULL),
+Viewer::Viewer(World* w, unsigned short width, unsigned short height):
+    world(w), blockDraw(NULL),
     cam_X(0), cam_Y(0), cam_Z(0), drawDistance(4096.f),
     view_width(width), view_height(height),
     aspectRatio((GLfloat)width/height), fieldOfViewY(70),
@@ -186,7 +186,7 @@ bool Viewer::init(const std::string& filename,
     }
     
     //Load game block information
-    blockDraw = new BlockDrawer(terrain_tex, item_tex);
+    blockDraw = new BlockDrawer(world, terrain_tex, item_tex);
 
 
     //Change camera to model view mode

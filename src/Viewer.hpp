@@ -56,12 +56,17 @@ namespace mc__ {
                 mapChunkUintMap_t;
 
             //Constructor
-            Viewer(unsigned short width, unsigned short height);
+            Viewer( World* w,
+                unsigned short width, unsigned short height);
             
             //Map item ID to item information
             BlockInfo itemInfo[item_id_MAX];
+
+            //World pointer
+            mc__::World* world;
             
-            BlockDrawer *blockDraw;  //use this to draw individual blocks
+            //Use this to draw individual blocks
+            BlockDrawer *blockDraw;
             
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;

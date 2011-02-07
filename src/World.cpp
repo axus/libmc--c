@@ -229,6 +229,22 @@ mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
     return chunk;
 }
 
+//Return copy of block at X,Y,Z (0xFF if failed)
+mc__::Block World::getBlock(int32_t X, int8_t Y, int32_t Z) const {
+    
+    mc__::Block result = {0xFF, 0, 0, 0};
+    
+    const Chunk *chunk = getChunk( X&0xFFFFFFF0, Z&0xFFFFFFF0);
+    if (chunk != NULL)
+    {
+        //Get block @ X,Y,Z
+        uint16_t index = ((X&0xF)<<11)|((Z&0xF)<<7)|(Y&0x7F);
+        result = chunk->block_array[index];
+    }
+    
+    return result;
+}
+
 //Unzip/copy one mini-chunk to appropriate map chunk
 bool World::addMapChunk( const Chunk* chunk)
 {

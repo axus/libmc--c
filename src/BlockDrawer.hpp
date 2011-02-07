@@ -22,6 +22,9 @@
 #ifndef MC__BLOCKDRAWER_H
 #define MC__BLOCKDRAWER_H
 
+//libmc--c
+#include "World.hpp"
+
 //DevIL
 #include <IL/il.h>
 
@@ -85,6 +88,9 @@ namespace mc__ {
             // Data
             //
             
+            //World
+            mc__::World *world;
+            
             //GL IDs for textures loaded by viewer
             GLuint terrain_tex, item_tex;
 
@@ -99,7 +105,7 @@ namespace mc__ {
             //
 
             //Constructor        
-            BlockDrawer( GLuint t_tex, GLuint i_tex );
+            BlockDrawer( mc__::World* w, GLuint t_tex, GLuint i_tex );
 
             //Draw a block ID, choose it's drawing function and change metadata
             void draw( uint8_t blockID, uint8_t meta,

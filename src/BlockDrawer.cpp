@@ -62,6 +62,7 @@
 #include "BlockDrawer.hpp"
 using mc__::BlockDrawer;
 using mc__::face_ID;
+using mc__::World;
 
 //C
 #include <cmath>    //fmod
@@ -87,8 +88,8 @@ using std::flush;
 using std::string;
 using std::stringstream;
 
-BlockDrawer::BlockDrawer(GLuint t_tex, GLuint i_tex):
-    terrain_tex(t_tex), item_tex(i_tex)
+BlockDrawer::BlockDrawer(World* w, GLuint t_tex, GLuint i_tex):
+    world(w), terrain_tex(t_tex), item_tex(i_tex)
 {
     //Load the block info for all known block types
     loadBlockInfo();
@@ -1154,38 +1155,132 @@ void BlockDrawer::drawDyed( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+    //Compare to adjacent blocks
+    uint8_t mask=0;
+    if (world != NULL) {
+        //A
+        Block block = world->getBlock(x - 1, y, z);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 8;
+        }
+        //B
+        block = world->getBlock(x + 1, y, z);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 4;
+        }
+        //E
+        block = world->getBlock(x, y, z - 1);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 2;
+        }
+        //F
+        block = world->getBlock(x, y, z + 1);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 1;
+        }
+    }
+        
     //If metadata > 0, wire is active
     uint8_t wireFace = 0;   //crossing
     if (meta > 0) {
         wireFace = 2;       //crossing, lit
     }
     
-    //TODO: Wire drawing depends on adjacent blocks
 
+    uint8_t rotate = 0;
+    GLfloat scale_x = 1.0, scale_y = 1.0, off_x=0.0, off_y=0.0;
+    const GLfloat scale = 11.0/16.0;    //Multiply by tmr for textures
+    const GLfloat offset = 5.0/16.0;       //Multiply by tmr for textures
+    
+    //Wire drawing depends on mask
+    switch (mask) {
+        case 1:
+        case 2:
+        case 3:
+            //Horizontal line
+            wireFace++;
+            rotate = 1;
+            break;
+        case 4:
+        case 8:
+        case 12:
+            //Vertical line
+            wireFace++;
+            break;
+        case 5:  //Top-left angle
+            scale_x = scale_y = scale;
+            break;
+        case 6: //Top-right angle
+            off_x = offset;
+            scale_x = scale_y = scale;
+            break;
+        case 9:  //Bottom-left angle
+            off_y = offset;
+            scale_x = scale_y = scale;
+            break;
+        case 10: //Bottom-right angle
+            off_x = off_y = offset;
+            scale_x = scale_y = scale;
+            break;
+        case 7:  //Top T-shape
+            scale_y = scale;
+            break;
+        case 14: //Right T-shape
+            off_x = offset;
+            scale_x = scale;
+            break;
+        case 11: //Bottom T-shape
+            off_y = offset;
+            scale_y = scale;
+            break;
+        case 13: //Left T-shape
+            scale_x = scale;
+            break;
+        case 0:
+        case 15:
+        default:
+            break;  //Default '+' shape
+    }
+    
+    //Texture map coordinates of terrain.png (0.0 - 1.0)
+    GLfloat tx[5], ty[5];
+
+    tx[0] = blockInfo[blockID].tx[wireFace] + off_x*tmr;
+    tx[1] = tx[0] + scale_x*tmr;
+    tx[2] = tx[1];
+    tx[3] = tx[0];
+    ty[0] = blockInfo[blockID].ty[wireFace] + (off_y + scale_y)*tmr;
+    ty[1] = ty[0];
+    ty[2] = blockInfo[blockID].ty[wireFace] + off_y*tmr;
+    ty[3] = ty[2];
+    
+    //Rotate texture as many times as needed
+    for (; rotate > 0; rotate--) {
+        tx[4] = tx[0]; ty[4] = ty[0];
+        tx[0] = tx[1]; ty[0] = ty[1];
+        tx[1] = tx[2]; ty[1] = ty[2];
+        tx[2] = tx[3]; ty[2] = ty[3];
+        tx[3] = tx[4]; ty[3] = ty[4];
+    }
+    
     //Object boundaries... flat square 1 pixel off the ground
-    GLint A = (x << 4) + 0;
-    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint A = (x << 4) + (off_x * texmap_TILE_LENGTH);
+    GLint B = A + (scale_x * texmap_TILE_LENGTH);
     GLint C = (y << 4) + 0;
     GLint D = (y << 4) + 1;
-    GLint E = (z << 4) + 0;
-    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + (off_y * texmap_TILE_LENGTH);
+    GLint F = E + (scale_y * texmap_TILE_LENGTH);
 
-    //Texture map coordinates (0.0 - 1.0)
-    GLfloat tx_0 = blockInfo[blockID].tx[wireFace];
-    GLfloat tx_1 = tx_0 + tmr;
-    GLfloat ty_1 = blockInfo[blockID].ty[wireFace];
-    GLfloat ty_0 = ty_1 + tmr;
-    
     //C
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, E);  //Lower right: BCE
+    glTexCoord2f(tx[2],ty[2]); glVertex3i( B, C, F);  //Top right:   BCF
+    glTexCoord2f(tx[3],ty[3]); glVertex3i( A, C, F);  //Top left:    ACF
 
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    glTexCoord2f(tx[0],ty[0]); glVertex3i( A, D, F);  //Lower left:  ADF
+    glTexCoord2f(tx[1],ty[1]); glVertex3i( B, D, F);  //Lower right: BDF
+    glTexCoord2f(tx[2],ty[2]); glVertex3i( B, D, E);  //Top right:   BDE
+    glTexCoord2f(tx[3],ty[3]); glVertex3i( A, D, E);  //Top left:    ADE
 
 }
 

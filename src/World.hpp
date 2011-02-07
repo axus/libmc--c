@@ -61,10 +61,13 @@ namespace mc__ {
                 uint8_t size_X, uint8_t size_Y, uint8_t size_Z,
                 uint32_t ziplength, uint8_t *zipped, bool unzip=true);
             
-            //Return chunk at X,Y,Z
+            //Return chunk at X,Z
             mc__::MapChunk* getChunk(int32_t X, int32_t Z);
             const mc__::MapChunk* getChunk(int32_t X, int32_t Z) const;
             mc__::MapChunk copyChunk(int32_t X, int32_t Z) const;
+            
+            //Return copy of block at X,Y,Z (0xFF if failed)
+            mc__::Block getBlock(int32_t X, int8_t Y, int32_t Z) const;
             
             //Return new chunk at X,Y,Z, erasing old chunk
             mc__::Chunk* newChunk(int32_t X, int8_t Y, int32_t Z,
