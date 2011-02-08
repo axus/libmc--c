@@ -723,9 +723,9 @@ const bool mc__::Chunk::isLogic[] = {
     false,  //20 Glass
     false,  //21 Lapis Ore
     false,  //22 Lapis Block
-    false,  //23 Dispenser
+    true,   //23 Dispenser  (different from vanilla client)
     false,  //24 Sandstone
-    false,  //25 Note Block
+    true,   //25 Note Block (different from vanilla client)
     false, false, false, //Cloth
     false, false, false, false, false, false, false, false, //Cloth
     false,  //37 Flower

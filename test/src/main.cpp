@@ -214,6 +214,28 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);    
     delete chunk1;
 
+    //
+    //  Raised redstone and floorplate test
+    //
+    chunk1 = new mc__::Chunk(2, 1, 2, -8, 65, 9);   //3x2x3 chunk
+    mc__::Block glassBlock = { 20, 0, 0, 0};
+    mc__::Block woodPlate = { 72, 0, 0, 0};
+    mc__::Block stonePlate = { 70, 0, 0, 0};
+    wireBlock.metadata = 0;
+    //Surround redstone with glass
+    chunk1->block_array[2] = glassBlock;
+    chunk1->block_array[6] = glassBlock;
+    chunk1->block_array[8] = wireBlock;
+    chunk1->block_array[10] = glassBlock;
+    chunk1->block_array[14] = glassBlock;
+    //Connect to plates on row above
+    chunk1->block_array[3] = stonePlate; stonePlate.metadata = 1;
+    chunk1->block_array[7] = woodPlate; woodPlate.metadata = 1;
+    chunk1->block_array[11] = woodPlate;
+    chunk1->block_array[15] = stonePlate;
+    //Add the chunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
     
     //
     //Move the world in these directions at start

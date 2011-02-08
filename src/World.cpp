@@ -232,10 +232,11 @@ mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
 //Return copy of block at X,Y,Z (0xFF if failed)
 mc__::Block World::getBlock(int32_t X, int8_t Y, int32_t Z) const {
     
-    mc__::Block result = {0xFF, 0, 0, 0};
+    //Return "air" if not found.
+    mc__::Block result = {0, 0, 0, 0};
     
     const Chunk *chunk = getChunk( X&0xFFFFFFF0, Z&0xFFFFFFF0);
-    if (chunk != NULL)
+    if (chunk != NULL && Y >= 0)
     {
         //Get block @ X,Y,Z
         uint16_t index = ((X&0xF)<<11)|((Z&0xF)<<7)|(Y&0x7F);

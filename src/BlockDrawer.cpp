@@ -1181,10 +1181,7 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     }
         
     //If metadata > 0, wire is active
-    uint8_t wireFace = 0;   //'+' shape
-    if (meta > 0) {
-        wireFace = 2;       //'+' shape, lit
-    }
+    uint8_t wireFace = (meta == 0 ? 0 : 2 );   //'+' shape, lit or unlit
     
 
     const GLfloat scale = 11.0/16.0;    //Ratio for truncated wires
@@ -1197,13 +1194,13 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
         case 1:
         case 2:
         case 3:
-            //Horizontal line
+            //'-' shape
             wireFace++;
             break;
         case 4:
         case 8:
         case 12:
-            //Vertical line
+            //'|' shape
             wireFace++;
             rotate = 1;
             break;
@@ -1283,6 +1280,105 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, F);  //Top right:   BCF
     glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, F);  //Top left:    ACF
 
+
+    //Vertical wires if adjacent "y+1" blocks are logic types
+    wireFace=( meta == 0 ? 1 : 3);
+    tx[0] = blockInfo[blockID].tx[wireFace];
+    tx[1] = tx[0]; 
+    tx[2] = tx[1] + tmr;
+    tx[3] = tx[2];
+    ty[0] = blockInfo[blockID].ty[wireFace];
+    ty[1] = ty[0] + tmr;
+    ty[2] = ty[1];
+    ty[3] = ty[0];
+
+    //Mask for adjacent "y+1" blocks
+    mask=0;
+    if (world != NULL) {
+        //A neighbor
+        Block block = world->getBlock(x - 1, y + 1, z);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 1;
+        }
+        //B neighbor
+        block = world->getBlock(x + 1, y + 1, z);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 2;
+        }
+        //E neighbor
+        block = world->getBlock(x, y + 1, z - 1);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 4;
+        }
+        //F neighbor
+        block = world->getBlock(x, y + 1, z + 1);
+        if (Chunk::isLogic[block.blockID]) {
+            mask |= 8;
+        }
+    }
+
+    //Face coordinates (in pixels)
+    A = (x << 4) + 0;
+    B = (x << 4) + texmap_TILE_LENGTH;
+    C = (y << 4) + 0;
+    D = (y << 4) + texmap_TILE_LENGTH;
+    E = (z << 4) + 0;
+    F = (z << 4) + texmap_TILE_LENGTH;
+
+    //A
+    if (mask & 1) {
+        //outer face
+        glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx[1],ty[1]); glVertex3i( A, C, F);  //Lower right: ACF
+        glTexCoord2f(tx[2],ty[2]); glVertex3i( A, D, F);  //Top right:   ADF
+        glTexCoord2f(tx[3],ty[3]); glVertex3i( A, D, E);  //Top left:    ADE
+        //inner face
+        glTexCoord2f(tx[3],ty[3]); glVertex3i( A, D, E);  //Top left:    ADE
+        glTexCoord2f(tx[2],ty[2]); glVertex3i( A, D, F);  //Top right:   ADF
+        glTexCoord2f(tx[1],ty[1]); glVertex3i( A, C, F);  //Lower right: ACF
+        glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, E);  //Lower left:  ACE
+    }
+
+    //B
+    if (mask & 2) {
+        //outer face
+        glTexCoord2f(tx[0],ty[0]); glVertex3i( B, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx[2],ty[2]); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx[3],ty[3]); glVertex3i( B, D, F);  //Top left:    BDF
+        //inner face
+        glTexCoord2f(tx[3],ty[3]); glVertex3i( B, D, F);  //Top left:    BDF
+        glTexCoord2f(tx[2],ty[2]); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx[0],ty[0]); glVertex3i( B, C, F);  //Lower left:  BCF
+    }
+
+
+    if (mask & 4) {
+        //E (outer face)
+        glTexCoord2f(tx[0],ty[0]); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx[1],ty[1]); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx[2],ty[2]); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx[3],ty[3]); glVertex3i( B, D, E);  //Top left:    BDE
+        //E (inner face)
+        glTexCoord2f(tx[3],ty[3]); glVertex3i( B, D, E);  //Top left:    BDE
+        glTexCoord2f(tx[2],ty[2]); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx[1],ty[1]); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx[0],ty[0]); glVertex3i( B, C, E);  //Lower left:  BCE
+    }
+    
+    if (mask & 8) {
+        //F (outer face)
+        glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx[2],ty[2]); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx[3],ty[3]); glVertex3i( A, D, F);  //Top left:    ADF
+        //F (inner face)
+        glTexCoord2f(tx[3],ty[3]); glVertex3i( A, D, F);  //Top left:    ADF
+        glTexCoord2f(tx[2],ty[2]); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, F);  //Lower left:  ACF
+    }
 
 }
 
