@@ -226,16 +226,19 @@ void genWorld(World& world)
     delete chunk1;
 
     //
-    //  Raised redstone and floorplate test
+    //  Raised redstone, floorplate, and ladder test
     //
     chunk1 = new mc__::Chunk(3, 1, 3, -8, 65, 9);   //4x2x4 chunk
     mc__::Block glassBlock = { 20, 0, 0, 0};
     mc__::Block woodPlate = { 72, 0, 0, 0};
     mc__::Block stonePlate = { 70, 0, 0, 0};
+    mc__::Block ladderBlock = { 65, 3, 0, 0};
     wireBlock.metadata = 0; 
     //Surround redstone with glass
-    chunk1->block_array[2]  = glassBlock;
-    chunk1->block_array[4]  = glassBlock;
+    chunk1->block_array[0] = ladderBlock; ladderBlock.metadata = 5;
+    chunk1->block_array[2] = glassBlock;
+    chunk1->block_array[4] = glassBlock;
+    chunk1->block_array[6] = ladderBlock; ladderBlock.metadata = 4;
     chunk1->block_array[8] = glassBlock;
     chunk1->block_array[10] = wireBlock;
     chunk1->block_array[12] = wireBlock;
@@ -244,8 +247,11 @@ void genWorld(World& world)
     chunk1->block_array[18] = wireBlock;
     chunk1->block_array[20] = wireBlock;
     chunk1->block_array[22] = glassBlock;
-    chunk1->block_array[26]  = glassBlock;
-    chunk1->block_array[28]  = glassBlock;
+    chunk1->block_array[24] = ladderBlock; ladderBlock.metadata = 2;
+    chunk1->block_array[26] = glassBlock;
+    chunk1->block_array[28] = glassBlock;
+    chunk1->block_array[30] = ladderBlock;
+    
     //Connect to plates on row above
     chunk1->block_array[3] = stonePlate; stonePlate.metadata = 1;
     chunk1->block_array[15] = woodPlate; woodPlate.metadata = 1;

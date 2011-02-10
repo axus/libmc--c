@@ -166,136 +166,12 @@ void BlockDrawer::draw( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawCube( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+    //Use the "16 bit blockID" cube drawing function
     drawCubeMeta(blockID, meta, x, y, z, vflags);
-    /*
-    //Face coordinates (in pixels)
-    GLint A = (x << 4) + 0;
-    GLint B = (x << 4) + texmap_TILE_LENGTH;
-    GLint C = (y << 4) + 0;
-    GLint D = (y << 4) + texmap_TILE_LENGTH;
-    GLint E = (z << 4) + 0;
-    GLint F = (z << 4) + texmap_TILE_LENGTH;
-
-    //Texture map coordinates (0.0 - 1.0)
-    GLfloat tx_0, tx_1, ty_0, ty_1;
-
-    //For each face, use the appropriate texture offsets for the block ID
-    //       ADE ---- BDE
-    //       /.       /|
-    //      / .      / |
-    //    ADF ---- BDF |
-    //     | ACE . .| BCE
-    //     | .      | /
-    //     |.       |/
-    //    ACF ---- BCF
-
-    //   Texture map was loaded upside down...
-    // 0.0 -------------> 1.0 (X)
-    // |
-    // |
-    // |
-    // |
-    // |
-    // |
-    // v
-    // 1.0
-    // (Y)
-    
-    //
-    // (tx_0, ty_1)      (tx_1, ty_1)
-    //
-    // (tx_0, ty_0)      (tx_1, ty_0)
-
-    //A
-    if (!(vflags & 0x80)) {
-        tx_0 = blockInfo[blockID].tx[WEST];
-        tx_1 = tx_0 + tmr;
-        ty_1 = blockInfo[blockID].ty[WEST];
-        ty_0 = ty_1 + tmr;    //flip y
-        setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
-        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
-        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
-    }
-
-    //B
-    if (!(vflags & 0x40)) {
-        tx_0 = blockInfo[blockID].tx[EAST];
-        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
-        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
-        ty_1 = blockInfo[blockID].ty[EAST];
-        setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
-        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
-    }
-    
-    //C
-    if (!(vflags & 0x20)) {
-        tx_0 = blockInfo[blockID].tx[DOWN];
-        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-        ty_1 = blockInfo[blockID].ty[DOWN];
-        setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
-        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
-    }
-    
-    //D
-    if (!(vflags & 0x10)) {
-        tx_0 = blockInfo[blockID].tx[UP];
-        tx_1 = blockInfo[blockID].tx[UP] + tmr;
-        ty_0 = blockInfo[blockID].ty[UP] + tmr;
-        ty_1 = blockInfo[blockID].ty[UP];
-        setBlockColor(blockID, UP);  //Set leaf/grass color if needed
-    
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
-    }
-    
-    //E
-    if (!(vflags & 0x08)) {
-        tx_0 = blockInfo[blockID].tx[NORTH];
-        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
-        ty_1 = blockInfo[blockID].ty[NORTH];
-        setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
-        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
-        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
-        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
-        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
-    }
-    
-    //F
-    if (!(vflags & 0x04)) {
-        tx_0 = blockInfo[blockID].tx[SOUTH];
-        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
-        ty_1 = blockInfo[blockID].ty[SOUTH];
-        setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
-        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
-    }
-    
-    //Return color to normal
-    setBlockColor( 0, (face_ID)0);
-    */
 }
 
 //Use OpenGL to draw a solid cube with appropriate textures for blockID
+// This function does not match drawBlock_f type
 void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -1036,40 +912,73 @@ void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawWallItem( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: metadata
-
-    //Texture map coordinates (0.0 - 1.0)
-    GLfloat tx_0, tx_1, ty_0, ty_1;
-
-    //Object boundaries... flat square 1 pixel off the wall
+    //Cube boundaries
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
     GLint C = (y << 4) + 0;
     GLint D = (y << 4) + texmap_TILE_LENGTH;
     GLint E = (z << 4) + 0;
-    GLint F = (z << 4) + 1;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    
+    //Object boundaries... flat square 1 pixel off the wall
+    GLint sideX[4], sideZ[4];
 
-    //E
-    tx_0 = blockInfo[blockID].tx[NORTH];
-    tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
-    ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
-    ty_1 = blockInfo[blockID].ty[NORTH];
+/*
+    //A
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+*/
+    //Boundaries depend on metadata
+    switch (meta) {
+        case 5: //attached to east side of block
+            sideX[0] = sideX[1] = A + 1;
+            sideX[2] = sideX[3] = A + 1;
+            sideZ[0] = sideZ[3] = E;
+            sideZ[1] = sideZ[2] = F;
+            break;
+        case 4: //attached to west side of block
+            sideX[0] = sideX[1] = B - 1;
+            sideX[2] = sideX[3] = B - 1;
+            sideZ[0] = sideZ[3] = F;
+            sideZ[1] = sideZ[2] = E;
+            break;
+        case 2: //attached to north side of block
+            sideX[0] = sideX[3] = B;
+            sideX[1] = sideX[2] = A;
+            sideZ[0] = sideZ[1] = F - 1;
+            sideZ[2] = sideZ[3] = F - 1;
+            break;
+        case 3: //attached to south side of block
+        default:
+            sideX[0] = sideX[3] = A;
+            sideX[1] = sideX[2] = B;
+            sideZ[0] = sideZ[1] = E + 1;
+            sideZ[2] = sideZ[3] = E + 1;
+            break;
+    }
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    tx_0 = blockInfo[blockID].tx[WEST];
+    tx_1 = blockInfo[blockID].tx[WEST] + tmr;
+    ty_0 = blockInfo[blockID].ty[WEST] + tmr;
+    ty_1 = blockInfo[blockID].ty[WEST];
+
+
+    //back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( sideX[0], C, sideZ[0]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( sideX[1], C, sideZ[1]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( sideX[1], D, sideZ[1]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( sideX[0], D, sideZ[0]);
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
-    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
-    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
-    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
-    
-    //F
-    tx_0 = blockInfo[blockID].tx[SOUTH];
-    tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-    ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
-    ty_1 = blockInfo[blockID].ty[SOUTH];
-    
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    //front face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( sideX[2], C, sideZ[2]); 
+    glTexCoord2f(tx_1,ty_0); glVertex3i( sideX[3], C, sideZ[3]); 
+    glTexCoord2f(tx_1,ty_1); glVertex3i( sideX[3], D, sideZ[3]); 
+    glTexCoord2f(tx_0,ty_1); glVertex3i( sideX[2], D, sideZ[2]); 
 }
 
 //Draw item blockID which is placed as a block
