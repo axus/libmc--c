@@ -232,13 +232,13 @@ void genWorld(World& world)
     mc__::Block glassBlock = { 20, 0, 0, 0};
     mc__::Block woodPlate = { 72, 0, 0, 0};
     mc__::Block stonePlate = { 70, 0, 0, 0};
-    mc__::Block ladderBlock = { 65, 3, 0, 0};
+    mc__::Block ladderBlock = { 65, 2, 0, 0};
     wireBlock.metadata = 0; 
     //Surround redstone with glass
-    chunk1->block_array[0] = ladderBlock; ladderBlock.metadata = 5;
+    chunk1->block_array[0] = ladderBlock; ladderBlock.metadata = 4;
     chunk1->block_array[2] = glassBlock;
     chunk1->block_array[4] = glassBlock;
-    chunk1->block_array[6] = ladderBlock; ladderBlock.metadata = 4;
+    chunk1->block_array[6] = ladderBlock; ladderBlock.metadata = 5;
     chunk1->block_array[8] = glassBlock;
     chunk1->block_array[10] = wireBlock;
     chunk1->block_array[12] = wireBlock;
@@ -247,7 +247,7 @@ void genWorld(World& world)
     chunk1->block_array[18] = wireBlock;
     chunk1->block_array[20] = wireBlock;
     chunk1->block_array[22] = glassBlock;
-    chunk1->block_array[24] = ladderBlock; ladderBlock.metadata = 2;
+    chunk1->block_array[24] = ladderBlock; ladderBlock.metadata = 3;
     chunk1->block_array[26] = glassBlock;
     chunk1->block_array[28] = glassBlock;
     chunk1->block_array[30] = ladderBlock;

@@ -912,73 +912,49 @@ void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawWallItem( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //Cube boundaries
+    //Texture coords
+    GLfloat tx_0 = blockInfo[blockID].tx[WEST];
+    GLfloat tx_1 = blockInfo[blockID].tx[WEST] + tmr;
+    GLfloat ty_0 = blockInfo[blockID].ty[WEST] + tmr;
+    GLfloat ty_1 = blockInfo[blockID].ty[WEST];
+
+    //Block face coordinates (in pixels)
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
     GLint C = (y << 4) + 0;
     GLint D = (y << 4) + texmap_TILE_LENGTH;
     GLint E = (z << 4) + 0;
     GLint F = (z << 4) + texmap_TILE_LENGTH;
-    
-    //Object boundaries... flat square 1 pixel off the wall
-    GLint sideX[4], sideZ[4];
 
-/*
-    //A
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
-*/
-    //Boundaries depend on metadata
+    //Use metadata for vertex coordinates
+    GLint x0, x1, x2, x3, z0, z1, z2, z3;
     switch (meta) {
-        case 5: //attached to east side of block
-            sideX[0] = sideX[1] = A + 1;
-            sideX[2] = sideX[3] = A + 1;
-            sideZ[0] = sideZ[3] = E;
-            sideZ[1] = sideZ[2] = F;
+        case 5:
+            x0 = x1 = A; x2 = x3 = A + 1; z0 = z2 = E; z1 = z3 = F;
             break;
-        case 4: //attached to west side of block
-            sideX[0] = sideX[1] = B - 1;
-            sideX[2] = sideX[3] = B - 1;
-            sideZ[0] = sideZ[3] = F;
-            sideZ[1] = sideZ[2] = E;
+        case 4:
+            x0 = x1 = B; x2 = x3 = B - 1; z0 = z2 = F; z1 = z3 = E;
             break;
-        case 2: //attached to north side of block
-            sideX[0] = sideX[3] = B;
-            sideX[1] = sideX[2] = A;
-            sideZ[0] = sideZ[1] = F - 1;
-            sideZ[2] = sideZ[3] = F - 1;
+        case 3:
+            x0 = x2 = B; x1 = x3 = A; z0 = z1 = E; z2 = z3 = E + 1;
             break;
-        case 3: //attached to south side of block
+        case 2:
         default:
-            sideX[0] = sideX[3] = A;
-            sideX[1] = sideX[2] = B;
-            sideZ[0] = sideZ[1] = E + 1;
-            sideZ[2] = sideZ[3] = E + 1;
+            x0 = x2 = A; x1 = x3 = B; z0 = z1 = F; z2 = z3 = F - 1;
             break;
     }
-
-    //Texture map coordinates (0.0 - 1.0)
-    GLfloat tx_0, tx_1, ty_0, ty_1;
-
-    tx_0 = blockInfo[blockID].tx[WEST];
-    tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-    ty_0 = blockInfo[blockID].ty[WEST] + tmr;
-    ty_1 = blockInfo[blockID].ty[WEST];
-
-
-    //back face
-    glTexCoord2f(tx_0,ty_0); glVertex3i( sideX[0], C, sideZ[0]);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( sideX[1], C, sideZ[1]);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( sideX[1], D, sideZ[1]);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( sideX[0], D, sideZ[0]);
     
-    //front face
-    glTexCoord2f(tx_0,ty_0); glVertex3i( sideX[2], C, sideZ[2]); 
-    glTexCoord2f(tx_1,ty_0); glVertex3i( sideX[3], C, sideZ[3]); 
-    glTexCoord2f(tx_1,ty_1); glVertex3i( sideX[3], D, sideZ[3]); 
-    glTexCoord2f(tx_0,ty_1); glVertex3i( sideX[2], D, sideZ[2]); 
+    //outer face (not seen except through glass)
+    glTexCoord2f(tx_0,ty_0); glVertex3i( x0, C, z0);  //Lower left:  ACF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( x1, C, z1);  //Lower right: BCF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( x1, D, z1);  //Top right:   BDF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( x0, D, z0);  //Top left:    ADF
+    //inner face
+    glTexCoord2f(tx_0,ty_1); glVertex3i( x2, D, z2);  //Top left:    ADF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( x3, D, z3);  //Top right:   BDF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( x3, C, z3);  //Lower right: BCF
+    glTexCoord2f(tx_0,ty_0); glVertex3i( x2, C, z2);  //Lower left:  ACF
+
 }
 
 //Draw item blockID which is placed as a block
