@@ -109,6 +109,17 @@ void genWorld(World& world)
     //Add the chunk with the wallsign
     world.addMapChunk(chunk1);
     delete chunk1;
+
+    //Draw dyed wool    
+    mc__::Block dyed_wool = {35, 0, 0, 0}; //wool, 0 metadata
+    chunk1 = new mc__::Chunk(15, 0, 0, -16, 65, 0);
+    for (gen_X = 0; gen_X < 16; gen_X++) {
+        chunk1->block_array[gen_X] = dyed_wool;
+        dyed_wool.metadata++;
+    }
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
     
     //Single workbench made from block put in chunk
     mc__::Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
@@ -217,22 +228,29 @@ void genWorld(World& world)
     //
     //  Raised redstone and floorplate test
     //
-    chunk1 = new mc__::Chunk(2, 1, 2, -8, 65, 9);   //3x2x3 chunk
+    chunk1 = new mc__::Chunk(3, 1, 3, -8, 65, 9);   //4x2x4 chunk
     mc__::Block glassBlock = { 20, 0, 0, 0};
     mc__::Block woodPlate = { 72, 0, 0, 0};
     mc__::Block stonePlate = { 70, 0, 0, 0};
-    wireBlock.metadata = 0;
+    wireBlock.metadata = 0; 
     //Surround redstone with glass
-    chunk1->block_array[2] = glassBlock;
-    chunk1->block_array[6] = glassBlock;
-    chunk1->block_array[8] = wireBlock;
-    chunk1->block_array[10] = glassBlock;
+    chunk1->block_array[2]  = glassBlock;
+    chunk1->block_array[4]  = glassBlock;
+    chunk1->block_array[8] = glassBlock;
+    chunk1->block_array[10] = wireBlock;
+    chunk1->block_array[12] = wireBlock;
     chunk1->block_array[14] = glassBlock;
+    chunk1->block_array[16] = glassBlock;
+    chunk1->block_array[18] = wireBlock;
+    chunk1->block_array[20] = wireBlock;
+    chunk1->block_array[22] = glassBlock;
+    chunk1->block_array[26]  = glassBlock;
+    chunk1->block_array[28]  = glassBlock;
     //Connect to plates on row above
     chunk1->block_array[3] = stonePlate; stonePlate.metadata = 1;
-    chunk1->block_array[7] = woodPlate; woodPlate.metadata = 1;
-    chunk1->block_array[11] = woodPlate;
-    chunk1->block_array[15] = stonePlate;
+    chunk1->block_array[15] = woodPlate; woodPlate.metadata = 1;
+    chunk1->block_array[17] = woodPlate;
+    chunk1->block_array[29] = stonePlate;
     //Add the chunk
     world.addMapChunk(chunk1);
     delete chunk1;

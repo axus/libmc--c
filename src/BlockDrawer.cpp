@@ -1146,8 +1146,90 @@ void BlockDrawer::drawFire( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawDyed( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    drawCube(blockID, meta, x, y, z, vflags);
-    //TODO: change texture depending on meta
+
+    //Change texture depending on meta
+    uint16_t ID = 256 + blockID + meta;
+    drawCubeMeta(ID, 0, x, y, z, vflags);
+
+/*
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Default texture for white wool
+    tx_0 = blockInfo[blockID].tx[WEST];
+    tx_1 = tx_0 + tmr;
+    ty_1 = blockInfo[blockID].ty[WEST];
+    ty_0 = ty_1 + tmr;    //flip y
+
+
+
+    //Face coordinates (in pixels)
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //For each face, use the appropriate texture offsets for the block ID
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //A
+    if (!(vflags & 0x80)) {
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+
+    //B
+    if (!(vflags & 0x40)) {
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
+    }
+    
+    //C
+    if (!(vflags & 0x20)) {
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    }
+    
+    //D
+    if (!(vflags & 0x10)) {    
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    }
+    
+    //E
+    if (!(vflags & 0x08)) {        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
+        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
+        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
+        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
+    }
+    
+    //F
+    if (!(vflags & 0x04)) {
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
+    }
+*/    
+
 }
 
 
@@ -1180,6 +1262,35 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
         }
     }
         
+    //Mask for adjacent "y+1" blocks
+    uint8_t up_mask=0;
+    if (world != NULL) {
+        //A neighbor
+        Block block = world->getBlock(x - 1, y + 1, z);
+        if (Chunk::isLogic[block.blockID]) {
+            up_mask |= 1;
+            mask |= 1;
+        }
+        //B neighbor
+        block = world->getBlock(x + 1, y + 1, z);
+        if (Chunk::isLogic[block.blockID]) {
+            up_mask |= 2;
+            mask |= 2;
+        }
+        //E neighbor
+        block = world->getBlock(x, y + 1, z - 1);
+        if (Chunk::isLogic[block.blockID]) {
+            up_mask |= 4;
+            mask |= 4;
+        }
+        //F neighbor
+        block = world->getBlock(x, y + 1, z + 1);
+        if (Chunk::isLogic[block.blockID]) {
+            up_mask |= 8;
+            mask |= 8;
+        }
+    }
+    
     //If metadata > 0, wire is active
     uint8_t wireFace = (meta == 0 ? 0 : 2 );   //'+' shape, lit or unlit
     
@@ -1292,30 +1403,6 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     ty[2] = ty[1];
     ty[3] = ty[0];
 
-    //Mask for adjacent "y+1" blocks
-    mask=0;
-    if (world != NULL) {
-        //A neighbor
-        Block block = world->getBlock(x - 1, y + 1, z);
-        if (Chunk::isLogic[block.blockID]) {
-            mask |= 1;
-        }
-        //B neighbor
-        block = world->getBlock(x + 1, y + 1, z);
-        if (Chunk::isLogic[block.blockID]) {
-            mask |= 2;
-        }
-        //E neighbor
-        block = world->getBlock(x, y + 1, z - 1);
-        if (Chunk::isLogic[block.blockID]) {
-            mask |= 4;
-        }
-        //F neighbor
-        block = world->getBlock(x, y + 1, z + 1);
-        if (Chunk::isLogic[block.blockID]) {
-            mask |= 8;
-        }
-    }
 
     //Face coordinates (in pixels)
     A = (x << 4) + 0;
@@ -1326,7 +1413,7 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     F = (z << 4) + texmap_TILE_LENGTH;
 
     //A
-    if (mask & 1) {
+    if (up_mask & 1) {
         //outer face
         glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx[1],ty[1]); glVertex3i( A, C, F);  //Lower right: ACF
@@ -1340,7 +1427,7 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     }
 
     //B
-    if (mask & 2) {
+    if (up_mask & 2) {
         //outer face
         glTexCoord2f(tx[0],ty[0]); glVertex3i( B, C, F);  //Lower left:  BCF
         glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, E);  //Lower right: BCE
@@ -1354,7 +1441,7 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     }
 
 
-    if (mask & 4) {
+    if (up_mask & 4) {
         //E (outer face)
         glTexCoord2f(tx[0],ty[0]); glVertex3i( B, C, E);  //Lower left:  BCE
         glTexCoord2f(tx[1],ty[1]); glVertex3i( A, C, E);  //Lower right: ACE
@@ -1367,7 +1454,7 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
         glTexCoord2f(tx[0],ty[0]); glVertex3i( B, C, E);  //Lower left:  BCE
     }
     
-    if (mask & 8) {
+    if (up_mask & 8) {
         //F (outer face)
         glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, F);  //Lower left:  ACF
         glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, F);  //Lower right: BCF
@@ -1677,11 +1764,20 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 23, 45, 45, 62, 62, 45, 46, 0x00,&BlockDrawer::drawFaceCube);
     setBlockInfo( 24,192,192,208,176,192,192, 0x00);    //Sandstone
     setBlockInfo( 25, 74, 74, 74, 74, 74, 74, 0x00);    //Note Block
+
+    //26 - 36 = Dyed wool (drawDyed will override metadata)
+    setBlockInfo( 26, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 27, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 28, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 29, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 30, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 31, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 32, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 33, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 34, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 35, 64, 64, 64, 64, 64, 64, 0x00,&BlockDrawer::drawDyed);
+    setBlockInfo( 36, 64, 64, 64, 64, 64, 64, 0x00 );
     
-    for (ID = 26; ID < 37; ID++) {
-         //Cloth (only 1 used, with 16 metadata types)
-        setBlockInfo( ID, 64, 64, 64, 64, 64, 64, 0x00,&BlockDrawer::drawDyed);
-    }
         //Flower
     setBlockInfo( 37, 13, 13, 13, 13, 13, 13, 0xF7,&BlockDrawer::drawItem);
         //Rose
@@ -1784,6 +1880,19 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 512 + 17, 117, 117, 21, 21, 117, 117, 0x00);
     setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133, 0x00);
     
+    //Dyed wool (256 + 35 + metadata)
+    setBlockInfo( 256 + 35, 64, 64, 64, 64, 64, 64, 0x00);
+    uint8_t dyed_id;
+    for (ID = 1; ID < 8; ID++) {
+        dyed_id = 226 - (ID<<4);
+        setBlockInfo( 256 + 35 + ID, dyed_id, dyed_id, dyed_id,
+            dyed_id, dyed_id, dyed_id, 0x00);    //draw cube
+    }
+    for (ID = 8; ID < 16; ID++) {
+        dyed_id = 225 - ((ID - 8)<<4);
+        setBlockInfo( 256 + 35 + ID, dyed_id, dyed_id, dyed_id,
+            dyed_id, dyed_id, dyed_id, 0x00);    //draw cube
+    }
     
     
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
