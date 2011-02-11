@@ -151,9 +151,10 @@ void BlockDrawer::setBlockColor(uint8_t blockID, face_ID face) const
 void BlockDrawer::draw( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t visflags) const
 {
+    //Drawing function for this block type
     drawBlock_f f = drawFunction[blockID];
     
-    //Metadata hackery to conform special cases
+    //Metadata hackery to conform special cases (not needed yet)
     
     //Draw!
     if (f != NULL) {
@@ -456,8 +457,53 @@ void BlockDrawer::drawFaceCube2( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawChest( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    drawFaceCube(blockID, meta, x, y, z, vflags);
-    //TODO: textures change depending on meta
+
+    //Examine neighbors  
+    //Compare to adjacent blocks
+    uint8_t mask=0;
+    if (world != NULL) {
+        //A neighbor
+        Block block = world->getBlock(x - 1, y, z);
+        if (block.blockID == blockID) {
+            mask |= 1;
+        }
+        //B neighbor
+        block = world->getBlock(x + 1, y, z);
+        if (block.blockID == blockID) {
+            mask |= 2;
+        }
+        //E neighbor
+        block = world->getBlock(x, y, z - 1);
+        if (block.blockID == blockID) {
+            mask |= 4;
+        }
+        //F neighbor
+        block = world->getBlock(x, y, z + 1);
+        if (block.blockID == blockID) {
+            mask |= 8;
+        }
+    }
+    uint16_t ID=blockID;
+    switch (mask) {
+        case 1:
+            ID = 256 + blockID + 1;
+            break;
+        case 2:
+            ID = 256 + blockID + 0;
+            break;
+        case 4:
+            ID = 256 + blockID + 2;
+            break;
+        case 8:
+            ID = 256 + blockID + 3;
+            break;
+        default:
+            ID = blockID;   //Don't combine blocks
+    }
+
+    //Chest (54=normal, 256 + 54=left, 55=right, 56=left X, 57=right X)    
+    drawCubeMeta(ID, meta, x, y, z, vflags);
+
 }
 
 //Draw cactus... almost like a cube, but A, B, E, F are inset 1 pixel
@@ -741,9 +787,9 @@ void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
         tmr_x  = scale_x * tmr;
         tmr_y = scale_y * tmr;
         tmr_z  = scale_z * tmr;
-        tmr_off_x = tmr*off_x/texmap_TILE_LENGTH;
-        tmr_off_y = tmr*off_y/texmap_TILE_LENGTH;
-        tmr_off_z = tmr*off_z/texmap_TILE_LENGTH;
+        tmr_off_x = fabs(tmr*off_x/texmap_TILE_LENGTH);
+        tmr_off_y = fabs(tmr*off_y/texmap_TILE_LENGTH);
+        tmr_off_z = fabs(tmr*off_z/texmap_TILE_LENGTH);
     } else {
         tmr_x = tmr_y = tmr_z = tmr;
         tmr_off_x =  tmr_off_y = tmr_off_z = 0;
@@ -1488,8 +1534,14 @@ void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawFloorplate( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+    GLint off_Y = 0;
+    if (meta & 1) {
+        off_Y = -1;
+    }
+
+    //Metadata affects z offset (pressed or not)
     drawScaledBlock( blockID, meta, x, y, z, 0,
-        0.75, 0.125, 0.75, true, 2, 0, 2);
+        0.75, 0.125, 0.75, true, 2, off_Y, 2);
 
 }
 
@@ -1536,7 +1588,7 @@ void BlockDrawer::drawButton( uint8_t blockID, uint8_t meta,
 {
     //TODO: meta affects which wall the button is on, and pressed/not pressed
     drawScaledBlock( blockID, meta, x, y, z, 0,
-        0.25, 0.25, 0.125, true, 8, 8, 0);
+        0.5, 0.25, 0.125, true, 4, 8, 0);
 
 }
 
@@ -1779,6 +1831,11 @@ Normal block = 0x00: cube, dark, opaque, solid
             dyed_id, dyed_id, dyed_id, 0x00);    //draw cube
     }
     
+    //Chest (256 + 54=left, 55=right, 56=left X, 57=right X)
+    setBlockInfo( 256 + 54 + 0, 26, 26, 25, 25, 58, 41, 0x00);
+    setBlockInfo( 256 + 54 + 1, 26, 26, 25, 25, 57, 42, 0x00);
+    setBlockInfo( 256 + 54 + 2, 58, 41, 25, 25, 26, 26, 0x00);
+    setBlockInfo( 256 + 54 + 3, 57, 42, 25, 25, 26, 26, 0x00);
     
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
 //              4=signpost, 5=ladder, 6=track, 7=fire

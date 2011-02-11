@@ -226,6 +226,27 @@ void genWorld(World& world)
     delete chunk1;
 
     //
+    // Chest test
+    //
+    mc__::Block chestBlock = { 54, 0, 0, 0};
+    chunk1 = new mc__::Chunk( 4, 0, 2, -13, 64, 20);   //3x5 area for chests
+    //single
+    chunk1->block_array[0] = chestBlock;
+    //2x1 on X
+    chunk1->block_array[2] = chestBlock;
+    chunk1->block_array[5] = chestBlock;
+    //2x1 on Z
+    chunk1->block_array[6] = chestBlock;
+    chunk1->block_array[7] = chestBlock;
+    //3x1 on Z, should look weird :)
+    chunk1->block_array[12] = chestBlock;
+    chunk1->block_array[13] = chestBlock;
+    chunk1->block_array[14] = chestBlock;
+    //Add the chunk
+    world.addMapChunk(chunk1);    
+    delete chunk1;
+
+    //
     //  Raised redstone, floorplate, and ladder test
     //
     chunk1 = new mc__::Chunk(3, 1, 3, -8, 65, 9);   //4x2x4 chunk

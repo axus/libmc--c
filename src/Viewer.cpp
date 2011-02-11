@@ -84,6 +84,7 @@ using std::setw;
 using std::setfill;
 using std::uppercase;
 using std::left;
+using std::right;
 using std::ofstream;
 using std::ios;
 using std::flush;
@@ -1141,16 +1142,19 @@ bool Viewer::saveLocalBlocks(const mc__::World& world) const
         << endl << endl;
 
     //Repeat for bounded range around camera
-    for (Y = center_Y - 2; Y <= (center_Y + 1) && Y != 127; Y++) {
+    Y = ( center_Y + 1 > 127 ? 127 : center_Y + 1);
+    for (; Y >= center_Y - 2; Y--) {
         //HEADER FOR Y VALUE
         logfile << "Y=" << left << setw(3) << (int)Y;
-        for (Z = center_Z - radius; Z <= center_Z + radius; Z++) {
-            logfile << " Z=" << left << setw(3) << (int)(Z);
+        
+        for (X = center_X - radius; X <= center_X + radius; X++) {
+            logfile << " X=" << left << setw(3) << (int)(X);
         }
+        
         logfile << endl;
+    for (Z = center_Z + radius; Z >= center_Z - radius; Z--) {
+        logfile << "Z=" << left << setw(3) << (int)Z << flush;
     for (X = center_X - radius; X <= center_X + radius; X++) {
-        logfile << "X=" << setw(2) << (int)X << flush;
-    for (Z = center_Z - radius; Z <= center_Z + radius; Z++) {
         //Lookup the chunk(s) camera is in
         const Chunk *chunk = world.getChunk( X&0xFFFFFFF0, Z&0xFFFFFFF0);
         if (chunk != NULL)
@@ -1161,8 +1165,8 @@ bool Viewer::saveLocalBlocks(const mc__::World& world) const
             seenBlocks.insert(block.blockID);
             
             //Print block info
-            logfile << "  " << hex << setw(2) << setfill('0') << uppercase
-                    << (short)block.blockID << ":" << (short)block.metadata;
+            logfile << "  " << uppercase << right << setw(2) << setfill('0')
+                << hex << (short)block.blockID << ":" << (short)block.metadata;
         }
     }
         logfile << dec << setfill(' ') << endl;
