@@ -945,7 +945,7 @@ void BlockDrawer::drawHalfBlock( uint8_t blockID, uint8_t meta,
 
 //Draw minecart track (meta affects angle, direction, intersection)
 void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //TODO: metadata to determine track type and orientation
 
@@ -986,7 +986,7 @@ void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
 
 //Draw item blockID which is placed flat on the wall
 void BlockDrawer::drawWallItem( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //Texture coords
     GLfloat tx_0 = blockInfo[blockID].tx[WEST];
@@ -1034,8 +1034,8 @@ void BlockDrawer::drawWallItem( uint8_t blockID, uint8_t meta,
 }
 
 //Draw item blockID which is placed as a block
-void BlockDrawer::drawItem( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+void BlockDrawer::drawItem( uint8_t blockID, uint8_t /*meta*/,
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
 
     //TODO: quad always faces player somehow
@@ -1117,7 +1117,7 @@ void BlockDrawer::drawDyed( uint8_t blockID, uint8_t meta,
 
 //Draw redstone wire (active or inactive)
 void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //Compare to adjacent blocks
     uint8_t mask=0;
@@ -1353,7 +1353,7 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
 
 //Draw planted crops (meta affects texture)
 void BlockDrawer::drawCrops( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //Crop textures in terrain.png are 86 - 93
     uint8_t cropTexture = blockInfo[blockID].textureID[0] + (meta & 0x7);
@@ -1484,7 +1484,7 @@ void BlockDrawer::drawStairs( uint8_t blockID, uint8_t meta,
 
 //Draw floor or wall lever (meta affects position)
 void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //TODO: handle angle and base location depend on meta
     
@@ -1501,6 +1501,8 @@ void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+    //TODO: use words at location for texture
+    
     //Sign
     drawScaledBlock( blockID, 0, x, y, z, 0,
         3.0/4.0, 1.0/2.0, 1.0/8.0, true, 2, 7, 8);
@@ -1511,15 +1513,12 @@ void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
 
 }
 
-//Draw nether portal (no meta)
-void BlockDrawer::drawPortal( uint8_t blockID, uint8_t meta,
+//Draw nether portal (use adjacent obsidian/portals for angle)
+void BlockDrawer::drawPortal( uint8_t blockID, uint8_t /*meta*/,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: use meta to change proportions
-  
-    //TODO: use portal texture from item_tex
-  
-    drawScaledBlock( blockID, meta, x, y, z, 0,
+    //TODO: Use an animated portal texture (generated, not from texture file)
+    drawScaledBlock( blockID, 0, x, y, z, vflags,
         1.0, 1.0, 0.25, true, 0, 0, 8);
 
 }
@@ -1551,7 +1550,7 @@ void BlockDrawer::drawFloorplate( uint8_t blockID, uint8_t meta,
     }
 
     //Metadata affects z offset (pressed or not)
-    drawScaledBlock( blockID, meta, x, y, z, 0,
+    drawScaledBlock( blockID, meta, x, y, z, (vflags&0x2),
         0.75, 0.125, 0.75, true, 2, off_Y, 2);
 
 }
@@ -1595,7 +1594,7 @@ void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
 
 //Draw wall button
 void BlockDrawer::drawButton( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //TODO: meta affects which wall the button is on, and pressed/not pressed
     drawScaledBlock( blockID, meta, x, y, z, 0,
@@ -1610,7 +1609,6 @@ void BlockDrawer::setBlockInfo( uint16_t index,
     uint8_t A, uint8_t B,
     uint8_t C, uint8_t D,
     uint8_t E, uint8_t F,
-    uint8_t properties,
     drawBlock_f drawFunc)
 {
     //A - F contain texture ID of the corresponding face (textureID = 0 - 255)
@@ -1652,9 +1650,9 @@ bool BlockDrawer::loadBlockInfo()
 
     //Set default block information to sponge!
     for (ID = 0; ID != 0xFF; ID++) {
-        setBlockInfo( ID, 48, 48, 48, 48, 48, 48, 0);
+        setBlockInfo( ID, 48, 48, 48, 48, 48, 48);
     }
-    setBlockInfo( 0xFF, 48, 48, 48, 48, 48, 48, 0);
+    setBlockInfo( 0xFF, 48, 48, 48, 48, 48, 48);
 
 /*  Block geometry
 
@@ -1682,179 +1680,179 @@ Normal block = 0x00: cube, dark, opaque, solid
 // 11 is the transparent texture
 
     //Set specific blocks
-    setBlockInfo( 0, 11, 11, 11, 11, 11, 11, 0x07);     //Air
-    setBlockInfo( 1, 1, 1, 1, 1, 1, 1,       0x00);     //Stone
-    setBlockInfo( 2, 3, 3, 2, 0, 3, 3,       0x00);     //Grass
-    setBlockInfo( 3, 2, 2, 2, 2, 2, 2,       0x00);     //Dirt
-    setBlockInfo( 4, 16, 16, 16, 16, 16, 16, 0x00);     //Cobble
-    setBlockInfo( 5, 4, 4, 4, 4, 4, 4,       0x00);     //Wood
+    setBlockInfo( 0, 11, 11, 11, 11, 11, 11);     //Air
+    setBlockInfo( 1, 1, 1, 1, 1, 1, 1      );     //Stone
+    setBlockInfo( 2, 3, 3, 2, 0, 3, 3      );     //Grass
+    setBlockInfo( 3, 2, 2, 2, 2, 2, 2      );     //Dirt
+    setBlockInfo( 4, 16, 16, 16, 16, 16, 16);     //Cobble
+    setBlockInfo( 5, 4, 4, 4, 4, 4, 4      );     //Wood
          //Sapling
-    setBlockInfo( 6, 15, 15, 15, 15, 15, 15, 0xF7, &BlockDrawer::drawItem);
-    setBlockInfo( 7, 17, 17, 17, 17, 17, 17, 0x00);     //Bedrock
-    setBlockInfo( 8, 0xCE, 0xDE, 0xCD, 0xCD, 0xDF, 0xCF, 0x06);     //Water(*)
-    setBlockInfo( 9, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0x06);     //WaterStill
-    setBlockInfo( 10, 0xEE, 0xFE, 0xED, 0xED, 0xFF, 0xEF, 0x02);    //Lava(*)
-    setBlockInfo( 11, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED, 0x02);    //LavaStill
-    setBlockInfo( 12, 18, 18, 18, 18, 18, 18, 0x01);    //Sand
-    setBlockInfo( 13, 19, 19, 19, 19, 19, 19, 0x01);    //Gravel
-    setBlockInfo( 14, 32, 32, 32, 32, 32, 32, 0x00);    //GoldOre
-    setBlockInfo( 15, 33, 33, 33, 33, 33, 33, 0x00);    //IronOre
-    setBlockInfo( 16, 34, 34, 34, 34, 34, 34, 0x00);    //CoalOre
+    setBlockInfo( 6, 15, 15, 15, 15, 15, 15, &BlockDrawer::drawItem);
+    setBlockInfo( 7, 17, 17, 17, 17, 17, 17);     //Bedrock
+    setBlockInfo( 8, 0xCE, 0xDE, 0xCD, 0xCD, 0xDF, 0xCF);     //Water(*)
+    setBlockInfo( 9, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD);     //WaterStill
+    setBlockInfo( 10, 0xEE, 0xFE, 0xED, 0xED, 0xFF, 0xEF);    //Lava(*)
+    setBlockInfo( 11, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED);    //LavaStill
+    setBlockInfo( 12, 18, 18, 18, 18, 18, 18);    //Sand
+    setBlockInfo( 13, 19, 19, 19, 19, 19, 19);    //Gravel
+    setBlockInfo( 14, 32, 32, 32, 32, 32, 32);    //GoldOre
+    setBlockInfo( 15, 33, 33, 33, 33, 33, 33);    //IronOre
+    setBlockInfo( 16, 34, 34, 34, 34, 34, 34);    //CoalOre
         //Log
-    setBlockInfo( 17, 20, 20, 21, 21, 20, 20, 0x00,&BlockDrawer::drawTree);
+    setBlockInfo( 17, 20, 20, 21, 21, 20, 20,&BlockDrawer::drawTree);
         //Leaves
-    setBlockInfo( 18, 52, 52, 52, 53, 52, 52, 0x04,&BlockDrawer::drawTree);
-    setBlockInfo( 19, 48, 48, 48, 48, 48, 48, 0x00);    //Sponge
-    setBlockInfo( 20, 49, 49, 49, 49, 49, 49, 0x04);    //Glass
-    setBlockInfo( 21,160,160,160,160,160,160, 0x00);    //Lapis Ore
-    setBlockInfo( 22,144,144,144,144,144,144, 0x00);    //Lapis Block
+    setBlockInfo( 18, 52, 52, 52, 53, 52, 52,&BlockDrawer::drawTree);
+    setBlockInfo( 19, 48, 48, 48, 48, 48, 48);    //Sponge
+    setBlockInfo( 20, 49, 49, 49, 49, 49, 49);    //Glass
+    setBlockInfo( 21,160,160,160,160,160,160);    //Lapis Ore
+    setBlockInfo( 22,144,144,144,144,144,144);    //Lapis Block
         //Dispenser (*)
-    setBlockInfo( 23, 45, 45, 62, 62, 45, 46, 0x00,&BlockDrawer::drawFaceCube);
-    setBlockInfo( 24,192,192,208,176,192,192, 0x00);    //Sandstone
-    setBlockInfo( 25, 74, 74, 74, 74, 74, 74, 0x00);    //Note Block
+    setBlockInfo( 23, 45, 45, 62, 62, 45, 46,&BlockDrawer::drawFaceCube);
+    setBlockInfo( 24,192,192,208,176,192,192);    //Sandstone
+    setBlockInfo( 25, 74, 74, 74, 74, 74, 74);    //Note Block
 
     //26 - 36 = Dyed wool (drawDyed will override metadata)
-    setBlockInfo( 26, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 27, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 28, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 29, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 30, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 31, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 32, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 33, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 34, 64, 64, 64, 64, 64, 64, 0x00 );
-    setBlockInfo( 35, 64, 64, 64, 64, 64, 64, 0x00,&BlockDrawer::drawDyed);
-    setBlockInfo( 36, 64, 64, 64, 64, 64, 64, 0x00 );
+    setBlockInfo( 26, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 27, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 28, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 29, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 30, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 31, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 32, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 33, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 34, 64, 64, 64, 64, 64, 64);
+    setBlockInfo( 35, 64, 64, 64, 64, 64, 64,&BlockDrawer::drawDyed);
+    setBlockInfo( 36, 64, 64, 64, 64, 64, 64);
     
         //Flower
-    setBlockInfo( 37, 13, 13, 13, 13, 13, 13, 0xF7,&BlockDrawer::drawItem);
+    setBlockInfo( 37, 13, 13, 13, 13, 13, 13,&BlockDrawer::drawItem);
         //Rose
-    setBlockInfo( 38, 12, 12, 12, 12, 12, 12, 0xF7,&BlockDrawer::drawItem);
+    setBlockInfo( 38, 12, 12, 12, 12, 12, 12,&BlockDrawer::drawItem);
         //BrownShroom
-    setBlockInfo( 39, 29, 29, 29, 29, 29, 29, 0xF7,&BlockDrawer::drawItem);
+    setBlockInfo( 39, 29, 29, 29, 29, 29, 29,&BlockDrawer::drawItem);
         //RedShroom
-    setBlockInfo( 40, 28, 28, 28, 28, 28, 28, 0xF7,&BlockDrawer::drawItem);
-    setBlockInfo( 41, 23, 23, 23, 23, 23, 23, 0x00);    //GoldBlock
-    setBlockInfo( 42, 22, 22, 22, 22, 22, 22, 0x00);    //IronBlock
-    setBlockInfo( 43, 5,  5,  6,  6,  5,  5,  0x00);    //DoubleStep
+    setBlockInfo( 40, 28, 28, 28, 28, 28, 28,&BlockDrawer::drawItem);
+    setBlockInfo( 41, 23, 23, 23, 23, 23, 23);    //GoldBlock
+    setBlockInfo( 42, 22, 22, 22, 22, 22, 22);    //IronBlock
+    setBlockInfo( 43, 5,  5,  6,  6,  5,  5 );    //DoubleStep
         //Step
-    setBlockInfo( 44, 5,  5,  6,  6,  5,  5, 0x30,&BlockDrawer::drawHalfBlock);
-    setBlockInfo( 45, 7,  7,  7,  7,  7,  7,  0x00);    //Brick
-    setBlockInfo( 46, 8,  8, 10,  9,  8,  8,  0x00);    //TNT
-    setBlockInfo( 47, 35, 35, 4,  4,  35, 35, 0x00);    //Bookshelf
-    setBlockInfo( 48, 36, 36, 16, 36, 36, 36, 0x00);    //Mossy
-    setBlockInfo( 49, 37, 37, 37, 37, 37, 37, 0x00);    //Obsidian
+    setBlockInfo( 44, 5,  5,  6,  6,  5,  5,&BlockDrawer::drawHalfBlock);
+    setBlockInfo( 45, 7,  7,  7,  7,  7,  7 );    //Brick
+    setBlockInfo( 46, 8,  8, 10,  9,  8,  8 );    //TNT
+    setBlockInfo( 47, 35, 35, 4,  4,  35, 35);    //Bookshelf
+    setBlockInfo( 48, 36, 36, 16, 36, 36, 36);    //Mossy
+    setBlockInfo( 49, 37, 37, 37, 37, 37, 37);    //Obsidian
         //Torch
-    setBlockInfo( 50, 80, 80, 80, 80, 80, 80, 0xFF,&BlockDrawer::drawTorch);
+    setBlockInfo( 50, 80, 80, 80, 80, 80, 80,&BlockDrawer::drawTorch);
         //Fire
-    setBlockInfo( 51, 31, 31, 47, 47, 31, 31, 0x7F,&BlockDrawer::drawFire);
-    setBlockInfo( 52, 65, 65, 65, 65, 65, 65, 0x04);    //Spawner
+    setBlockInfo( 51, 31, 31, 47, 47, 31, 31,&BlockDrawer::drawFire);
+    setBlockInfo( 52, 65, 65, 65, 65, 65, 65);    //Spawner
         //WoodStairs
-    setBlockInfo( 53, 4,  4,  4,  4,  4,  4,  0x10,&BlockDrawer::drawStairs);
+    setBlockInfo( 53, 4,  4,  4,  4,  4,  4, &BlockDrawer::drawStairs);
         //Chest (*)
-    setBlockInfo( 54, 26, 26, 25, 25, 26, 27, 0x00,&BlockDrawer::drawChest);
+    setBlockInfo( 54, 26, 26, 25, 25, 26, 27,&BlockDrawer::drawChest);
         //Wire (*)
-    setBlockInfo( 55, 84, 85, 100,101,84,100, 0x6F,&BlockDrawer::drawWire);
-    setBlockInfo( 56, 50, 50, 50, 50, 50, 50, 0x00);    //DiamondOre
-    setBlockInfo( 57, 24, 24, 24, 24, 24, 24, 0x00);    //DiamondBlock
-    setBlockInfo( 58, 60, 60, 43, 43, 59, 59, 0x00);    //Workbench
+    setBlockInfo( 55, 84, 85, 100,101,84,100,&BlockDrawer::drawWire);
+    setBlockInfo( 56, 50, 50, 50, 50, 50, 50);    //DiamondOre
+    setBlockInfo( 57, 24, 24, 24, 24, 24, 24);    //DiamondBlock
+    setBlockInfo( 58, 60, 60, 43, 43, 59, 59);    //Workbench
         //Crops (*)
-    setBlockInfo( 59, 88, 89, 90, 91, 93, 95, 0xF7,&BlockDrawer::drawCrops);
-    setBlockInfo( 60, 2,  2,  2,  86, 2,  2,  0x00);    //Soil
+    setBlockInfo( 59, 88, 89, 90, 91, 93, 95, &BlockDrawer::drawCrops);
+    setBlockInfo( 60, 2,  2,  2,  86, 2,  2 );    //Soil
         //Furnace (+)
-    setBlockInfo( 61, 45, 45, 62, 62, 45, 44, 0x00,&BlockDrawer::drawFaceCube);
+    setBlockInfo( 61, 45, 45, 62, 62, 45, 44,&BlockDrawer::drawFaceCube);
         //LitFurnace (+)
-    setBlockInfo( 62, 45, 45, 62, 62, 45, 61, 0x08,&BlockDrawer::drawFaceCube);
+    setBlockInfo( 62, 45, 45, 62, 62, 45, 61,&BlockDrawer::drawFaceCube);
         //SignPost (*)
-    setBlockInfo( 63, 4,  4,  4,  4,  4,  4,  0x47,&BlockDrawer::drawSignpost);
+    setBlockInfo( 63, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawSignpost);
         //WoodDoor (*)
-    setBlockInfo( 64, 97, 81, 97, 81, 97, 81, 0xA7,&BlockDrawer::drawDoor);
+    setBlockInfo( 64, 97, 81, 97, 81, 97, 81,&BlockDrawer::drawDoor);
         //Ladder (*)
-    setBlockInfo( 65, 83, 83, 83, 83, 83, 83, 0x57,&BlockDrawer::drawWallItem);
+    setBlockInfo( 65, 83, 83, 83, 83, 83, 83, &BlockDrawer::drawWallItem);
         //Track (*)
-    setBlockInfo( 66, 112,112,128,128,128,128,0x67,&BlockDrawer::drawTrack);
+    setBlockInfo( 66, 112,112,128,128,128,128,&BlockDrawer::drawTrack);
         //CobbleStairs
-    setBlockInfo( 67, 16, 16, 16, 16, 16, 16, 0x10,&BlockDrawer::drawStairs);
+    setBlockInfo( 67, 16, 16, 16, 16, 16, 16,&BlockDrawer::drawStairs);
         //WallSign (*)
-    setBlockInfo( 68, 4,  4,  4,  4,  4,  4,  0xD7,&BlockDrawer::drawWallSign);
+    setBlockInfo( 68, 4,  4,  4,  4,  4,  4, &BlockDrawer::drawWallSign);
         //Lever
-    setBlockInfo( 69, 96, 96, 96, 96, 96, 16, 0x27,&BlockDrawer::drawLever);
+    setBlockInfo( 69, 96, 96, 96, 96, 96, 16,&BlockDrawer::drawLever);
         //StonePlate
-    setBlockInfo( 70, 1,  1,  1,  1,  1,  1, 0xB7,&BlockDrawer::drawFloorplate);
+    setBlockInfo( 70, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawFloorplate);
         //IronDoor (*)
-    setBlockInfo( 71, 98, 82, 98, 82, 98, 82, 0xA7,&BlockDrawer::drawDoor);
+    setBlockInfo( 71, 98, 82, 98, 82, 98, 82,&BlockDrawer::drawDoor);
         //WoodPlate
-    setBlockInfo( 72, 4,  4,  4,  4,  4,  4, 0xB7,&BlockDrawer::drawFloorplate);
-    setBlockInfo( 73, 51, 51, 51, 51, 51, 51, 0x00);    //RedstoneOre
-    setBlockInfo( 74, 51, 51, 51, 51, 51, 51, 0x08);    //RedstoneOreLit(*)
+    setBlockInfo( 72, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFloorplate);
+    setBlockInfo( 73, 51, 51, 51, 51, 51, 51);    //RedstoneOre
+    setBlockInfo( 74, 51, 51, 51, 51, 51, 51);    //RedstoneOreLit(*)
         //RedstoneTorch
-    setBlockInfo( 75, 115,115,115,115,115,115,0xF7,&BlockDrawer::drawTorch);
+    setBlockInfo( 75, 115,115,115,115,115,115,&BlockDrawer::drawTorch);
         //RedstoneTorchLit
-    setBlockInfo( 76, 99, 99, 99, 99, 99, 99, 0xFF,&BlockDrawer::drawTorch);
+    setBlockInfo( 76, 99, 99, 99, 99, 99, 99,&BlockDrawer::drawTorch);
         //StoneButton
-    setBlockInfo( 77, 1,  1,  1,  1,  1,  1,  0xE7,&BlockDrawer::drawButton);
+    setBlockInfo( 77, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawButton);
         //SnowLayer(*)
-    setBlockInfo( 78, 66, 66, 66, 66, 66, 66, 0xC0,&BlockDrawer::draw4thBlock);
+    setBlockInfo( 78, 66, 66, 66, 66, 66, 66,&BlockDrawer::draw4thBlock);
         //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
-    setBlockInfo( 79, 67, 67, 67, 67, 67, 67, 0x04);    //Ice
-    setBlockInfo( 80, 66, 66, 66, 66, 66, 66, 0x00);    //SnowBlock
+    setBlockInfo( 79, 67, 67, 67, 67, 67, 67);    //Ice
+    setBlockInfo( 80, 66, 66, 66, 66, 66, 66);    //SnowBlock
         //Cactus
-    setBlockInfo( 81, 70, 70, 71, 69, 70, 70, 0xF0,&BlockDrawer::drawCactus);
-    setBlockInfo( 82, 72, 72, 72, 72, 72, 72, 0x00);    //Clay
+    setBlockInfo( 81, 70, 70, 71, 69, 70, 70,&BlockDrawer::drawCactus);
+    setBlockInfo( 82, 72, 72, 72, 72, 72, 72);    //Clay
         //Sugarcane (*)
-    setBlockInfo( 83, 73, 73, 73, 73, 73, 73, 0xF7,&BlockDrawer::drawItem);
-    setBlockInfo( 84, 74, 74, 43, 75, 74, 74, 0x00);    //Jukebox
+    setBlockInfo( 83, 73, 73, 73, 73, 73, 73,&BlockDrawer::drawItem);
+    setBlockInfo( 84, 74, 74, 43, 75, 74, 74);    //Jukebox
         //Fence (*)
-    setBlockInfo( 85, 4,  4,  4,  4,  4,  4,  0x94,&BlockDrawer::drawFence);
+    setBlockInfo( 85, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFence);
         //Pumpkin
-    setBlockInfo( 86, 118,118,118,102,118,119,0x00,&BlockDrawer::drawFaceCube2);
-    setBlockInfo( 87, 103,103,103,103,103,103,0x00);    //Netherstone
-    setBlockInfo( 88, 104,104,104,104,104,104,0x01);    //SlowSand
-    setBlockInfo( 89, 105,105,105,105,105,105,0x08);    //Lightstone
+    setBlockInfo( 86, 118,118,118,102,118,119,&BlockDrawer::drawFaceCube2);
+    setBlockInfo( 87, 103,103,103,103,103,103);    //Netherstone
+    setBlockInfo( 88, 104,104,104,104,104,104);    //SlowSand
+    setBlockInfo( 89, 105,105,105,105,105,105);    //Lightstone
         //Portal
-    setBlockInfo( 90, 49, 49, 49, 49, 49, 49, 0x8F,&BlockDrawer::drawPortal);
+    setBlockInfo( 90, 205,206,207,222,223,205,&BlockDrawer::drawPortal);
         //PumpkinLit
-    setBlockInfo( 91, 118,118,118,102,118,120,0x08,&BlockDrawer::drawFaceCube2);
+    setBlockInfo( 91, 118,118,118,102,118,120,&BlockDrawer::drawFaceCube2);
         //Cake block (*)
-    setBlockInfo( 92, 123,122,124,121,122,122,0xC4,&BlockDrawer::drawCake);
+    setBlockInfo( 92, 123,122,124,121,122,122,&BlockDrawer::drawCake);
     
     
     //extra info for metadata blocks
     
     //Redwood tree
-    setBlockInfo( 256 + 17, 116, 116, 21, 21, 116, 116, 0x00);
-    setBlockInfo( 256 + 18, 132, 132, 132, 132, 132, 132, 0x00);
+    setBlockInfo( 256 + 17, 116, 116, 21, 21, 116, 116);
+    setBlockInfo( 256 + 18, 132, 132, 132, 132, 132, 132);
     //Birch tree
-    setBlockInfo( 512 + 17, 117, 117, 21, 21, 117, 117, 0x00);
-    setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133, 0x00);
+    setBlockInfo( 512 + 17, 117, 117, 21, 21, 117, 117);
+    setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133);
     
     //Dyed wool (256 + 35 + metadata)
-    setBlockInfo( 256 + 35, 64, 64, 64, 64, 64, 64, 0x00);
+    setBlockInfo( 256 + 35, 64, 64, 64, 64, 64, 64);
     uint8_t dyed_id;
     for (ID = 1; ID < 8; ID++) {
         dyed_id = 226 - (ID<<4);
         setBlockInfo( 256 + 35 + ID, dyed_id, dyed_id, dyed_id,
-            dyed_id, dyed_id, dyed_id, 0x00);    //draw cube
+            dyed_id, dyed_id, dyed_id);    //draw cube
     }
     for (ID = 8; ID < 16; ID++) {
         dyed_id = 225 - ((ID - 8)<<4);
         setBlockInfo( 256 + 35 + ID, dyed_id, dyed_id, dyed_id,
-            dyed_id, dyed_id, dyed_id, 0x00);    //draw cube
+            dyed_id, dyed_id, dyed_id);    //draw cube
     }
     
     //Chest (256 + 54=left, 55=right, 56=left X, 57=right X)
-    setBlockInfo( 256 + 54 + 0, 26, 26, 25, 25, 58, 41, 0x00);
-    setBlockInfo( 256 + 54 + 1, 26, 26, 25, 25, 57, 42, 0x00);
-    setBlockInfo( 256 + 54 + 2, 58, 41, 25, 25, 26, 26, 0x00);
-    setBlockInfo( 256 + 54 + 3, 57, 42, 25, 25, 26, 26, 0x00);
+    setBlockInfo( 256 + 54 + 0, 26, 26, 25, 25, 58, 41);
+    setBlockInfo( 256 + 54 + 1, 26, 26, 25, 25, 57, 42);
+    setBlockInfo( 256 + 54 + 2, 58, 41, 25, 25, 26, 26);
+    setBlockInfo( 256 + 54 + 3, 57, 42, 25, 25, 26, 26);
 
     //Wood door
-    setBlockInfo( 256 + 64, 97, 97, 97, 97, 97, 97, 0xA7);  //bottom
-    setBlockInfo( 256 + 65, 81, 81, 81, 81, 81, 81, 0xA7);  //top
+    setBlockInfo( 256 + 64, 97, 97, 97, 97, 97, 97);  //bottom
+    setBlockInfo( 256 + 65, 81, 81, 81, 81, 81, 81);  //top
     
     //Iron door
-    setBlockInfo( 256 + 71, 98, 98, 98, 98, 98, 98, 0xA7 ); //bottom
-    setBlockInfo( 256 + 72, 82, 82, 82, 82, 82, 82, 0xA7 ); //top
+    setBlockInfo( 256 + 71, 98, 98, 98, 98, 98, 98); //bottom
+    setBlockInfo( 256 + 72, 82, 82, 82, 82, 82, 82); //top
 
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
 //              4=signpost, 5=ladder, 6=track, 7=fire

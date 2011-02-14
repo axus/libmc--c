@@ -191,7 +191,7 @@ namespace mc__ {
             //Initialization functions
             bool loadBlockInfo();
             void setBlockInfo( uint16_t index, uint8_t A, uint8_t B, uint8_t C,
-                uint8_t D, uint8_t E, uint8_t F, uint8_t properties,
+                uint8_t D, uint8_t E, uint8_t F,
                 drawBlock_f drawFunc = &mc__::BlockDrawer::drawCube);
                 //12 men died to bring me knowledge of class function pointers
                 
