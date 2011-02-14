@@ -285,7 +285,7 @@ void genWorld(World& world)
     //
     // Door test
     //
-    mc__::Block doorBlock = { 64, 0, 0, 0};
+    mc__::Block doorBlock = { 64, 0, 0, 0}; //wood door
     chunk1 = new mc__::Chunk( 2, 1, 2, 0, 64, 7);   //3x2x3 area for doors
     doorBlock.metadata = 6 ; chunk1->block_array[0] = doorBlock;
     doorBlock.metadata += 8; chunk1->block_array[1] = doorBlock;
@@ -307,6 +307,44 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
 
+    doorBlock = { 71, 0, 0, 0}; //iron door
+    chunk1 = new mc__::Chunk( 2, 1, 2, -4, 64, 4);   //3x2x3 area for doors
+    doorBlock.metadata = 6 ; chunk1->block_array[0] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[1] = doorBlock;
+    doorBlock.metadata = 2 ; chunk1->block_array[2] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[3] = doorBlock;
+    doorBlock.metadata = 5 ; chunk1->block_array[4] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[5] = doorBlock;
+    doorBlock.metadata = 3 ; chunk1->block_array[6] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[7] = doorBlock;
+    doorBlock.metadata = 1 ; chunk1->block_array[10] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[11] = doorBlock;
+    doorBlock.metadata = 7 ; chunk1->block_array[12] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[13] = doorBlock;
+    doorBlock.metadata = 0 ; chunk1->block_array[14] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[15] = doorBlock;
+    doorBlock.metadata = 4 ; chunk1->block_array[16] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[17] = doorBlock;
+    //Add the chunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
+    //Stairs test
+    chunk1 = new mc__::Chunk( 4, 0, 1, -9, 64, 3);   //5x1x2 area for stairs
+    mc__::Block stairsBlock = { 53, 0, 0, 0};   //wood stairs
+    stairsBlock.metadata = 0; chunk1->block_array[0] = stairsBlock;
+    stairsBlock.metadata = 3; chunk1->block_array[1] = stairsBlock;
+    stairsBlock.metadata = 2; chunk1->block_array[2] = stairsBlock;
+    stairsBlock.metadata = 1; chunk1->block_array[3] = stairsBlock;
+    stairsBlock = { 67, 0, 0, 0};   //cobble stairs
+    stairsBlock.metadata = 0; chunk1->block_array[6] = stairsBlock;
+    stairsBlock.metadata = 3; chunk1->block_array[7] = stairsBlock;
+    stairsBlock.metadata = 2; chunk1->block_array[8] = stairsBlock;
+    stairsBlock.metadata = 1; chunk1->block_array[9] = stairsBlock;
+    //Add the chunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
     //Cactus test
     mc__::Block cactusBlock = { 81, 0, 0, 0};
     chunk1 = new mc__::Chunk( 0, 0, 15, 1, 64, -16);   //1x1x15 area for cactus
@@ -317,7 +355,6 @@ void genWorld(World& world)
     //Add the chunk
     world.addMapChunk(chunk1);
     delete chunk1;
-    
 
     //
     //Move the world in these directions at start

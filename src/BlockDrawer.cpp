@@ -454,7 +454,7 @@ void BlockDrawer::drawFaceCube2( uint8_t blockID, uint8_t meta,
 }
 
 
-//Draw "treasure" chest (meta affects direction, large chest)
+//Draw "treasure" chest (large chest if adjacent block is chest)
 void BlockDrawer::drawChest( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -714,17 +714,19 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     glTexCoord2f(tx_1,ty_1); glVertex3i( B - offset, D - half, E);
     glTexCoord2f(tx_0,ty_1); glVertex3i( B - offset, D - half, F);
 
-    //C always visible
-    tx_0 = blockInfo[blockID].tx[DOWN] + tmr_eat;
-    tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-    ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-    ty_1 = blockInfo[blockID].ty[DOWN];
+    //C (might be blocked from below)
+    if (!(vflags & 0x20)) {
+        tx_0 = blockInfo[blockID].tx[DOWN] + tmr_eat;
+        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
+        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
+        ty_1 = blockInfo[blockID].ty[DOWN];
+        
+        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);
+        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);
+        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);
+        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);
+    }
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);
-
     //D
     tx_0 = blockInfo[blockID].tx[UP] + tmr_eat;
     tx_1 = blockInfo[blockID].tx[UP] + tmr;
@@ -760,8 +762,8 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     
 }
 
-//Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotation)
-void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t meta,
+//Use OpenGL to draw partial solid cube, with offsets, scale, mirroring
+void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     GLint x, GLint y, GLint z, uint8_t vflags,
     GLfloat scale_x, GLfloat scale_y, GLfloat scale_z,
     bool scale_texture,
@@ -930,8 +932,15 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t meta,
 void BlockDrawer::drawHalfBlock( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: metadata to determine which half!
-    drawScaledBlock( blockID, meta, x, y, z, vflags, 1, 0.5, 1);
+    //Use metadata to determine which half!
+    if (meta) {
+        //Draw top half
+        drawScaledBlock( blockID, meta, x, y, z, vflags, 1, 0.5, 1,
+            true, 0, 8, 0);
+    } else {
+        //Draw bottom half
+        drawScaledBlock( blockID, meta, x, y, z, vflags, 1, 0.5, 1);
+    }
 }
 
 //Draw minecart track (meta affects angle, direction, intersection)
@@ -1448,12 +1457,28 @@ void BlockDrawer::drawDoor( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawStairs( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //Top step: TODO: dimensions depend on meta
-    drawScaledBlock(blockID, meta, x, y, z, vflags,
-        1, 0.5, 0.5, true, 0, 8, 0);
-        
+    //Top step: depends on meta
+    switch (meta & 0x3) {
+        case 0: //Ascend south
+            drawScaledBlock(blockID, meta, x, y, z, vflags,
+                0.5, 0.5, 1.0, true, 8, 8, 0);
+            break;
+        case 1: //Ascend north
+            drawScaledBlock(blockID, meta, x, y, z, vflags,
+                0.5, 0.5, 1.0, true, 0, 8, 0);
+            break;
+        case 2: //Ascend west
+            drawScaledBlock(blockID, meta, x, y, z, vflags,
+                1, 0.5, 0.5, true, 0, 8, 8);
+            break;
+        case 3:
+            drawScaledBlock(blockID, meta, x, y, z, vflags,
+                1, 0.5, 0.5, true, 0, 8, 0);
+            break;
+    }
+    
     //Bottom step
-    drawHalfBlock( blockID, meta, x, y, z, vflags);
+    drawHalfBlock( blockID, 0, x, y, z, vflags);
 
 }
 
