@@ -1038,7 +1038,6 @@ void BlockDrawer::drawItem( uint8_t blockID, uint8_t /*meta*/,
     GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
 
-    //TODO: quad always faces player somehow
 
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
