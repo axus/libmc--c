@@ -469,7 +469,10 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     
     //Add top to doors
     firstBlockArray[3].blockID = 64;
+    firstBlockArray[3].metadata |= 0x8;
     firstBlockArray[3 + size_Y*7].blockID = 71;
+    firstBlockArray[3 + size_Y*7].metadata |= 0x8;
+    
     
 
     //Add chunk to map

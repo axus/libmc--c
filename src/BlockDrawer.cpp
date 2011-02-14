@@ -758,11 +758,11 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
 }
 
 //Use OpenGL to draw partial solid cube, with offsets, scale (TODO: rotation)
-void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
+void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags,
     GLfloat scale_x, GLfloat scale_y, GLfloat scale_z,
     bool scale_texture,
-    GLint off_x, GLint off_y, GLint off_z) const
+    GLint off_x, GLint off_y, GLint off_z, uint8_t mirror) const
 {
     GLint width, height, depth;
     
@@ -778,7 +778,7 @@ void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
     GLint E = (z << 4) + off_z;
     GLint F = (z << 4) + off_z + depth;
 
-    //Texture map coordinates (0.0 - 1.0)
+    //Texture map coordinates (0.0 - 1.0), and mirror copying coords
     GLfloat tx_0, tx_1, ty_0, ty_1;
     
     //Scaled texture map ratios (1/block length)
@@ -828,6 +828,9 @@ void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
         ty_0 = blockInfo[blockID].ty[WEST] + tmr_off_y + tmr_y;
         ty_1 = blockInfo[blockID].ty[WEST] + tmr_off_y;
         
+        //Swap coordinates if needed
+        if (mirror & 0x80) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
+        
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
         glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
@@ -841,6 +844,9 @@ void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
         tx_1 = blockInfo[blockID].tx[EAST] + tmr_off_z + tmr_z;
         ty_0 = blockInfo[blockID].ty[EAST] + tmr_off_y + tmr_y;
         ty_1 = blockInfo[blockID].ty[EAST] + tmr_off_y;
+        
+        //Swap coordinates if needed
+        if (mirror & 0x40) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -856,6 +862,9 @@ void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
         ty_0 = blockInfo[blockID].ty[DOWN] + tmr_off_z + tmr_z;
         ty_1 = blockInfo[blockID].ty[DOWN] + tmr_off_z;
         
+        //Swap coordinates if needed
+        if (mirror & 0x20) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
+        
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
         glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
@@ -869,6 +878,9 @@ void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
         tx_1 = blockInfo[blockID].tx[UP] + tmr_off_x + tmr_x;
         ty_0 = blockInfo[blockID].ty[UP] + tmr_off_z + tmr_z;
         ty_1 = blockInfo[blockID].ty[UP] + tmr_off_z;
+        
+        //Swap coordinates if needed
+        if (mirror & 0x10) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
     
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
@@ -884,6 +896,9 @@ void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
         ty_0 = blockInfo[blockID].ty[NORTH] + tmr_off_y + tmr_y;
         ty_1 = blockInfo[blockID].ty[NORTH] + tmr_off_y;
         
+        //Swap coordinates if needed
+        if (mirror & 0x08) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
+        
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
         glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
@@ -897,6 +912,9 @@ void BlockDrawer::drawScaledBlock( uint8_t blockID, uint8_t meta,
         tx_1 = blockInfo[blockID].tx[SOUTH] + tmr_off_x + tmr_x;
         ty_0 = blockInfo[blockID].ty[SOUTH] + tmr_off_y + tmr_y;
         ty_1 = blockInfo[blockID].ty[SOUTH] + tmr_off_y;
+        
+        //Swap coordinates if needed
+        if (mirror & 0x04) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
@@ -1081,85 +1099,6 @@ void BlockDrawer::drawDyed( uint8_t blockID, uint8_t meta,
     //Change texture depending on meta
     uint16_t ID = 256 + blockID + meta;
     drawCubeMeta(ID, 0, x, y, z, vflags);
-
-/*
-    //Texture map coordinates (0.0 - 1.0)
-    GLfloat tx_0, tx_1, ty_0, ty_1;
-
-    //Default texture for white wool
-    tx_0 = blockInfo[blockID].tx[WEST];
-    tx_1 = tx_0 + tmr;
-    ty_1 = blockInfo[blockID].ty[WEST];
-    ty_0 = ty_1 + tmr;    //flip y
-
-
-
-    //Face coordinates (in pixels)
-    GLint A = (x << 4) + 0;
-    GLint B = (x << 4) + texmap_TILE_LENGTH;
-    GLint C = (y << 4) + 0;
-    GLint D = (y << 4) + texmap_TILE_LENGTH;
-    GLint E = (z << 4) + 0;
-    GLint F = (z << 4) + texmap_TILE_LENGTH;
-
-    //For each face, use the appropriate texture offsets for the block ID
-    //       ADE ---- BDE
-    //       /.       /|
-    //      / .      / |
-    //    ADF ---- BDF |
-    //     | ACE . .| BCE
-    //     | .      | /
-    //     |.       |/
-    //    ACF ---- BCF
-
-    //A
-    if (!(vflags & 0x80)) {
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
-        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, F);  //Top right:   ADF
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
-    }
-
-    //B
-    if (!(vflags & 0x40)) {
-        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, F);  //Top left:    BDF
-    }
-    
-    //C
-    if (!(vflags & 0x20)) {
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
-    }
-    
-    //D
-    if (!(vflags & 0x10)) {    
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
-    }
-    
-    //E
-    if (!(vflags & 0x08)) {        
-        glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
-        glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
-        glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E);  //Top right:   ADE
-        glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E);  //Top left:    BDE
-    }
-    
-    //F
-    if (!(vflags & 0x04)) {
-        glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
-        glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
-        glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, F);  //Top right:   BDF
-        glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, F);  //Top left:    ADF
-    }
-*/    
 
 }
 
@@ -1453,8 +1392,52 @@ void BlockDrawer::drawCrops( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawDoor( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: change texture and wall depending on meta
-    drawWallItem(blockID, meta, x, y, z, vflags);
+    //Change texture and wall depending on meta
+    uint16_t ID = 256 + blockID;
+    
+    //Check top bit
+    if (meta & 0x8) {
+        ID++;
+    }
+    
+    //Door position and side depends on metadata
+    switch (meta & 0x7) {
+        case 0:     //West side, closed
+            drawScaledBlock( ID, meta, x, y, z, vflags,
+                3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0x80);   //mirror A
+            break;
+        case 1:     //North side, closed
+            drawScaledBlock( ID, meta, x, y, z, vflags,
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x08);   //mirror E
+            break;
+        case 2:     //East side, closed
+            drawScaledBlock( ID, meta, x, y, z, vflags,
+                3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0x40);   //mirror B
+            break;
+        case 3:     //South side, closed
+            drawScaledBlock( ID, meta, x, y, z, vflags,
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x04);   //mirror F
+            break;
+        case 4:     //West side, open
+            drawScaledBlock( ID, meta, x, y, z, vflags,
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x04);   //mirror F
+            break;
+        case 5:     //North side, open
+            drawScaledBlock( ID, meta, x, y, z, vflags,
+                3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0x80);   //mirror A
+            break;
+        case 6:     //East side, open
+            drawScaledBlock( ID, meta, x, y, z, vflags,
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x08);   //mirror E
+            break;
+        case 7:     //South side, open
+            drawScaledBlock( ID, meta, x, y, z, vflags,
+                3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0x40);   //mirror B
+            break;
+        default:
+            break;
+    }
+
 }
 
 
@@ -1836,7 +1819,15 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 256 + 54 + 1, 26, 26, 25, 25, 57, 42, 0x00);
     setBlockInfo( 256 + 54 + 2, 58, 41, 25, 25, 26, 26, 0x00);
     setBlockInfo( 256 + 54 + 3, 57, 42, 25, 25, 26, 26, 0x00);
+
+    //Wood door
+    setBlockInfo( 256 + 64, 97, 97, 97, 97, 97, 97, 0xA7);  //bottom
+    setBlockInfo( 256 + 65, 81, 81, 81, 81, 81, 81, 0xA7);  //top
     
+    //Iron door
+    setBlockInfo( 256 + 71, 98, 98, 98, 98, 98, 98, 0xA7 ); //bottom
+    setBlockInfo( 256 + 72, 82, 82, 82, 82, 82, 82, 0xA7 ); //top
+
 //0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
 //              4=signpost, 5=ladder, 6=track, 7=fire
 //              8=portal, 9=fence, A=door, B=floorplate
@@ -1846,4 +1837,14 @@ Normal block = 0x00: cube, dark, opaque, solid
 //0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
 
     return true;
+}
+
+void BlockDrawer::mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
+                GLfloat& ty_0, GLfloat& ty_1, uint8_t mirror_type) const
+{
+    GLfloat t_mirror;
+    
+    if (mirror_type & 2) { t_mirror = tx_0; tx_0 = tx_1; tx_1 = t_mirror; }
+    if (mirror_type & 1) { t_mirror = ty_0; ty_0 = ty_1; ty_1 = t_mirror; }
+    
 }

@@ -281,7 +281,32 @@ void genWorld(World& world)
     //Add the chunk
     world.addMapChunk(chunk1);
     delete chunk1;
-    
+
+    //
+    // Door test
+    //
+    mc__::Block doorBlock = { 64, 0, 0, 0};
+    chunk1 = new mc__::Chunk( 2, 1, 2, 0, 64, 7);   //3x2x3 area for doors
+    doorBlock.metadata = 6 ; chunk1->block_array[0] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[1] = doorBlock;
+    doorBlock.metadata = 2 ; chunk1->block_array[2] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[3] = doorBlock;
+    doorBlock.metadata = 5 ; chunk1->block_array[4] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[5] = doorBlock;
+    doorBlock.metadata = 3 ; chunk1->block_array[6] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[7] = doorBlock;
+    doorBlock.metadata = 1 ; chunk1->block_array[10] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[11] = doorBlock;
+    doorBlock.metadata = 7 ; chunk1->block_array[12] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[13] = doorBlock;
+    doorBlock.metadata = 0 ; chunk1->block_array[14] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[15] = doorBlock;
+    doorBlock.metadata = 4 ; chunk1->block_array[16] = doorBlock;
+    doorBlock.metadata += 8; chunk1->block_array[17] = doorBlock;
+    //Add the chunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
     //
     //Move the world in these directions at start
     //
