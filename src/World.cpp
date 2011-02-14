@@ -473,7 +473,8 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     firstBlockArray[3 + size_Y*7].blockID = 71;
     firstBlockArray[3 + size_Y*7].metadata |= 0x8;
     
-    
+    //Set cactus metadata
+    firstBlockArray[size_Y].metadata = 15;
 
     //Add chunk to map
     bool result=addMapChunk(testChunk );

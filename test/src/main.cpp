@@ -307,6 +307,18 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
 
+    //Cactus test
+    mc__::Block cactusBlock = { 81, 0, 0, 0};
+    chunk1 = new mc__::Chunk( 0, 0, 15, 1, 64, -16);   //1x1x15 area for cactus
+    for (gen_Z=0; gen_Z < 16; gen_Z++) {
+        cactusBlock.metadata = gen_Z;
+        chunk1->block_array[gen_Z] = cactusBlock;
+    }
+    //Add the chunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
+    
+
     //
     //Move the world in these directions at start
     //

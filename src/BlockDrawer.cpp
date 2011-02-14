@@ -172,8 +172,9 @@ void BlockDrawer::drawCube( uint8_t blockID, uint8_t meta,
 }
 
 //Use OpenGL to draw a solid cube with appropriate textures for blockID
+// It will normally only be called by other functions that use metadata
 // This function does not match drawBlock_f type
-void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t meta,
+void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t /*meta*/,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
     
@@ -507,6 +508,7 @@ void BlockDrawer::drawChest( uint8_t blockID, uint8_t meta,
 }
 
 //Draw cactus... almost like a cube, but A, B, E, F are inset 1 pixel
+//  metadata is used for draw height :)
 void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -515,7 +517,7 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
     GLint C = (y << 4) + 0;
-    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint D = (y << 4) + meta + 1/*texmap_TILE_LENGTH*/;
     GLint E = (z << 4) + 0;
     GLint F = (z << 4) + texmap_TILE_LENGTH;
 
@@ -550,11 +552,12 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     // (tx_0, ty_0)      (tx_1, ty_0)
 
     // For cactus, the face coordinates are inset from the face
+    GLfloat tmr_y = tmr*(meta + 1.0)/16.0;
 
     //A always visible
         tx_0 = blockInfo[blockID].tx[WEST];
         tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-        ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
+        ty_0 = blockInfo[blockID].ty[WEST] + tmr_y;    //flip y
         ty_1 = blockInfo[blockID].ty[WEST];
         setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
         
@@ -566,7 +569,7 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     //B
         tx_0 = blockInfo[blockID].tx[EAST];
         tx_1 = blockInfo[blockID].tx[EAST] + tmr;
-        ty_0 = blockInfo[blockID].ty[EAST] + tmr;
+        ty_0 = blockInfo[blockID].ty[EAST] + tmr_y;
         ty_1 = blockInfo[blockID].ty[EAST];
         setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
         
@@ -606,7 +609,7 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     //E always visible
         tx_0 = blockInfo[blockID].tx[NORTH];
         tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[NORTH] + tmr_y;
         ty_1 = blockInfo[blockID].ty[NORTH];
         setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
         
@@ -618,7 +621,7 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     //F
         tx_0 = blockInfo[blockID].tx[SOUTH];
         tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
+        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr_y;
         ty_1 = blockInfo[blockID].ty[SOUTH];
         setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
         
