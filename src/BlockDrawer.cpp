@@ -1586,9 +1586,27 @@ void BlockDrawer::drawTree( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: meta affects which wall the sign is on
-    drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08),
-        0.75, 0.5, 0.125, true, 2, 7, 0);
+    
+    //TODO: Write message on sign texture
+    switch (meta & 0x7) {
+        case 2: //South side (face north)
+            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40),
+                1.0/16.0, 0.5, 12.0/16.0, true, 15, 7, 2);
+            break;
+        case 3: //North side (face south)
+            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80),
+                1.0/16.0, 0.5, 12.0/16.0, true, 0, 7, 2);
+            break;
+        case 4: //West side (face east)
+            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04),
+                12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 15);
+            break;
+        case 5: //East side (face west)
+        default:
+            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08),
+                12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 0);
+            break;
+    }
 }
 
 //Draw wall button

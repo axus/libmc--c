@@ -345,6 +345,29 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
 
+    //Fence and sign test
+    chunk1 = new mc__::Chunk( 2, 1, 2, -14, 64, 3);   //3x2x3 area
+    mc__::Block fenceBlock = { 85, 0, 0, 0};
+    chunk1->block_array[0] = fenceBlock;
+    chunk1->block_array[2] = fenceBlock;
+    chunk1->block_array[4] = fenceBlock;
+    chunk1->block_array[6] = fenceBlock;
+    chunk1->block_array[8] = fenceBlock;
+    chunk1->block_array[9] = fenceBlock;
+    chunk1->block_array[10] = fenceBlock;
+    chunk1->block_array[12] = fenceBlock;
+    chunk1->block_array[14] = fenceBlock;
+    chunk1->block_array[16] = fenceBlock;
+    sign1.metadata = 2; chunk1->block_array[3] = sign1;
+    sign1.metadata = 4; chunk1->block_array[7] = sign1;
+    sign1.metadata = 5; chunk1->block_array[11] = sign1;
+    sign1.metadata = 3; chunk1->block_array[15] = sign1;
+    //Add the chunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
+    
+
     //Cactus test
     mc__::Block cactusBlock = { 81, 0, 0, 0};
     chunk1 = new mc__::Chunk( 0, 0, 15, 1, 64, -16);   //1x1x15 area for cactus
