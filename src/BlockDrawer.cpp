@@ -1088,10 +1088,72 @@ void BlockDrawer::drawItem( uint8_t blockID, uint8_t /*meta*/,
 
 //Draw torch, on ground or wall
 void BlockDrawer::drawTorch( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
-    drawItem(blockID, meta, x, y, z, vflags);
-    //TODO: draw on wall at and angle depending on meta
+
+    //Look up texture coordinates for the item
+    GLfloat tx_0 = blockInfo[blockID].tx[WEST];
+    GLfloat tx_1 = blockInfo[blockID].tx[WEST] + tmr;
+    GLfloat ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
+    GLfloat ty_1 = blockInfo[blockID].ty[WEST];
+    
+    GLfloat tx_m1 = blockInfo[blockID].tx[WEST] + tmr*7.0/16.0;
+    GLfloat tx_m2 = blockInfo[blockID].tx[WEST] + tmr*9.0/16.0;
+    GLfloat ty_m1 = blockInfo[blockID].ty[WEST] + tmr*8.0/16.0;
+    GLfloat ty_m2 = blockInfo[blockID].ty[WEST] + tmr*6.0/16.0;
+
+    //Torch location depends on metadata
+    switch(meta) {
+        //TODO: metadata for walls
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:     //Torch on ground, center of block
+        default:
+        
+            //Cube boundaries
+            GLint A = (x << 4) + 0;
+            GLint B = (x << 4) + texmap_TILE_LENGTH;
+            GLint C = (y << 4) + 0;
+            GLint D = (y << 4) + texmap_TILE_LENGTH;
+            GLint E = (z << 4) + 0;
+            GLint F = (z << 4) + texmap_TILE_LENGTH;
+            
+            //middle torch boundaries
+            GLint G = A + 7;
+            GLint H = A + 9;
+            GLint I = E + 7;
+            GLint J = E + 9;
+            GLint K = C + 10;
+            
+            //A side
+            glTexCoord2f(tx_0,ty_0); glVertex3i( G, C, E);  //Lower left:  ACE
+            glTexCoord2f(tx_1,ty_0); glVertex3i( G, C, F);  //Lower right: ACF
+            glTexCoord2f(tx_1,ty_1); glVertex3i( G, D, F);  //Top right:   ADF
+            glTexCoord2f(tx_0,ty_1); glVertex3i( G, D, E);  //Top left:    ADE
+            //B side
+            glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left
+            glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right
+            glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right
+            glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left
+            //E side
+            glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, I);  //Lower left:  BCE
+            glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, I);  //Lower right: ACE
+            glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, I);  //Top right:   ADE
+            glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, I);  //Top left:    BDE
+            //F side
+            glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, J);  //Lower left:  ACF
+            glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, J);  //Lower right: BCF
+            glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, J);  //Top right:   BDF
+            glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, J);  //Top left:    ADF
+            
+            //Top side (D)
+            glTexCoord2f(tx_m1,ty_m1); glVertex3i( G, K, J);  //Lower left:  ADF
+            glTexCoord2f(tx_m2,ty_m1); glVertex3i( H, K, J);  //Lower right: BDF
+            glTexCoord2f(tx_m2,ty_m2); glVertex3i( H, K, I);  //Top right:   BDE
+            glTexCoord2f(tx_m1,ty_m2); glVertex3i( G, K, I);  //Top left:    ADE
+    }
 }
 
 //Draw fire burning (use item texture)
@@ -1419,11 +1481,11 @@ void BlockDrawer::drawDoor( uint8_t blockID, uint8_t meta,
             break;
         case 1:     //North side, closed
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x00);   //mirror E
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x00);
             break;
         case 2:     //East side, closed
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0x00);   //mirror B
+                3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0x00);
             break;
         case 3:     //South side, closed
             drawScaledBlock( ID, meta, x, y, z, vflags,
@@ -1439,11 +1501,11 @@ void BlockDrawer::drawDoor( uint8_t blockID, uint8_t meta,
             break;
         case 6:     //East side, open
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x00);   //mirror E
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x00);
             break;
         case 7:     //South side, open
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0x00);   //mirror B
+                3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0x00);
             break;
         default:
             break;
