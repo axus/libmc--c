@@ -792,9 +792,9 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
         tmr_x  = scale_x * tmr;
         tmr_y = scale_y * tmr;
         tmr_z  = scale_z * tmr;
-        tmr_off_x = fabs(tmr*off_x/texmap_TILE_LENGTH);
-        tmr_off_y = fabs(tmr*off_y/texmap_TILE_LENGTH);
-        tmr_off_z = fabs(tmr*off_z/texmap_TILE_LENGTH);
+        tmr_off_x = fabs(tmr*off_x/float(texmap_TILE_LENGTH));
+        tmr_off_y = fabs(tmr*off_y/float(texmap_TILE_LENGTH));
+        tmr_off_z = fabs(tmr*off_z/float(texmap_TILE_LENGTH));
     } else {
         tmr_x = tmr_y = tmr_z = tmr;
         tmr_off_x =  tmr_off_y = tmr_off_z = 0;
@@ -845,8 +845,8 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     //B
     if (!(vflags & 0x40) && (scale_y != 0.0 && scale_z != 0.0) ) {
         //Use offsets and scaling for texture coordinates
-        tx_0 = blockInfo[blockID].tx[EAST] + tmr_off_z;
-        tx_1 = blockInfo[blockID].tx[EAST] + tmr_off_z + tmr_z;
+        tx_0 = blockInfo[blockID].tx[EAST] + tmr_off_z + tmr_z;
+        tx_1 = blockInfo[blockID].tx[EAST] + tmr_off_z;
         ty_0 = blockInfo[blockID].ty[EAST] + tmr_off_y + tmr_y;
         ty_1 = blockInfo[blockID].ty[EAST] + tmr_off_y;
         
@@ -896,8 +896,8 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     //E
     if (!(vflags & 0x08) && (scale_x != 0.0 && scale_y != 0.0) ) {
         //Use offsets and scaling for texture coordinates
-        tx_0 = blockInfo[blockID].tx[NORTH] + tmr_off_x;
-        tx_1 = blockInfo[blockID].tx[NORTH] + tmr_off_x + tmr_x;
+        tx_0 = blockInfo[blockID].tx[NORTH] + tmr_off_x + tmr_x;
+        tx_1 = blockInfo[blockID].tx[NORTH] + tmr_off_x;
         ty_0 = blockInfo[blockID].ty[NORTH] + tmr_off_y + tmr_y;
         ty_1 = blockInfo[blockID].ty[NORTH] + tmr_off_y;
         
@@ -1415,35 +1415,35 @@ void BlockDrawer::drawDoor( uint8_t blockID, uint8_t meta,
     switch (meta & 0x7) {
         case 0:     //West side, closed
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0x80);   //mirror A
+                3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0xC0);   //mirror A+B
             break;
         case 1:     //North side, closed
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x08);   //mirror E
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x00);   //mirror E
             break;
         case 2:     //East side, closed
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0x40);   //mirror B
+                3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0x00);   //mirror B
             break;
         case 3:     //South side, closed
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x04);   //mirror F
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x0C);   //mirror E+F
             break;
         case 4:     //West side, open
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x04);   //mirror F
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x0C);   //mirror E+F
             break;
         case 5:     //North side, open
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0x80);   //mirror A
+                3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0xC0);   //mirror A+B
             break;
         case 6:     //East side, open
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x08);   //mirror E
+                1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x00);   //mirror E
             break;
         case 7:     //South side, open
             drawScaledBlock( ID, meta, x, y, z, vflags,
-                3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0x40);   //mirror B
+                3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0x00);   //mirror B
             break;
         default:
             break;
@@ -1526,16 +1526,66 @@ void BlockDrawer::drawPortal( uint8_t blockID, uint8_t /*meta*/,
 void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: meta determines if this is a single fence, or has neighbors
-    
-    //Top of fence
-    drawScaledBlock( blockID, meta, x, y, z, vflags&0xC0,
-        1, 0.25, 0.25, true, 0, 6, 6);
-    //Fence legs
-    drawScaledBlock( blockID, meta, x, y, z, (vflags&0x30)|0x10,
-        0.25, 0.375, 0.25, true, 2, 0, 6);
-    drawScaledBlock( blockID, meta, x, y, z, (vflags&0x30)|0x10,
-        0.25, 0.375, 0.25, true, 10, 0, 6);
+
+    //Center post
+    drawScaledBlock( blockID, meta, x, y, z, (vflags&0x30),
+        0.25, 1.0, 0.25, true, 6, 0, 6);
+
+
+    //Quit if unable to check neighbors
+    if (world == NULL) {
+        return;
+    }
+
+    //Check adjacent blocks for connected fences
+    //A neighbor
+    Block block = world->getBlock(x - 1, y, z);
+    if (block.blockID == blockID) {
+        //Top connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40)|0x80,
+            6/16.0, 3/16.0, 2/16.0, true, 0, 12, 7);        
+
+        //Bottom connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40)|0x80,
+            6/16.0, 3/16.0, 2/16.0, true, 0, 6, 7);        
+    }
+
+    //B neighbor
+    block = world->getBlock(x + 1, y, z);
+    if (block.blockID == blockID) {
+        //Top connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80)|0x40,
+            6/16.0, 3/16.0, 2/16.0, true, 10, 12, 7);
+
+        //Bottom connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80)|0x40,
+            6/16.0, 3/16.0, 2/16.0, true, 10, 6, 7);
+    }
+
+    //E neighbor
+    block = world->getBlock(x, y, z - 1);
+    if (block.blockID == blockID) {
+        //Top connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04)|0x08,
+            2/16.0, 3/16.0, 6/16.0, true, 7, 12, 0);
+
+        //Bottom connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04)|0x08,
+            2/16.0, 3/16.0, 6/16.0, true, 7, 6, 0);
+    }
+
+    //F neighbor
+    block = world->getBlock(x, y, z + 1);
+    if (block.blockID == blockID) {
+        //Top connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08)|0x04,
+            2/16.0, 3/16.0, 6/16.0, true, 7, 12, 10);
+
+        //Bottom connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08)|0x04,
+            2/16.0, 3/16.0, 6/16.0, true, 7, 6, 10);
+    }
+
 
 }
 
