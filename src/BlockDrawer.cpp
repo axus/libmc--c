@@ -1097,10 +1097,13 @@ void BlockDrawer::drawTorch( uint8_t blockID, uint8_t meta,
     GLfloat ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
     GLfloat ty_1 = blockInfo[blockID].ty[WEST];
     
+    //pieces of torch texture (used for top and bottom)
     GLfloat tx_m1 = blockInfo[blockID].tx[WEST] + tmr*7.0/16.0;
     GLfloat tx_m2 = blockInfo[blockID].tx[WEST] + tmr*9.0/16.0;
     GLfloat ty_m1 = blockInfo[blockID].ty[WEST] + tmr*8.0/16.0;
     GLfloat ty_m2 = blockInfo[blockID].ty[WEST] + tmr*6.0/16.0;
+    GLfloat ty_b1 = blockInfo[blockID].ty[WEST] + tmr*14.0/16.0;
+    GLfloat ty_b2 = blockInfo[blockID].ty[WEST] + tmr;
 
     //Cube boundaries
     GLint A = (x << 4) + 0;
@@ -1109,122 +1112,84 @@ void BlockDrawer::drawTorch( uint8_t blockID, uint8_t meta,
     GLint D = (y << 4) + texmap_TILE_LENGTH;
     GLint E = (z << 4) + 0;
     GLint F = (z << 4) + texmap_TILE_LENGTH;
-    //middle torch boundaries
-    GLint G = A + 7;
-    GLint H = A + 9;
-    GLint I = E + 7;
-    GLint J = E + 9;
     
-    GLint K = C + 10;
-    /*
-    GLint P = C + 3;
-    GLint L = A - 1;
-    GLint M = A + 1;
-    GLint N = A + 3;
-    GLint O = A + 5;
-      */      
+    //torch top (10/16 block over bottom)
+    GLint H = C + 10;
+
+    //Vertices of "parallelocube"
+    GLint vX[8], vY[8], vZ[8];
     
-    //Polygon corner coordinates
-    GLint Ax[4], Az[4], Bx[4], Bz[4];
-    GLint Ex[4], Ez[4], Fx[4], Fz[4];
-    GLint Dx[4], Dz[4];
-    GLint y0, y1, y2;
+    //A: 0, 2, 3, 1
+    vX[0] = A; vX[1] = A; vX[2] = A; vX[3] = A;
+    vY[0] = C; vY[1] = D; vY[2] = C; vY[3] = D;
+    vZ[0] = E; vZ[1] = E; vZ[2] = F; vZ[3] = F;
+
+    //B: 6, 4, 5, 7
+    vX[6] = B; vX[4] = B; vX[5] = B; vX[7] = B;
+    vY[6] = C; vY[4] = C; vY[5] = D; vY[7] = D;
+    vZ[6] = F; vZ[4] = E; vZ[5] = E; vZ[7] = F;
+
+    //Edge offsets for faces of torch
+    GLint AC = 7, AD = 7, BC = -7, BD = -7, EC = 7, ED = 7, FC = -7, FD = -7;
+    
+    //Wall torch offsets
+    GLint dY = 0, dXC = 0, dXD = 0, dZC = 0, dZD = 0;
 
     //Torch location depends on metadata
     switch(meta) {
         //Metadata to determine which wall torch is on
         case 1: //North side (-X)
-        case 2: //South side (+X)
-        case 3: //East side (-Z)
-        case 4: //West side (+Z)
-            y0 = C; y1 = D; y2 = K;
-            
-            Ax[0] = G; Ax[1] = G; Ax[2] = G+3; Ax[3] = G+3;
-            Az[0] = E; Az[1] = F; Az[2] = F; Az[3] = E;
-
-            Bx[0] = H; Bx[1] = H; Bx[2] = H+3; Bx[3] = H+3;
-            Bz[0] = F; Bz[1] = E; Bz[2] = F; Bz[3] = E;
-
-            Ex[0] = B - 8; Ex[1] = A - 8; Ex[2] = A - 5; Ex[3] = B - 5;
-            Ez[0] = I; Ez[1] = I; Ez[2] = I; Ez[3] = I;
-
-            Fx[0] = A - 8; Fx[1] = B - 8; Fx[2] = B - 5; Fx[3] = A - 5;
-            Fz[0] = J; Fz[1] = J; Fz[2] = J; Fz[3] = J;
-            
-            //Top cap
-            Dx[0] = G - 5; Dx[1] = H - 5; Dx[2] = H - 5; Dx[3] = G - 5;
-            Dz[0] = J; Dz[1] = J; Dz[2] = I; Dz[3] = I;
-        
-        /*
-            y0 = P; y1 = K; y2 = K;
-            Ax[0] = L; Ax[1] = L; Ax[2] = N; Ax[3] = N;
-            Az[0] = I; Az[1] = J; Az[2] = J; Az[3] = I;
-
-            Bx[0] = M; Bx[1] = M; Bx[2] = O; Bx[3] = O;
-            Bz[0] = J; Bz[1] = I; Bz[2] = I; Bz[3] = J;
-
-            Ex[0] = M; Ex[1] = L; Ex[2] = N; Ex[3] = O;
-            Ez[0] = I; Ez[1] = I; Ez[2] = I; Ez[3] = I;
-
-            Fx[0] = L; Fx[1] = M; Fx[2] = O; Fx[3] = N;
-            Fz[0] = J; Fz[1] = J; Fz[2] = J; Fz[3] = J;
-            
-            //Top cap
-            Dx[0] = N; Dx[1] = O; Dx[2] = O; Dx[3] = N;
-            Dz[0] = I; Dz[1] = I; Dz[2] = J; Dz[3] = J;
-        */
+            dXC = -8; dXD = -4; dY = 3;
             break;
-            
-        case 5:     //Torch on ground, center of block
-        default:
-
-            y0 = C; y1 = D; y2 = K;
-            Ax[0] = G; Ax[1] = G; Ax[2] = G; Ax[3] = G;
-            Az[0] = E; Az[1] = F; Az[2] = F; Az[3] = E;
-
-            Bx[0] = H; Bx[1] = H; Bx[2] = H; Bx[3] = H;
-            Bz[0] = F; Bz[1] = E; Bz[2] = E; Bz[3] = F;
-
-            Ex[0] = B; Ex[1] = A; Ex[2] = A; Ex[3] = B;
-            Ez[0] = I; Ez[1] = I; Ez[2] = I; Ez[3] = I;
-
-            Fx[0] = A; Fx[1] = B; Fx[2] = B; Fx[3] = A;
-            Fz[0] = J; Fz[1] = J; Fz[2] = J; Fz[3] = J;
-            
-            //Top cap
-            Dx[0] = G; Dx[1] = H; Dx[2] = H; Dx[3] = G;
-            Dz[0] = J; Dz[1] = J; Dz[2] = I; Dz[3] = I;
-        
+        case 2: //South side (+X)
+            dXC = 8; dXD = 4; dY = 3;
+            break;
+        case 3: //East side (-Z)
+            dZC = -8; dZD = -4; dY = 3;
+            break;
+        case 4: //West side (+Z)
+            dZC = 8; dZD = 4; dY = 3;
+            break;
+        default:    //Placed on floor
+            break;
     }
 
-    //Lower left, lower right, top right, top left
-
-    //A side
-    glTexCoord2f(tx_0,ty_0); glVertex3i( Ax[0], y0, Az[0]);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( Ax[1], y0, Az[1]);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( Ax[2], y1, Az[2]);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( Ax[3], y1, Az[3]);
-    //B side
-    glTexCoord2f(tx_0,ty_0); glVertex3i( Bx[0], y0, Bz[0]);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( Bx[1], y0, Bz[1]);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( Bx[2], y1, Bz[2]);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( Bx[3], y1, Bz[3]);
-    //E side
-    glTexCoord2f(tx_0,ty_0); glVertex3i( Ex[0], y0, Ez[0]);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( Ex[1], y0, Ez[1]);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( Ex[2], y1, Ez[2]);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( Ex[3], y1, Ez[3]);
-    //F side
-    glTexCoord2f(tx_0,ty_0); glVertex3i( Fx[0], y0, Fz[0]);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( Fx[1], y0, Fz[1]);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( Fx[2], y1, Fz[2]);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( Fx[3], y1, Fz[3]);
+    //Vertex order: Lower left, lower right, top right, top left
+    //A side: 0, 2, 3, 1
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[0]+AC, vY[0]+dY, dZC+vZ[0]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[2]+AC, vY[2]+dY, dZC+vZ[2]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[3]+AD, vY[3]+dY, dZD+vZ[3]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[1]+AD, vY[1]+dY, dZD+vZ[1]);
+    //B side: 6, 4, 5, 7
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[6]+BC, vY[6]+dY, dZC+vZ[6]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[4]+BC, vY[4]+dY, dZC+vZ[4]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[5]+BD, vY[5]+dY, dZD+vZ[5]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[7]+BD, vY[7]+dY, dZD+vZ[7]);
+    //E side: 4, 0, 1, 5
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[4], vY[4]+dY, dZC+vZ[4]+EC);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[0], vY[0]+dY, dZC+vZ[0]+EC);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[1], vY[1]+dY, dZD+vZ[1]+ED);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[5], vY[5]+dY, dZD+vZ[5]+ED);
+    //F side: 2, 6, 7, 3
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[2], vY[2]+dY, dZC+vZ[2]+FC);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[6], vY[6]+dY, dZC+vZ[6]+FC);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[7], vY[7]+dY, dZD+vZ[7]+FD);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[3], vY[3]+dY, dZD+vZ[3]+FD);
     
-    //Top side (D)
-    glTexCoord2f(tx_m1,ty_m1); glVertex3i( Dx[0], y2, Dz[0]);
-    glTexCoord2f(tx_m2,ty_m1); glVertex3i( Dx[1], y2, Dz[1]);
-    glTexCoord2f(tx_m2,ty_m2); glVertex3i( Dx[2], y2, Dz[2]);
-    glTexCoord2f(tx_m1,ty_m2); glVertex3i( Dx[3], y2, Dz[3]);
+    //Bottom side (C): 0, 4, 6, 2
+    glTexCoord2f(tx_m1,ty_b1); glVertex3i( dXC+vX[0]+AC, C+dY, dZC+vZ[0]+EC);
+    glTexCoord2f(tx_m2,ty_b1); glVertex3i( dXC+vX[4]+BC, C+dY, dZC+vZ[4]+EC);
+    glTexCoord2f(tx_m2,ty_b2); glVertex3i( dXC+vX[6]+BC, C+dY, dZC+vZ[6]+FC);
+    glTexCoord2f(tx_m1,ty_b2); glVertex3i( dXC+vX[2]+AC, C+dY, dZC+vZ[2]+FC);
+    
+    //Calculate offsets of torch top (linear interpolation of XC<->XD, ZC<->ZD)
+    GLfloat dX = (10*dXD + 6*dXC)/16.0;
+    GLfloat dZ = (10*dZD + 6*dZC)/16.0;
+    //Top side (D): 3, 7, 5, 1
+    glTexCoord2f(tx_m1,ty_m1); glVertex3f( dX+vX[3]+AD, H+dY, dZ+vZ[3]+FD);
+    glTexCoord2f(tx_m2,ty_m1); glVertex3f( dX+vX[7]+BD, H+dY, dZ+vZ[7]+FD);
+    glTexCoord2f(tx_m2,ty_m2); glVertex3f( dX+vX[5]+BD, H+dY, dZ+vZ[5]+ED);
+    glTexCoord2f(tx_m1,ty_m2); glVertex3f( dX+vX[1]+AD, H+dY, dZ+vZ[1]+ED);
 
 }
 
@@ -1634,6 +1599,7 @@ void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+    //TODO: use meta for sign orientation
     //TODO: use words at location for texture
     
     //Sign

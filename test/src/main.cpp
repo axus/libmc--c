@@ -370,11 +370,11 @@ void genWorld(World& world)
     chunk1 = new mc__::Chunk( 2, 0, 2, -13, 65, 9);   //3x1x3 area
     mc__::Block torchBlock = { 50, 5, 0, 0};
     chunk1->block_array[0] = torchBlock;
-    torchBlock.metadata = 1; chunk1->block_array[1] = torchBlock;
-    torchBlock.metadata = 3; chunk1->block_array[3] = torchBlock;
+    torchBlock.metadata = 2; chunk1->block_array[1] = torchBlock;
+    torchBlock.metadata = 4; chunk1->block_array[3] = torchBlock;
     chunk1->block_array[4] = glassBlock;
-    torchBlock.metadata = 4; chunk1->block_array[5] = torchBlock;
-    torchBlock.metadata = 2; chunk1->block_array[7] = torchBlock;
+    torchBlock.metadata = 3; chunk1->block_array[5] = torchBlock;
+    torchBlock.metadata = 1; chunk1->block_array[7] = torchBlock;
     //Add the chunk
     world.addMapChunk(chunk1);
     delete chunk1;
