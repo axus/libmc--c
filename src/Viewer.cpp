@@ -1152,7 +1152,7 @@ bool Viewer::saveLocalBlocks(const mc__::World& world) const
         }
         
         logfile << endl;
-    for (Z = center_Z + radius; Z >= center_Z - radius; Z--) {
+    for (Z = center_Z - radius; Z <= center_Z + radius; Z++) {
         logfile << "Z=" << left << setw(3) << (int)Z << flush;
     for (X = center_X - radius; X <= center_X + radius; X++) {
         //Lookup the chunk(s) camera is in

@@ -1508,40 +1508,43 @@ void BlockDrawer::drawDoor( uint8_t blockID, uint8_t meta,
     //Check top bit
     if (meta & 0x8) {
         ID++;
+        vflags |= 0x20; //don't draw bottom face
+    } else {
+        vflags |= 0x10; //don't draw top face
     }
     
     //Door position and side depends on metadata
     switch (meta & 0x7) {
-        case 0:     //West side, closed
-            drawScaledBlock( ID, meta, x, y, z, vflags,
+        case 0:     //Closed (hinge NE, door on A face)
+            drawScaledBlock( ID, meta, x, y, z, vflags&0xBC,
                 3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0xC0);   //mirror A+B
             break;
-        case 1:     //North side, closed
-            drawScaledBlock( ID, meta, x, y, z, vflags,
+        case 1:     //Closed (hinge SE, door on E face)
+            drawScaledBlock( ID, meta, x, y, z, vflags&0xF8,
                 1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x00);
             break;
-        case 2:     //East side, closed
-            drawScaledBlock( ID, meta, x, y, z, vflags,
+        case 2:     //Closed (hinge SW , door on B face)
+            drawScaledBlock( ID, meta, x, y, z, vflags&0x7C,
                 3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0x00);
             break;
-        case 3:     //South side, closed
-            drawScaledBlock( ID, meta, x, y, z, vflags,
+        case 3:     //Closed (hinge NW, door on F face)
+            drawScaledBlock( ID, meta, x, y, z, vflags&0xF4,
                 1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x0C);   //mirror E+F
             break;
-        case 4:     //West side, open
-            drawScaledBlock( ID, meta, x, y, z, vflags,
+        case 4:     //Open (hinge NE, door on E face)
+            drawScaledBlock( ID, meta, x, y, z, vflags&0xF8,
                 1.0, 1.0, 3.0/16.0, true, 0, 0, 0, 0x0C);   //mirror E+F
             break;
-        case 5:     //North side, open
-            drawScaledBlock( ID, meta, x, y, z, vflags,
+        case 5:     //Open (hinge SE, door on B face)
+            drawScaledBlock( ID, meta, x, y, z, vflags&0x7C,
                 3.0/16.0, 1.0, 1.0, true, 13, 0, 0, 0xC0);   //mirror A+B
             break;
-        case 6:     //East side, open
-            drawScaledBlock( ID, meta, x, y, z, vflags,
+        case 6:     //Open (hinge SW, door on F face)
+            drawScaledBlock( ID, meta, x, y, z, vflags&0xF4,
                 1.0, 1.0, 3.0/16.0, true, 0, 0, 13, 0x00);
             break;
-        case 7:     //South side, open
-            drawScaledBlock( ID, meta, x, y, z, vflags,
+        case 7:     //Open (hinge NW, door on A face)
+            drawScaledBlock( ID, meta, x, y, z, vflags&0xBC,
                 3.0/16.0, 1.0, 1.0, true, 0, 0, 0, 0x00);
             break;
         default:
@@ -1622,7 +1625,7 @@ void BlockDrawer::drawPortal( uint8_t blockID, uint8_t /*meta*/,
 
 }
 
-//Draw fence (meta affects angle)
+//Draw fence
 void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -1739,22 +1742,22 @@ void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
     
     //TODO: Write message on sign texture
     switch (meta & 0x7) {
-        case 2: //South side (face north)
-            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40),
-                1.0/16.0, 0.5, 12.0/16.0, true, 15, 7, 2);
-            break;
-        case 3: //North side (face south)
-            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80),
-                1.0/16.0, 0.5, 12.0/16.0, true, 0, 7, 2);
-            break;
-        case 4: //West side (face east)
+        case 2: //West side (face east)
             drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04),
                 12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 15);
             break;
-        case 5: //East side (face west)
+        case 3: //East side (face west)
         default:
             drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08),
                 12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 0);
+            break;
+        case 4: //South side (face north)
+            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40),
+                1.0/16.0, 0.5, 12.0/16.0, true, 15, 7, 2);
+            break;
+        case 5: //North side (face south)
+            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80),
+                1.0/16.0, 0.5, 12.0/16.0, true, 0, 7, 2);
             break;
     }
 }
