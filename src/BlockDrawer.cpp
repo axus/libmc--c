@@ -1102,58 +1102,130 @@ void BlockDrawer::drawTorch( uint8_t blockID, uint8_t meta,
     GLfloat ty_m1 = blockInfo[blockID].ty[WEST] + tmr*8.0/16.0;
     GLfloat ty_m2 = blockInfo[blockID].ty[WEST] + tmr*6.0/16.0;
 
+    //Cube boundaries
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    //middle torch boundaries
+    GLint G = A + 7;
+    GLint H = A + 9;
+    GLint I = E + 7;
+    GLint J = E + 9;
+    
+    GLint K = C + 10;
+    /*
+    GLint P = C + 3;
+    GLint L = A - 1;
+    GLint M = A + 1;
+    GLint N = A + 3;
+    GLint O = A + 5;
+      */      
+    
+    //Polygon corner coordinates
+    GLint Ax[4], Az[4], Bx[4], Bz[4];
+    GLint Ex[4], Ez[4], Fx[4], Fz[4];
+    GLint Dx[4], Dz[4];
+    GLint y0, y1, y2;
+
     //Torch location depends on metadata
     switch(meta) {
-        //TODO: metadata for walls
-        case 1:
-        case 2:
-        case 3:
-        case 4:
+        //Metadata to determine which wall torch is on
+        case 1: //North side (-X)
+        case 2: //South side (+X)
+        case 3: //East side (-Z)
+        case 4: //West side (+Z)
+            y0 = C; y1 = D; y2 = K;
+            
+            Ax[0] = G; Ax[1] = G; Ax[2] = G+3; Ax[3] = G+3;
+            Az[0] = E; Az[1] = F; Az[2] = F; Az[3] = E;
+
+            Bx[0] = H; Bx[1] = H; Bx[2] = H+3; Bx[3] = H+3;
+            Bz[0] = F; Bz[1] = E; Bz[2] = F; Bz[3] = E;
+
+            Ex[0] = B - 8; Ex[1] = A - 8; Ex[2] = A - 5; Ex[3] = B - 5;
+            Ez[0] = I; Ez[1] = I; Ez[2] = I; Ez[3] = I;
+
+            Fx[0] = A - 8; Fx[1] = B - 8; Fx[2] = B - 5; Fx[3] = A - 5;
+            Fz[0] = J; Fz[1] = J; Fz[2] = J; Fz[3] = J;
+            
+            //Top cap
+            Dx[0] = G - 5; Dx[1] = H - 5; Dx[2] = H - 5; Dx[3] = G - 5;
+            Dz[0] = J; Dz[1] = J; Dz[2] = I; Dz[3] = I;
+        
+        /*
+            y0 = P; y1 = K; y2 = K;
+            Ax[0] = L; Ax[1] = L; Ax[2] = N; Ax[3] = N;
+            Az[0] = I; Az[1] = J; Az[2] = J; Az[3] = I;
+
+            Bx[0] = M; Bx[1] = M; Bx[2] = O; Bx[3] = O;
+            Bz[0] = J; Bz[1] = I; Bz[2] = I; Bz[3] = J;
+
+            Ex[0] = M; Ex[1] = L; Ex[2] = N; Ex[3] = O;
+            Ez[0] = I; Ez[1] = I; Ez[2] = I; Ez[3] = I;
+
+            Fx[0] = L; Fx[1] = M; Fx[2] = O; Fx[3] = N;
+            Fz[0] = J; Fz[1] = J; Fz[2] = J; Fz[3] = J;
+            
+            //Top cap
+            Dx[0] = N; Dx[1] = O; Dx[2] = O; Dx[3] = N;
+            Dz[0] = I; Dz[1] = I; Dz[2] = J; Dz[3] = J;
+        */
+            break;
+            
         case 5:     //Torch on ground, center of block
         default:
+
+            y0 = C; y1 = D; y2 = K;
+            Ax[0] = G; Ax[1] = G; Ax[2] = G; Ax[3] = G;
+            Az[0] = E; Az[1] = F; Az[2] = F; Az[3] = E;
+
+            Bx[0] = H; Bx[1] = H; Bx[2] = H; Bx[3] = H;
+            Bz[0] = F; Bz[1] = E; Bz[2] = E; Bz[3] = F;
+
+            Ex[0] = B; Ex[1] = A; Ex[2] = A; Ex[3] = B;
+            Ez[0] = I; Ez[1] = I; Ez[2] = I; Ez[3] = I;
+
+            Fx[0] = A; Fx[1] = B; Fx[2] = B; Fx[3] = A;
+            Fz[0] = J; Fz[1] = J; Fz[2] = J; Fz[3] = J;
+            
+            //Top cap
+            Dx[0] = G; Dx[1] = H; Dx[2] = H; Dx[3] = G;
+            Dz[0] = J; Dz[1] = J; Dz[2] = I; Dz[3] = I;
         
-            //Cube boundaries
-            GLint A = (x << 4) + 0;
-            GLint B = (x << 4) + texmap_TILE_LENGTH;
-            GLint C = (y << 4) + 0;
-            GLint D = (y << 4) + texmap_TILE_LENGTH;
-            GLint E = (z << 4) + 0;
-            GLint F = (z << 4) + texmap_TILE_LENGTH;
-            
-            //middle torch boundaries
-            GLint G = A + 7;
-            GLint H = A + 9;
-            GLint I = E + 7;
-            GLint J = E + 9;
-            GLint K = C + 10;
-            
-            //A side
-            glTexCoord2f(tx_0,ty_0); glVertex3i( G, C, E);  //Lower left:  ACE
-            glTexCoord2f(tx_1,ty_0); glVertex3i( G, C, F);  //Lower right: ACF
-            glTexCoord2f(tx_1,ty_1); glVertex3i( G, D, F);  //Top right:   ADF
-            glTexCoord2f(tx_0,ty_1); glVertex3i( G, D, E);  //Top left:    ADE
-            //B side
-            glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left
-            glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right
-            glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right
-            glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left
-            //E side
-            glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, I);  //Lower left:  BCE
-            glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, I);  //Lower right: ACE
-            glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, I);  //Top right:   ADE
-            glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, I);  //Top left:    BDE
-            //F side
-            glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, J);  //Lower left:  ACF
-            glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, J);  //Lower right: BCF
-            glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, J);  //Top right:   BDF
-            glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, J);  //Top left:    ADF
-            
-            //Top side (D)
-            glTexCoord2f(tx_m1,ty_m1); glVertex3i( G, K, J);  //Lower left:  ADF
-            glTexCoord2f(tx_m2,ty_m1); glVertex3i( H, K, J);  //Lower right: BDF
-            glTexCoord2f(tx_m2,ty_m2); glVertex3i( H, K, I);  //Top right:   BDE
-            glTexCoord2f(tx_m1,ty_m2); glVertex3i( G, K, I);  //Top left:    ADE
     }
+
+    //Lower left, lower right, top right, top left
+
+    //A side
+    glTexCoord2f(tx_0,ty_0); glVertex3i( Ax[0], y0, Az[0]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( Ax[1], y0, Az[1]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( Ax[2], y1, Az[2]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( Ax[3], y1, Az[3]);
+    //B side
+    glTexCoord2f(tx_0,ty_0); glVertex3i( Bx[0], y0, Bz[0]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( Bx[1], y0, Bz[1]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( Bx[2], y1, Bz[2]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( Bx[3], y1, Bz[3]);
+    //E side
+    glTexCoord2f(tx_0,ty_0); glVertex3i( Ex[0], y0, Ez[0]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( Ex[1], y0, Ez[1]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( Ex[2], y1, Ez[2]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( Ex[3], y1, Ez[3]);
+    //F side
+    glTexCoord2f(tx_0,ty_0); glVertex3i( Fx[0], y0, Fz[0]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( Fx[1], y0, Fz[1]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( Fx[2], y1, Fz[2]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( Fx[3], y1, Fz[3]);
+    
+    //Top side (D)
+    glTexCoord2f(tx_m1,ty_m1); glVertex3i( Dx[0], y2, Dz[0]);
+    glTexCoord2f(tx_m2,ty_m1); glVertex3i( Dx[1], y2, Dz[1]);
+    glTexCoord2f(tx_m2,ty_m2); glVertex3i( Dx[2], y2, Dz[2]);
+    glTexCoord2f(tx_m1,ty_m2); glVertex3i( Dx[3], y2, Dz[3]);
+
 }
 
 //Draw fire burning (use item texture)
