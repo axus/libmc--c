@@ -150,8 +150,8 @@ void genWorld(World& world)
     delete chunk1;
     
     //Add crops with metadata 0-7
-    mc__::Block crops = {59, 0, 0, 0};
     chunk1 = new mc__::Chunk(7, 0, 0, 4, 64, 18);   //Row of 8 crops
+    mc__::Block crops = {59, 0, 0, 0};
     for (gen_X = 0; gen_X < 8; gen_X++) {
         //Increase metadata for each crop
         crops.metadata = gen_X;
@@ -228,8 +228,8 @@ void genWorld(World& world)
     //
     // Chest test
     //
-    mc__::Block chestBlock = { 54, 0, 0, 0};
     chunk1 = new mc__::Chunk( 4, 0, 2, -13, 64, 20);   //3x5 area for chests
+    mc__::Block chestBlock = { 54, 0, 0, 0};
     //single
     chunk1->block_array[0] = chestBlock;
     //2x1 on X
@@ -285,8 +285,8 @@ void genWorld(World& world)
     //
     // Door test
     //
-    mc__::Block doorBlock = { 64, 0, 0, 0}; //wood door
     chunk1 = new mc__::Chunk( 2, 1, 2, 0, 64, 7);   //3x2x3 area for doors
+    mc__::Block doorBlock = { 64, 0, 0, 0}; //wood door
     doorBlock.metadata = 6 ; chunk1->block_array[0] = doorBlock;
     doorBlock.metadata += 8; chunk1->block_array[1] = doorBlock;
     doorBlock.metadata = 2 ; chunk1->block_array[2] = doorBlock;
@@ -307,8 +307,8 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
 
-    doorBlock = { 71, 0, 0, 0}; //iron door
     chunk1 = new mc__::Chunk( 2, 1, 2, -4, 64, 4);   //3x2x3 area for doors
+    doorBlock = { 71, 0, 0, 0}; //iron door
     doorBlock.metadata = 6 ; chunk1->block_array[0] = doorBlock;
     doorBlock.metadata += 8; chunk1->block_array[1] = doorBlock;
     doorBlock.metadata = 2 ; chunk1->block_array[2] = doorBlock;
@@ -379,10 +379,34 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
     
+    //Signpost test (below torch test)
+    chunk1 = new mc__::Chunk( 4, 0, 4, -14, 64, 8);   //5x1x5 area
+    mc__::Block postBlock = { 63, 0, 0, 0};
+    
+    postBlock.metadata=0x6; chunk1->block_array[0] = postBlock;
+    postBlock.metadata=0x5; chunk1->block_array[1] = postBlock;
+    postBlock.metadata=0x4; chunk1->block_array[2] = postBlock;
+    postBlock.metadata=0x3; chunk1->block_array[3] = postBlock;
+    postBlock.metadata=0x2; chunk1->block_array[4] = postBlock;
+    postBlock.metadata=0x7; chunk1->block_array[5] = postBlock;
+    postBlock.metadata=0x1; chunk1->block_array[9] = postBlock;
+    postBlock.metadata=0x8; chunk1->block_array[10] = postBlock;
+    postBlock.metadata=0x0; chunk1->block_array[14] = postBlock;
+    postBlock.metadata=0x9; chunk1->block_array[15] = postBlock;
+    postBlock.metadata=0xF; chunk1->block_array[19] = postBlock;
+    postBlock.metadata=0xA; chunk1->block_array[20] = postBlock;
+    postBlock.metadata=0xB; chunk1->block_array[21] = postBlock;
+    postBlock.metadata=0xC; chunk1->block_array[22] = postBlock;
+    postBlock.metadata=0xD; chunk1->block_array[23] = postBlock;
+    postBlock.metadata=0xE; chunk1->block_array[24] = postBlock;
+    
+    //Add the chunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
 
     //Cactus test
-    mc__::Block cactusBlock = { 81, 0, 0, 0};
     chunk1 = new mc__::Chunk( 0, 0, 15, 1, 64, -16);   //1x1x15 area for cactus
+    mc__::Block cactusBlock = { 81, 0, 0, 0};
     for (gen_Z=0; gen_Z < 16; gen_Z++) {
         cactusBlock.metadata = gen_Z;
         chunk1->block_array[gen_Z] = cactusBlock;

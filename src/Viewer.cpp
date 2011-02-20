@@ -126,8 +126,8 @@ Viewer::Viewer(World* w, unsigned short width, unsigned short height):
 }
 
 //Start up OpenGL
-bool Viewer::init(const std::string& filename,
-    const std::string& item_filename,
+bool Viewer::init(
+    const std::string filenames[mc__::TEX_MAX],
     bool mipmaps)
 {
 
@@ -140,29 +140,25 @@ bool Viewer::init(const std::string& filename,
     }
 
     //DevIL textures
-    ILuint il_texture_map, il_icon_map;
+    ILuint il_texture_map;  //, il_icon_map;
 
     //Graphics options
     use_mipmaps=mipmaps;
 
-    //Remember filenames
-    texture_map_file = filename;
-    item_icon_file = item_filename;
-
-    //Initialize OpenGL
+    //Initialize OpenGL, allocate texture and model IDs
     startOpenGL();
 
     //Start DevIL
     ilInit();
 
     //Load item icon map, copy to openGL texture
-    il_icon_map = loadImageFile(item_icon_file);
-    if (il_icon_map == 0) {
+    il_texture_map = loadImageFile(filenames[TEX_ITEM]);
+    if (il_texture_map == 0) {
         result=false;
-        cerr << "Error loading " << item_icon_file << endl;
+        cerr << "Error loading " << filenames[TEX_ITEM] << endl;
     } else {
         //glBind texture before assigning it
-        glBindTexture(GL_TEXTURE_2D, item_tex);
+        glBindTexture(GL_TEXTURE_2D, textures[mc__::TEX_ITEM]);
         
         //Copy current DevIL image to OpenGL image.
         glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
@@ -170,14 +166,31 @@ bool Viewer::init(const std::string& filename,
             ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
     }
 
-    //Load terrain texture map, bind it to current DevIL image
-    il_texture_map = loadImageFile(texture_map_file);
+    //Load sign texture
+    il_texture_map = loadImageFile(filenames[TEX_SIGN]);
     if (il_texture_map == 0) {
         result = false;   //error, exit program
-        cerr << "Error loading " << texture_map_file << endl;
+        cerr << "Error loading " << filenames[TEX_SIGN] << endl;
     } else {
         //glBind texture before assigning it
-        glBindTexture(GL_TEXTURE_2D, terrain_tex);
+        glBindTexture(GL_TEXTURE_2D, textures[mc__::TEX_SIGN]);
+        
+        //Copy current DevIL image to OpenGL image.
+        glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
+            ilGetInteger(IL_IMAGE_WIDTH), ilGetInteger(IL_IMAGE_HEIGHT), 0,
+            ilGetInteger(IL_IMAGE_FORMAT), GL_UNSIGNED_BYTE, ilGetData());
+    
+    }
+    
+
+    //Load terrain texture map, bind it to current DevIL image
+    il_texture_map = loadImageFile(filenames[TEX_TERRAIN]);
+    if (il_texture_map == 0) {
+        result = false;   //error, exit program
+        cerr << "Error loading " << filenames[TEX_TERRAIN] << endl;
+    } else {
+        //glBind texture before assigning it
+        glBindTexture(GL_TEXTURE_2D, textures[mc__::TEX_TERRAIN]);
         
         //Copy current DevIL image to OpenGL image.
         glTexImage2D(GL_TEXTURE_2D, 0, ilGetInteger(IL_IMAGE_BPP),
@@ -187,7 +200,7 @@ bool Viewer::init(const std::string& filename,
     }
     
     //Load game block information
-    blockDraw = new BlockDrawer(world, terrain_tex, item_tex);
+    blockDraw = new BlockDrawer(world, textures);
 
 
     //Change camera to model view mode
@@ -204,7 +217,7 @@ bool Viewer::init(const std::string& filename,
 void Viewer::rebindTerrain()
 {
     //glBind texture before assigning it
-    glBindTexture(GL_TEXTURE_2D, terrain_tex);
+    glBindTexture(GL_TEXTURE_2D, textures[mc__::TEX_TERRAIN]);
 }
 
 //
@@ -424,7 +437,7 @@ void Viewer::drawMapChunk(MapChunk* mapchunk)
         glNewList(gl_list, GL_COMPILE);
 
         //Rebind terrain png
-        glBindTexture( GL_TEXTURE_2D, terrain_tex);  
+        glBindTexture( GL_TEXTURE_2D, textures[mc__::TEX_TERRAIN]);
 
         glBegin(GL_QUADS);
         
@@ -569,14 +582,13 @@ void Viewer::startOpenGL() {
     glPushMatrix(); 
 
     //Create memory, set options for openGL terrain texture
-    glGenTextures(1, &terrain_tex);
-    configureTexture(terrain_tex);
+    glGenTextures(mc__::TEX_MAX, textures);
+
+    //Set texture parameters for every texture
+    for (int texID = TEX_TERRAIN; texID < TEX_MAX; texID++) {
+        configureTexture(textures[texID]);
+    }
     
-    //...for item texture
-    glGenTextures(1, &item_tex);
-    configureTexture(item_tex);
-    
-    //...for entity textures
     glGenTextures(entity_type_MAX, entity_tex);
     //TODO: configureTexture for each one
     
@@ -723,7 +735,7 @@ bool Viewer::createItemModel( uint16_t index)
     switch (iteminf.properties & 0x07) {
         case 0:
             //Terrain cube (as item 75% size)
-            glBindTexture( GL_TEXTURE_2D, terrain_tex);
+            glBindTexture( GL_TEXTURE_2D, textures[mc__::TEX_TERRAIN]);
             glBegin(GL_QUADS);
             //Centered at current position
             blockDraw->drawScaledBlock( index&0xFF, 0/*meta*/, 0, 0, 0, 0,
@@ -732,7 +744,7 @@ bool Viewer::createItemModel( uint16_t index)
             break;
         case 1:
             //Terrain item (as item 75% size)
-            glBindTexture( GL_TEXTURE_2D, terrain_tex);
+            glBindTexture( GL_TEXTURE_2D, textures[mc__::TEX_TERRAIN]);
             glBegin(GL_QUADS);
             //Centered at current position
             blockDraw->drawScaledBlock( index&0xFF, 0/*meta*/, 0, 0, 0, 0,
@@ -742,14 +754,14 @@ bool Viewer::createItemModel( uint16_t index)
         case 2:     //Regular item icon :)
         case 6:     //Item icon depends on damage field, change ID at run time
             //Inventory item
-            glBindTexture( GL_TEXTURE_2D, item_tex);
+            glBindTexture( GL_TEXTURE_2D, textures[mc__::TEX_ITEM]);
             glBegin(GL_QUADS);
             drawDroppedItem( index);
             glEnd();
             break;
         case 3:
             //Special inventory item
-            glBindTexture( GL_TEXTURE_2D, item_tex);
+            glBindTexture( GL_TEXTURE_2D, textures[mc__::TEX_ITEM]);
             glBegin(GL_QUADS);
             drawDroppedItem( index);
             glEnd();

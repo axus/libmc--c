@@ -50,9 +50,8 @@ namespace mc__ {
             enum movetype { MOVE_FORWARD, MOVE_BACK, MOVE_LEFT, MOVE_RIGHT,
                 MOVE_UP, MOVE_DOWN, TURN_LEFT, TURN_RIGHT, MOVE_COUNT };
             
-            //Texture file
-            const std::string texture_map_filename;
-            const std::string item_icon_filename;
+            //Texture filenames
+            std::string texture_files[TEX_MAX];
             
             //Constructor, initialize SFML and mc-- objects here
             UserInterface(const std::string& title, mc__::World& w,

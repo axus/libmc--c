@@ -42,7 +42,10 @@ namespace mc__ {
     //
     // Types for mc__ namespace
     //
+    // THESE NAMES ARE WRONG.. BUT I NEED TO REMAP EVERYTHING TO FIX IT
     enum face_ID { WEST=0, EAST=1, DOWN=2, UP=3, NORTH=4, SOUTH=5, FACE_MAX};
+
+    enum tex_TYPE { TEX_TERRAIN, TEX_ITEM, TEX_SIGN, TEX_MAX};
 
     //Physical properties, to associate with blockID (internal to engine)
     typedef struct {
@@ -92,7 +95,7 @@ namespace mc__ {
             mc__::World *world;
             
             //GL IDs for textures loaded by viewer
-            GLuint terrain_tex, item_tex;
+            GLuint *textures ;
 
             //Texture information for ID (> 256 are my own shortcuts)
             BlockInfo blockInfo[768];
@@ -105,7 +108,7 @@ namespace mc__ {
             //
 
             //Constructor        
-            BlockDrawer( mc__::World* w, GLuint t_tex, GLuint i_tex );
+            BlockDrawer( mc__::World* w, GLuint tex_array[mc__::TEX_MAX] );
 
             //Draw a block ID, choose it's drawing function and change metadata
             void draw( uint8_t blockID, uint8_t meta,
@@ -181,9 +184,15 @@ namespace mc__ {
                 bool scale_textures=true,
                 GLint off_x=0, GLint off_y=0, GLint off_z=0,
                 uint8_t mirror_mask=0) const;
+                
+            //Draw a 6-sided volume with specified vertices and tex coords
+            void drawVertexBlock( GLint vX[8], GLint vY[8], GLint vZ[8],
+                GLfloat tx_0[6], GLfloat tx_1[6],
+                GLfloat ty_0[6], GLfloat ty_1[6], uint8_t visflags=0 ) const;
+
 
             //Use terrain texture again
-            void rebindTerrain();
+            void bindTexture(tex_TYPE bindme) const;
             
             //Use biome color on block face
             void setBlockColor(uint8_t blockID, face_ID face) const;
@@ -203,6 +212,12 @@ namespace mc__ {
             //Texture mirror. mirror_type mask: 1=vertical, 2=horizontal
             void mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
                 GLfloat& ty_0, GLfloat& ty_1, uint8_t mirror_type=2) const;
+                
+            //Calculate texture coordinates
+            void setTexCoords(GLsizei max_width, GLsizei max_height,
+                GLsizei x0, GLsizei y0, GLsizei tex_width, GLsizei tex_height,
+                GLfloat& tx_0, GLfloat& tx_1,
+                GLfloat& ty_0, GLfloat& ty_1) const;
 
     };
 }

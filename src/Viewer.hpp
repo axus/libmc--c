@@ -71,8 +71,7 @@ namespace mc__ {
             //Current camera position
             GLfloat cam_X, cam_Y, cam_Z;
 
-            bool init(const std::string &texture_map_file,
-                const std::string &item_icon_file,
+            bool init( const std::string filenames[mc__::TEX_MAX],
                 bool mipmaps=true);
 
             //Load texture map
@@ -156,10 +155,11 @@ namespace mc__ {
             GLfloat cam_yaw, cam_pitch, cam_vecX, cam_vecY, cam_vecZ;
             
             //Remember texture map filename
-            std::string texture_map_file, item_icon_file;
+            //std::string texture_map_file, item_icon_file;
+            //std::string texture_files[mc__::TEX_MAX];
 
             //openGL image (for texture)
-            GLuint terrain_tex, item_tex;
+            GLuint textures[mc__::TEX_MAX]; //terrain_tex, item_tex;
             GLuint entity_tex[entity_type_MAX];
 
             //GL display list of terrain display lists that player can see

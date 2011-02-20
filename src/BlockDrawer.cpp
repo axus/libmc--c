@@ -88,8 +88,8 @@ using std::flush;
 using std::string;
 using std::stringstream;
 
-BlockDrawer::BlockDrawer(World* w, GLuint t_tex, GLuint i_tex):
-    world(w), terrain_tex(t_tex), item_tex(i_tex)
+BlockDrawer::BlockDrawer( mc__::World* w, GLuint tex_array[mc__::TEX_MAX] ):
+    world(w), textures(tex_array)
 {
     //Load the block info for all known block types
     loadBlockInfo();
@@ -112,10 +112,10 @@ BlockDrawer::BlockDrawer(World* w, GLuint t_tex, GLuint i_tex):
 }
 
 //change back to texture if needed
-void BlockDrawer::rebindTerrain()
+void BlockDrawer::bindTexture( tex_TYPE index) const
 {
     //glBind texture before assigning it
-    glBindTexture(GL_TEXTURE_2D, terrain_tex);
+    glBindTexture(GL_TEXTURE_2D, textures[index]);
 }
 
 
@@ -1599,21 +1599,290 @@ void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
 }
 
 //Draw signpost (meta affects angle)
-void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
+void BlockDrawer::drawSignpost( uint8_t /*blockID*/, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: use meta for sign orientation
-    //TODO: use words at location for texture
+
+    //Use sign.png
+    bindTexture(TEX_SIGN);
     
-    //Sign
-    drawScaledBlock( blockID, 0, x, y, z, 0,
-        3.0/4.0, 1.0/2.0, 1.0/8.0, true, 2, 7, 8);
+    //TODO: look up precalculated texture coordinates by block ID
+    //Look up texture coordinates for signboard
+    GLfloat tx0[6], tx1[6], ty0[6], ty1[6];
+    //left side
+    setTexCoords(128, 64, 0, 4, 4, 24, tx0[0], tx1[0], ty0[0], ty1[0]);
+    //right side
+    setTexCoords(128, 64, 52, 4, 4, 24, tx0[1], tx1[1], ty0[1], ty1[1]);
+    //bottom side
+    setTexCoords(128, 64, 52, 0, 48, 4, tx0[2], tx1[2], ty0[2], ty1[2]);
+    //top side
+    setTexCoords(128, 64, 4, 0, 48, 4, tx0[3], tx1[3], ty0[3], ty1[3]);
+    //back side
+    setTexCoords(128, 64, 4, 4, 48, 24, tx0[4], tx1[4], ty0[4], ty1[4]);
+    //front side
+    setTexCoords(128, 64, 56, 4, 48, 24, tx0[5], tx1[5], ty0[5], ty1[5]);
+    
+    //Cube boundaries
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    
+    //signboard bottom
+    GLint G = C + 9;
+    
+    //signboard top (D + 2)
+    GLint H = D + 2;
+    
+    //Vertices of signboard
+    GLint vX[8], vY[8], vZ[8];
+    
+    //Y values of vertices always the same
+    vY[0] = G  ; vY[2] = G  ; vY[3] = H  ; vY[1] = H  ;
+    vY[6] = G  ; vY[4] = G  ; vY[5] = H  ; vY[7] = H  ;
+
+    //Sign orientation depends on metadata
+    switch(meta) {
+        case 0: //West
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B;
+            vZ[0] = E+9; vZ[2] = E+7; vZ[3] = E+7; vZ[1] = E+9;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
+            vZ[6] = E+7; vZ[4] = E+9; vZ[5] = E+9; vZ[7] = E+7;
+            break;
+        case 1: //West-Northwest
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B-1; vX[2] = B  ; vX[3] = B  ; vX[1] = B-1;
+            vZ[0] = F-4; vZ[2] = F-5; vZ[3] = F-5; vZ[1] = F-4;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A+1; vX[4] = A  ; vX[5] = A  ; vX[7] = A+1; 
+            vZ[6] = E+4; vZ[4] = E+5; vZ[5] = E+5; vZ[7] = E+4;
+            break;
+        case 2: //Northwest
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B-2; vX[2] = B-1; vX[3] = B-1; vX[1] = B-2;
+            vZ[0] = F-1; vZ[2] = F-2; vZ[3] = F-2; vZ[1] = F-1;
+
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A+2; vX[4] = A+1; vX[5] = A+1; vX[7] = A+2;
+            vZ[6] = E+1; vZ[4] = E+2; vZ[5] = E+2; vZ[7] = E+1;
+            break;
+        case 3: //North-Northwest
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B-5; vX[2] = B-4; vX[3] = B-4; vX[1] = B-5;
+            vZ[0] = F  ; vZ[2] = F-1; vZ[3] = F-1; vZ[1] = F  ;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A+5; vX[4] = A+4; vX[5] = A+4; vX[7] = A+5;
+            vZ[6] = E  ; vZ[4] = E+1; vZ[5] = E+1; vZ[7] = E  ;
+            break;
+        default:
+        case 4: //North
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A+7; vX[2] = A+9; vX[3] = A+9; vX[1] = A+7;
+            vZ[0] = F  ; vZ[2] = F  ; vZ[3] = F  ; vZ[1] = F  ;
+
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A+9; vX[4] = A+7; vX[5] = A+7; vX[7] = A+9;
+            vZ[6] = E  ; vZ[4] = E  ; vZ[5] = E  ; vZ[7] = E  ;
+            break;
+        case 5: //North-Northeast
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A+4; vX[2] = A+5; vX[3] = A+5; vX[1] = A+4;
+            vZ[0] = F-1; vZ[2] = F  ; vZ[3] = F  ; vZ[1] = F-1;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = B-4; vX[4] = B-5; vX[5] = B-5; vX[7] = B-4;
+            vZ[6] = E+1; vZ[4] = E  ; vZ[5] = E  ; vZ[7] = E+1;
+            break;
+        case 6: //Northeast
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A+1; vX[2] = A+2; vX[3] = A+2; vX[1] = A+1; 
+            vZ[0] = F-2; vZ[2] = F-1; vZ[3] = F-1; vZ[1] = F-2;
         
-    //Post
-    drawScaledBlock( blockID, 0, x, y, z, (vflags&0x30)|0x10,
-        1.0/8.0, 7.0/16.0, 1.0/8.0, true, 7, 0, 8);
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = B-1; vX[4] = B-2; vX[5] = B-2; vX[7] = B-1;
+            vZ[6] = E+2; vZ[4] = E+1; vZ[5] = E+1; vZ[7] = E+2;
+            break;
+        case 7: //East-Northeast
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A  ; vX[2] = A+1; vX[3] = A+1; vX[1] = A  ; 
+            vZ[0] = F-5; vZ[2] = F-4; vZ[3] = F-4; vZ[1] = F-5;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = B  ; vX[4] = B-1; vX[5] = B-1; vX[7] = B  ;
+            vZ[6] = E+5; vZ[4] = E+4; vZ[5] = E+4; vZ[7] = E+5;
+            break;
+        case 8: //East
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A; vX[2] = A; vX[3] = A; vX[1] = A; 
+            vZ[0] = E+7; vZ[2] = E+9; vZ[3] = E+9; vZ[1] = E+7;
+        
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = B  ; vX[4] = B  ; vX[5] = B  ; vX[7] = B  ;
+            vZ[6] = F-7; vZ[4] = F-9; vZ[5] = F-9; vZ[7] = F-7;
+            break;
+        case 9: //East-Southeast
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A+1; vX[2] = A  ; vX[3] = A  ; vX[1] = A+1; 
+            vZ[0] = E+4; vZ[2] = E+5; vZ[3] = E+5; vZ[1] = E+4;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = B-1; vX[4] = B  ; vX[5] = B  ; vX[7] = B-1;
+            vZ[6] = F-4; vZ[4] = F-5; vZ[5] = F-5; vZ[7] = F-4;
+            break;
+        case 10: //Southeast
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A+2; vX[2] = A+1; vX[3] = A+1; vX[1] = A+2;
+            vZ[0] = E+1; vZ[2] = E+2; vZ[3] = E+2; vZ[1] = E+1;
+
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = B-2; vX[4] = B-1; vX[5] = B-1; vX[7] = B-2;
+            vZ[6] = F-1; vZ[4] = F-2; vZ[5] = F-2; vZ[7] = F-1;
+            break;
+        case 11: //South-Southeast
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A+5; vX[2] = A+4; vX[3] = A+4; vX[1] = A+5;
+            vZ[0] = E  ; vZ[2] = E+1; vZ[3] = E+1; vZ[1] = E  ;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = B-5; vX[4] = B-4; vX[5] = B-4; vX[7] = B-5;
+            vZ[6] = F  ; vZ[4] = F-1; vZ[5] = F-1; vZ[7] = F  ;
+            break;
+        case 12: //South
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A+9; vX[2] = A+7; vX[3] = A+7; vX[1] = A+9;
+            vZ[0] = E  ; vZ[2] = E  ; vZ[3] = E  ; vZ[1] = E  ;
+
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A+7; vX[4] = A+9; vX[5] = A+9; vX[7] = A+7;
+            vZ[6] = F  ; vZ[4] = F  ; vZ[5] = F  ; vZ[7] = F  ;
+            break;
+        case 13: //South-Southwest
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B-4; vX[2] = B-5; vX[3] = B-5; vX[1] = B-4;
+            vZ[0] = E+1; vZ[2] = E  ; vZ[3] = E  ; vZ[1] = E+1;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A+4; vX[4] = A+5; vX[5] = A+5; vX[7] = A+4; 
+            vZ[6] = F-1; vZ[4] = F  ; vZ[5] = F  ; vZ[7] = F-1;
+            break;
+        case 14: //Southwest
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B-1; vX[2] = B-2; vX[3] = B-2; vX[1] = B-1;
+            vZ[0] = E+2; vZ[2] = E+1; vZ[3] = E+1; vZ[1] = E+2;
+        
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A+1; vX[4] = A+2; vX[5] = A+2; vX[7] = A+1; 
+            vZ[6] = F-2; vZ[4] = F-1; vZ[5] = F-1; vZ[7] = F-2;
+            break;
+        case 15: //West-Southwest
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B  ; vX[2] = B-1; vX[3] = B-1; vX[1] = B  ;
+            vZ[0] = E+5; vZ[2] = E+4; vZ[3] = E+4; vZ[1] = E+5;
+            
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A  ; vX[4] = A+1; vX[5] = A+1; vX[7] = A  ; 
+            vZ[6] = F-5; vZ[4] = F-4; vZ[5] = F-4; vZ[7] = F-5;
+            break;
+    }
+
+    //I want 6 faces, pronto!
+    drawVertexBlock(vX, vY, vZ, tx0, tx1, ty0, ty1, vflags&0x10);
+    
+    //
+    //Draw the signpost
+    //
+    
+    //Set signpost texture boundaries
+    setTexCoords(128, 64, 0 ,32, 4, 28, tx0[0], tx1[0], ty0[0], ty1[0]);//left
+    setTexCoords(128, 64, 8 ,32, 4, 28, tx0[1], tx1[1], ty0[1], ty1[1]);//right
+    setTexCoords(128, 64, 8 ,28, 4,  4, tx0[2], tx1[2], ty0[2], ty1[2]);//bottom
+    setTexCoords(128, 64, 4 ,28, 4,  4, tx0[3], tx1[3], ty0[3], ty1[3]);//top
+    setTexCoords(128, 64, 12,32, 4 ,28, tx0[4], tx1[4], ty0[4], ty1[4]);//back
+    setTexCoords(128, 64, 4 ,32, 4 ,28, tx0[5], tx1[5], ty0[5], ty1[5]);//front
+    
+    //Y values of vertices always the same
+    vY[0] = C  ; vY[2] = C  ; vY[3] = G  ; vY[1] = G  ;
+    vY[6] = C  ; vY[4] = C  ; vY[5] = G  ; vY[7] = G  ;
+
+    //left side: 0, 2, 3, 1
+    vX[0] = A+7; vX[2] = A+8; vX[3] = A+8; vX[1] = A+7;
+    vZ[0] = F-8; vZ[2] = F-7; vZ[3] = F-7; vZ[1] = F-8;
+    
+    //right side: 6, 4, 5, 7
+    vX[6] = B-7; vX[4] = B-8; vX[5] = B-8; vX[7] = B-7; 
+    vZ[6] = E+8; vZ[4] = E+7; vZ[5] = E+7; vZ[7] = E+8;
+
+    //Signpost from vertices, don't draw bottom side
+    drawVertexBlock(vX, vY, vZ, tx0, tx1, ty0, ty1, 0x20 );
+
+    //Switch back to terrain texture
+    bindTexture(TEX_TERRAIN);
 
 }
+
+//Draw a 6-sided volume with specified vertices and tex coords
+void BlockDrawer::drawVertexBlock( GLint vX[8], GLint vY[8], GLint vZ[8],
+    GLfloat tx_0[6], GLfloat tx_1[6],
+    GLfloat ty_0[6], GLfloat ty_1[6], uint8_t vflags ) const
+{
+    //Vertex order: Lower left, lower right, top right, top left
+    //A side: 0, 2, 3, 1
+    if (! (vflags&0x80)) {
+        glTexCoord2f(tx_0[0],ty_0[0]); glVertex3i( vX[0], vY[0], vZ[0]);
+        glTexCoord2f(tx_1[0],ty_0[0]); glVertex3i( vX[2], vY[2], vZ[2]);
+        glTexCoord2f(tx_1[0],ty_1[0]); glVertex3i( vX[3], vY[3], vZ[3]);
+        glTexCoord2f(tx_0[0],ty_1[0]); glVertex3i( vX[1], vY[1], vZ[1]);
+    }
+    
+    //B side: 6, 4, 5, 7
+    if (! (vflags&0x40)) {
+        glTexCoord2f(tx_0[1],ty_0[1]); glVertex3i( vX[6], vY[6], vZ[6]);
+        glTexCoord2f(tx_1[1],ty_0[1]); glVertex3i( vX[4], vY[4], vZ[4]);
+        glTexCoord2f(tx_1[1],ty_1[1]); glVertex3i( vX[5], vY[5], vZ[5]);
+        glTexCoord2f(tx_0[1],ty_1[1]); glVertex3i( vX[7], vY[7], vZ[7]);
+    }
+
+    //Bottom side (C): 0, 4, 6, 2
+    if (! (vflags&0x20)) {
+        glTexCoord2f(tx_0[2],ty_0[2]); glVertex3i( vX[0], vY[0], vZ[0]);
+        glTexCoord2f(tx_1[2],ty_0[2]); glVertex3i( vX[4], vY[4], vZ[4]);
+        glTexCoord2f(tx_1[2],ty_1[2]); glVertex3i( vX[6], vY[6], vZ[6]);
+        glTexCoord2f(tx_0[2],ty_1[2]); glVertex3i( vX[2], vY[2], vZ[2]);
+    }
+    
+    //Top side (D): 3, 7, 5, 1
+    if (! (vflags&0x10)) {
+        glTexCoord2f(tx_0[3],ty_0[3]); glVertex3f( vX[3], vY[3], vZ[3]);
+        glTexCoord2f(tx_1[3],ty_0[3]); glVertex3f( vX[7], vY[7], vZ[7]);
+        glTexCoord2f(tx_1[3],ty_1[3]); glVertex3f( vX[5], vY[5], vZ[5]);
+        glTexCoord2f(tx_0[3],ty_1[3]); glVertex3f( vX[1], vY[1], vZ[1]);
+    }
+    
+    //E side: 4, 0, 1, 5
+    if (! (vflags&0x08)) {
+        glTexCoord2f(tx_0[4],ty_0[4]); glVertex3i( vX[4], vY[4], vZ[4]);
+        glTexCoord2f(tx_1[4],ty_0[4]); glVertex3i( vX[0], vY[0], vZ[0]);
+        glTexCoord2f(tx_1[4],ty_1[4]); glVertex3i( vX[1], vY[1], vZ[1]);
+        glTexCoord2f(tx_0[4],ty_1[4]); glVertex3i( vX[5], vY[5], vZ[5]);
+    }
+    
+    //F side: 2, 6, 7, 3
+    if (! (vflags&0x04)) {
+        glTexCoord2f(tx_0[5],ty_0[5]); glVertex3i( vX[2], vY[2], vZ[2]);
+        glTexCoord2f(tx_1[5],ty_0[5]); glVertex3i( vX[6], vY[6], vZ[6]);
+        glTexCoord2f(tx_1[5],ty_1[5]); glVertex3i( vX[7], vY[7], vZ[7]);
+        glTexCoord2f(tx_0[5],ty_1[5]); glVertex3i( vX[3], vY[3], vZ[3]);
+    }
+    
+}
+
 
 //Draw nether portal (use adjacent obsidian/portals for angle)
 void BlockDrawer::drawPortal( uint8_t blockID, uint8_t /*meta*/,
@@ -2044,3 +2313,20 @@ void BlockDrawer::mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
     if (mirror_type & 1) { t_mirror = ty_0; ty_0 = ty_1; ty_1 = t_mirror; }
     
 }
+
+//Calculate texture coordinates (ratio is kept if higher resolution is used)
+void BlockDrawer::setTexCoords(GLsizei max_width, GLsizei max_height,
+    GLsizei x0, GLsizei y0, GLsizei tex_width, GLsizei tex_height,
+    GLfloat& tx_0, GLfloat& tx_1,
+    GLfloat& ty_0, GLfloat& ty_1) const
+{
+    tx_0 = (x0)/GLfloat(max_width);
+    tx_1 = (x0 + tex_width)/GLfloat(max_width);
+    ty_0 = (y0)/GLfloat(max_height);
+    ty_1 = (y0 + tex_height)/GLfloat(max_height);
+    /*
+    cerr << "setTexCoords " << tx_0 << "," << ty_0 << " "
+         << tx_1 << "," << ty_1 << endl;
+    */
+}
+

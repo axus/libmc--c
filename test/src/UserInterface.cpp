@@ -59,8 +59,6 @@ UserInterface::UserInterface(
             Player& p, Events& ev, bool dbg):
 
     //initialize objects here
-    texture_map_filename("terrain.png"),    //block textures
-    item_icon_filename("items.png"),        //item icons
     mouseSensitivity(UI_mouse_sensitivity), //Mouselook sensitivity
     Settings(UI_bpp, 0, 0),                 //32bpp, 0 stencil, 0 anti-aliasing
     App(sf::VideoMode(UI_width, UI_height, UI_bpp), //860x480, 32-bit color
@@ -96,8 +94,13 @@ UserInterface::UserInterface(
     status_string.SetSize(20);
     status_string.Move(10.f, 10.f);
 
+    //Get texture
+    texture_files[TEX_TERRAIN] = string("terrain.png");  //block textures
+    texture_files[TEX_ITEM] = string("items.png");       //item icons
+    texture_files[TEX_SIGN] = string("item/sign.png");   //signpost texture
+
     //Load textures   //TODO: configurable
-    viewer.init(texture_map_filename, item_icon_filename, true);
+    viewer.init(texture_files, true);
 
     //Reset camera
     resetCamera();
