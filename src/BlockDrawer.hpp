@@ -24,13 +24,14 @@
 
 //libmc--c
 #include "World.hpp"
+#include "TextureInfo.hpp"
 
 //DevIL
 #include <IL/il.h>
 
 //STL
 #include <string>
-#include <map>
+//#include <unordered_map>
 
 //OpenGL
 #include <GL/gl.h>
@@ -45,8 +46,6 @@ namespace mc__ {
     // THESE NAMES ARE WRONG.. BUT I NEED TO REMAP EVERYTHING TO FIX IT
     enum face_ID { WEST=0, EAST=1, DOWN=2, UP=3, NORTH=4, SOUTH=5, FACE_MAX};
 
-    enum tex_TYPE { TEX_TERRAIN, TEX_ITEM, TEX_SIGN, TEX_MAX};
-
     //Physical properties, to associate with blockID (internal to engine)
     typedef struct {
         uint16_t textureID[FACE_MAX];  //texture of faces A, B, C, D, E, F
@@ -54,11 +53,8 @@ namespace mc__ {
         GLfloat ty[FACE_MAX];          //Y texture coordinate (0.0 - 1.0)
         uint8_t  properties;
         uint16_t dataOffset;            //If != 0, ID = dataOffset + hitpoints
-        
-    //0xF0: Shape : 0=cube, 1=stairs, 2=lever, 3=halfblock,
-    //              4=wallsign, 5=ladder, 6=track, 7=fire
-    //              8=portal, 9=fence, A=door, B=floorplate
-    //              C=snow, D=wallsign, E=button, F=plant
+
+    //Properties (not used yet)        
     //0x08: Bright: 0=dark, 1=lightsource
     //0x04: Vision: 0=opqaue, 1=see-through
     //0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
@@ -71,11 +67,14 @@ namespace mc__ {
     const uint16_t block_id_MAX = 256;
     const uint16_t item_id_MAX = 2304;
     const uint16_t entity_type_MAX = 128;
+    const uint16_t texture_id_MAX = 1024;
+    
+    //Offsets in texInfo array for texture IDs
+    const uint16_t texture_INDEX[mc__::TEX_MAX] = { 0, 256, 512};
 
     //Texture map ratio:  tile:texmap length
     const float tmr = 1.0f/((float)texmap_TILES);
 
-       
     class BlockDrawer {
         public:
 
@@ -87,6 +86,8 @@ namespace mc__ {
             typedef void (BlockDrawer::*drawBlock_f)(uint8_t, uint8_t,
                 GLint, GLint, GLint, uint8_t) const;
 
+            //typedef std::unordered_map< uint16_t, mc__::TextureInfo > texInfo_t;
+
             //
             // Data
             //
@@ -95,10 +96,14 @@ namespace mc__ {
             mc__::World *world;
             
             //GL IDs for textures loaded by viewer
-            GLuint *textures ;
+            GLuint textures[mc__::TEX_MAX];
 
-            //Texture information for ID (> 256 are my own shortcuts)
+            //Store information for block ID (> 256 are my own shortcuts)
             BlockInfo blockInfo[768];
+            
+            //Texture information for texture ID (as found in blockInfo)
+            //texInfo_t texInfo;
+            mc__::TextureInfo *texInfo[texture_id_MAX];
             
             //Block drawing function for ID (> 256 are my own shortcuts)
             drawBlock_f drawFunction[768];
@@ -192,17 +197,19 @@ namespace mc__ {
 
 
             //Use terrain texture again
-            void bindTexture(tex_TYPE bindme) const;
+            void bindTexture(tex_t bindme) const;
             
             //Use biome color on block face
             void setBlockColor(uint8_t blockID, face_ID face) const;
             
             //Initialization functions
             bool loadBlockInfo();
-            void setBlockInfo( uint16_t index, uint8_t A, uint8_t B, uint8_t C,
-                uint8_t D, uint8_t E, uint8_t F,
+            void setBlockInfo( uint16_t index, uint16_t A, uint16_t B, uint16_t C,
+                uint16_t D, uint16_t E, uint16_t F,
                 drawBlock_f drawFunc = &mc__::BlockDrawer::drawCube);
                 //12 men died to bring me knowledge of class function pointers
+                
+            bool loadTexInfo( );    //Fill texture ID -> textureInfo map
                 
         protected:
             //RGB settings for leaves, grass. TODO: use biome flag from MapChunk
@@ -213,11 +220,6 @@ namespace mc__ {
             void mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
                 GLfloat& ty_0, GLfloat& ty_1, uint8_t mirror_type=2) const;
                 
-            //Calculate texture coordinates
-            void setTexCoords(GLsizei max_width, GLsizei max_height,
-                GLsizei x0, GLsizei y0, GLsizei tex_width, GLsizei tex_height,
-                GLfloat& tx_0, GLfloat& tx_1,
-                GLfloat& ty_0, GLfloat& ty_1) const;
 
     };
 }

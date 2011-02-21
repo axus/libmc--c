@@ -63,6 +63,7 @@
 using mc__::BlockDrawer;
 using mc__::face_ID;
 using mc__::World;
+using mc__::TextureInfo;
 
 //C
 #include <cmath>    //fmod
@@ -89,10 +90,20 @@ using std::string;
 using std::stringstream;
 
 BlockDrawer::BlockDrawer( mc__::World* w, GLuint tex_array[mc__::TEX_MAX] ):
-    world(w), textures(tex_array)
+    world(w)
 {
+    //Copy textures... it was crashing when I used a pointer.
+    //  So, I probably have memory corruption elsewhere, will track it later
+    for (int i=mc__::TEX_TERRAIN; i < mc__::TEX_MAX; i++) {
+        textures[i] = tex_array[i];
+    }
+
+    //Load the texture info for possible face textures
+    loadTexInfo();
+  
     //Load the block info for all known block types
     loadBlockInfo();
+
 
     //Default biome colors
     
@@ -112,7 +123,7 @@ BlockDrawer::BlockDrawer( mc__::World* w, GLuint tex_array[mc__::TEX_MAX] ):
 }
 
 //change back to texture if needed
-void BlockDrawer::bindTexture( tex_TYPE index) const
+void BlockDrawer::bindTexture( tex_t index) const
 {
     //glBind texture before assigning it
     glBindTexture(GL_TEXTURE_2D, textures[index]);
@@ -1599,29 +1610,25 @@ void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
 }
 
 //Draw signpost (meta affects angle)
-void BlockDrawer::drawSignpost( uint8_t /*blockID*/, uint8_t meta,
+void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
 
     //Use sign.png
     bindTexture(TEX_SIGN);
     
-    //TODO: look up precalculated texture coordinates by block ID
     //Look up texture coordinates for signboard
     GLfloat tx0[6], tx1[6], ty0[6], ty1[6];
-    //left side
-    setTexCoords(128, 64, 0, 4, 4, 24, tx0[0], tx1[0], ty0[0], ty1[0]);
-    //right side
-    setTexCoords(128, 64, 52, 4, 4, 24, tx0[1], tx1[1], ty0[1], ty1[1]);
-    //bottom side
-    setTexCoords(128, 64, 52, 0, 48, 4, tx0[2], tx1[2], ty0[2], ty1[2]);
-    //top side
-    setTexCoords(128, 64, 4, 0, 48, 4, tx0[3], tx1[3], ty0[3], ty1[3]);
-    //back side
-    setTexCoords(128, 64, 4, 4, 48, 24, tx0[4], tx1[4], ty0[4], ty1[4]);
-    //front side
-    setTexCoords(128, 64, 56, 4, 48, 24, tx0[5], tx1[5], ty0[5], ty1[5]);
-    
+    uint16_t index;
+    for (index = 0; index < 6; index++) {
+        
+        //Get texture coordinates from TextureInfo
+        TextureInfo *pti = texInfo[texture_INDEX[TEX_SIGN] + index];
+        if (pti != NULL) { pti->getCoords(
+            tx0[index], tx1[index], ty0[index], ty1[index]);
+        }
+    }
+
     //Cube boundaries
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
@@ -1800,12 +1807,14 @@ void BlockDrawer::drawSignpost( uint8_t /*blockID*/, uint8_t meta,
     //
     
     //Set signpost texture boundaries
-    setTexCoords(128, 64, 0 ,32, 4, 28, tx0[0], tx1[0], ty0[0], ty1[0]);//left
-    setTexCoords(128, 64, 8 ,32, 4, 28, tx0[1], tx1[1], ty0[1], ty1[1]);//right
-    setTexCoords(128, 64, 8 ,28, 4,  4, tx0[2], tx1[2], ty0[2], ty1[2]);//bottom
-    setTexCoords(128, 64, 4 ,28, 4,  4, tx0[3], tx1[3], ty0[3], ty1[3]);//top
-    setTexCoords(128, 64, 12,32, 4 ,28, tx0[4], tx1[4], ty0[4], ty1[4]);//back
-    setTexCoords(128, 64, 4 ,32, 4 ,28, tx0[5], tx1[5], ty0[5], ty1[5]);//front
+    for (index = 0; index < 6; index++) {
+        
+        //Get texture coordinates from TextureInfo
+        TextureInfo *pti = texInfo[texture_INDEX[TEX_SIGN] + 6 + index];
+        if (pti != NULL) { pti->getCoords(
+            tx0[index], tx1[index], ty0[index], ty1[index]);
+        }
+    }
     
     //Y values of vertices always the same
     vY[0] = C  ; vY[2] = C  ; vY[3] = G  ; vY[1] = G  ;
@@ -2045,9 +2054,9 @@ void BlockDrawer::drawButton( uint8_t blockID, uint8_t meta,
 
 //Copy block info to struct
 void BlockDrawer::setBlockInfo( uint16_t index,
-    uint8_t A, uint8_t B,
-    uint8_t C, uint8_t D,
-    uint8_t E, uint8_t F,
+    uint16_t A, uint16_t B,
+    uint16_t C, uint16_t D,
+    uint16_t E, uint16_t F,
     drawBlock_f drawFunc)
 {
     //A - F contain texture ID of the corresponding face (textureID = 0 - 255)
@@ -2080,6 +2089,68 @@ void BlockDrawer::setBlockInfo( uint16_t index,
     
     drawFunction[index] = drawFunc;
 
+}
+
+//Fill texture ID -> textureInfo map
+bool BlockDrawer::loadTexInfo()
+{
+    uint16_t ID;
+
+    //Assign terrain textures 0-255
+    for (ID = texture_INDEX[TEX_TERRAIN];
+         ID < texture_INDEX[TEX_TERRAIN] + 256;
+         ID++) {
+        //Calculate texture map coordinates
+        GLfloat tx0 = GLfloat(ID & (texmap_TILES-1))/((GLfloat)texmap_TILES);
+        GLfloat ty0 = GLfloat(ID/texmap_TILES)/((GLfloat)texmap_TILES);
+        
+        //Map ID to texture information
+        texInfo[ID] = new TextureInfo(TEX_TERRAIN, tx0, tx0+tmr, ty0, ty0+tmr);
+    }
+
+    //Assign item textures 256-511
+    for (ID = texture_INDEX[TEX_ITEM];
+         ID < texture_INDEX[TEX_ITEM] + 256;
+         ID++) {
+        //Calculate texture map coordinates
+        GLfloat tx0 = GLfloat(ID & (texmap_TILES-1))/((GLfloat)texmap_TILES);
+        GLfloat ty0 = GLfloat((ID&0xFF)/texmap_TILES)/((GLfloat)texmap_TILES);
+        
+        //Map ID to texture information
+        texInfo[ID] = new TextureInfo(TEX_ITEM, tx0, tx0+tmr, ty0, ty0+tmr);
+    }
+
+    //
+    //Assign sign textures 512-523
+    //
+    
+    //Sign board: left, right, bottom, top, back, front
+    ID=texture_INDEX[TEX_SIGN];
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64,  0,  4,  4, 24);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64, 52,  4,  4, 24);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64, 52,  0, 48,  4);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64,  4,  0, 48,  4);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64,  4,  4, 48, 24);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64, 56,  4, 48, 24);
+        
+    //Sign post: left, right, bottom, top, back, front
+    ID=texture_INDEX[TEX_SIGN]+6;
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64,  0, 32,  4, 28);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64,  8, 32,  4, 28);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64,  8, 28,  4,  4);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64,  4, 28,  4,  4);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64, 12, 32,  4, 28);
+    texInfo[ID++] = new TextureInfo(TEX_SIGN, 128, 64,  4, 32,  4, 28);
+
+    //Fill the rest of IDs with sponge texture
+    for (; ID < texture_id_MAX; ID++) {
+      
+        //Map ID to sponge texture information
+        texInfo[ID++] = new TextureInfo(TEX_TERRAIN, 16, 16, 0, 3, 1, 1);
+    }
+    
+
+    return true;
 }
 
 //Map block ID to block type information
@@ -2314,6 +2385,8 @@ void BlockDrawer::mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
     
 }
 
+/*
+    //MOVED TO TEXTUREINFO CLASS
 //Calculate texture coordinates (ratio is kept if higher resolution is used)
 void BlockDrawer::setTexCoords(GLsizei max_width, GLsizei max_height,
     GLsizei x0, GLsizei y0, GLsizei tex_width, GLsizei tex_height,
@@ -2324,9 +2397,5 @@ void BlockDrawer::setTexCoords(GLsizei max_width, GLsizei max_height,
     tx_1 = (x0 + tex_width)/GLfloat(max_width);
     ty_0 = (y0)/GLfloat(max_height);
     ty_1 = (y0 + tex_height)/GLfloat(max_height);
-    /*
-    cerr << "setTexCoords " << tx_0 << "," << ty_0 << " "
-         << tx_1 << "," << ty_1 << endl;
-    */
 }
-
+*/

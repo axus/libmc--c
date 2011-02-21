@@ -369,7 +369,6 @@ void genWorld(World& world)
     //Torch test
     chunk1 = new mc__::Chunk( 2, 0, 2, -13, 65, 9);   //3x1x3 area
     mc__::Block torchBlock = { 50, 5, 0, 0};
-    chunk1->block_array[0] = torchBlock;
     torchBlock.metadata = 2; chunk1->block_array[1] = torchBlock;
     torchBlock.metadata = 4; chunk1->block_array[3] = torchBlock;
     chunk1->block_array[4] = glassBlock;
@@ -378,7 +377,8 @@ void genWorld(World& world)
     //Add the chunk
     world.addMapChunk(chunk1);
     delete chunk1;
-    
+
+///*
     //Signpost test (below torch test)
     chunk1 = new mc__::Chunk( 4, 0, 4, -14, 64, 8);   //5x1x5 area
     mc__::Block postBlock = { 63, 0, 0, 0};
@@ -391,6 +391,7 @@ void genWorld(World& world)
     postBlock.metadata=0x7; chunk1->block_array[5] = postBlock;
     postBlock.metadata=0x1; chunk1->block_array[9] = postBlock;
     postBlock.metadata=0x8; chunk1->block_array[10] = postBlock;
+    torchBlock.metadata=0x5; chunk1->block_array[12] = torchBlock;
     postBlock.metadata=0x0; chunk1->block_array[14] = postBlock;
     postBlock.metadata=0x9; chunk1->block_array[15] = postBlock;
     postBlock.metadata=0xF; chunk1->block_array[19] = postBlock;
@@ -403,6 +404,7 @@ void genWorld(World& world)
     //Add the chunk
     world.addMapChunk(chunk1);
     delete chunk1;
+//*/
 
     //Cactus test
     chunk1 = new mc__::Chunk( 0, 0, 15, 1, 64, -16);   //1x1x15 area for cactus

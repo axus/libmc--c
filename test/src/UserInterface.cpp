@@ -121,7 +121,6 @@ UserInterface::UserInterface(
 
     //Clear the window
     viewer.clear();
-    //viewer.drawWorld(world);
 
     App.Display();
 }
