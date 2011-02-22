@@ -812,7 +812,7 @@ bool Viewer::loadItemInfo()
 
 // 11 is the transparent texture
 
-    //Set "cube" blocks: ID, texture, properties
+    //Set "cube" blocks: block ID, texture, properties
     setItemInfo( 0, 11, 0xFF);     //Air   (should not be drawn!)
     setItemInfo( 1, 1,  0x00);     //Stone
     setItemInfo( 2, 3,  0x08);     //Grass
@@ -908,128 +908,129 @@ bool Viewer::loadItemInfo()
     }
 
     //Set inventory items info: ID, texture, properties
-    setItemInfo(256, 82,0x02);//    Iron Shovel
-    setItemInfo(257, 98,0x02);//    Iron Pick
-    setItemInfo(258,114,0x02);//    Iron Axe
-    setItemInfo(259,  5,0x02);//    Flint n Steel
-    setItemInfo(260, 10,0x02);//    Apple
-    setItemInfo(261, 21,0x02);//    Bow
-    setItemInfo(262, 37,0x02);//    Arrow
-    setItemInfo(263,  7,0x02);//    Coal
-    setItemInfo(264, 55,0x02);//    Diamond
-    setItemInfo(265, 23,0x02);//    Iron Ingot
-    setItemInfo(266, 39,0x02);//    Gold Ingot
-    setItemInfo(267, 66,0x02);//    Iron Sword
-    setItemInfo(268, 64,0x02);//    Wooden Sword
-    setItemInfo(269, 80,0x02);//    Wooden Shovel
-    setItemInfo(270, 96,0x02);//    Wooden Pickaxe
-    setItemInfo(271,112,0x02);//    Wooden Axe
-    setItemInfo(272, 65,0x02);//    Stone Sword
-    setItemInfo(273, 81,0x02);//    Stone Shovel
-    setItemInfo(274, 97,0x02);//    Stone Pickaxe
-    setItemInfo(275,113,0x02);//    Stone Axe
-    setItemInfo(276, 67,0x02);//    Diamond Sword
-    setItemInfo(277, 83,0x02);//    Diamond Shovel
-    setItemInfo(278, 99,0x02);//    Diamond Pickaxe
-    setItemInfo(279,115,0x02);//    Diamond Axe
-    setItemInfo(280, 53,0x02);//    Stick
-    setItemInfo(281, 71,0x02);//    Bowl
-    setItemInfo(282, 72,0x02);//    Mushroom Soup
-    setItemInfo(283, 68,0x02);//    Gold Sword
-    setItemInfo(284, 84,0x02);//    Gold Shovel
-    setItemInfo(285,100,0x02);//    Gold Pickaxe
-    setItemInfo(286,116,0x02);//    Gold Axe
-    setItemInfo(287,  8,0x02);//    String
-    setItemInfo(288, 24,0x02);//    Feather
-    setItemInfo(289, 40,0x02);//    Sulphur
-    setItemInfo(290,128,0x02);//    Wooden Hoe
-    setItemInfo(291,129,0x02);//    Stone Hoe
-    setItemInfo(292,130,0x02);//    Iron Hoe
-    setItemInfo(293,131,0x02);//    Diamond Hoe
-    setItemInfo(294,132,0x02);//    Gold Hoe
-    setItemInfo(295,  9,0x02);//    Seeds
-    setItemInfo(296, 25,0x02);//    Wheat
-    setItemInfo(297, 41,0x02);//    Bread
-    setItemInfo(298,  0,0x02);//    Leather Helmet
-    setItemInfo(299, 16,0x02);//    Leather Chestplate
-    setItemInfo(300, 32,0x02);//    Leather Leggings
-    setItemInfo(301, 48,0x02);//    Leather Boots
-    setItemInfo(302,  1,0x02);//    Chainmail Helmet
-    setItemInfo(303, 17,0x02);//    Chainmail Chestplate
-    setItemInfo(304, 33,0x02);//    Chainmail Leggings
-    setItemInfo(305, 49,0x02);//    Chainmail Boots
-    setItemInfo(306,  2,0x02);//    Iron Helmet
-    setItemInfo(307, 18,0x02);//    Iron Chestplate
-    setItemInfo(308, 34,0x02);//    Iron Leggings
-    setItemInfo(309, 50,0x02);//    Iron Boots
-    setItemInfo(310,  3,0x02);//    Diamond Helmet
-    setItemInfo(311, 19,0x02);//    Diamond Chestplate
-    setItemInfo(312, 35,0x02);//    Diamond Leggings
-    setItemInfo(313, 51,0x02);//    Diamond Boots
-    setItemInfo(314,  4,0x02);//    Gold Helmet
-    setItemInfo(315, 20,0x02);//    Gold Chestplate
-    setItemInfo(316, 36,0x02);//    Gold Leggings
-    setItemInfo(317, 52,0x02);//    Gold Boots
-    setItemInfo(318,  6,0x02);//    Flint
-    setItemInfo(319, 87,0x02);//    Raw Porkchop
-    setItemInfo(320, 88,0x02);//    Cooked Porkchop
-    setItemInfo(321, 26,0x02);//    Paintings
-    setItemInfo(322, 11,0x02);//    Golden apple
-    setItemInfo(323, 42,0x02);//    Sign
-    setItemInfo(324, 43,0x02);//    Wooden door
-    setItemInfo(325, 74,0x02);//    Bucket
-    setItemInfo(326, 75,0x02);//    Water bucket
-    setItemInfo(327, 76,0x02);//    Lava bucket
-    setItemInfo(328,135,0x02);//    Mine cart
-    setItemInfo(329,104,0x02);//    Saddle
-    setItemInfo(330, 44,0x02);//    Iron door
-    setItemInfo(331, 56,0x02);//    Redstone
-    setItemInfo(332, 14,0x02);//    Snowball
-    setItemInfo(333,136,0x02);//    Boat
-    setItemInfo(334,103,0x02);//    Leather
-    setItemInfo(335, 77,0x02);//    Milk
-    setItemInfo(336, 22,0x02);//    Clay Brick
-    setItemInfo(337, 57,0x02);//    Clay Balls
-    setItemInfo(338, 27,0x02);//    Sugarcane
-    setItemInfo(339, 58,0x02);//    Paper
-    setItemInfo(340, 59,0x02);//    Book
-    setItemInfo(341, 30,0x02);//    Slimeball
-    setItemInfo(342,141,0x02);//    Storage Minecart
-    setItemInfo(343,157,0x02);//    Powered Minecart
-    setItemInfo(344, 12,0x02);//    Egg
-    setItemInfo(345, 54,0x03);//    Compass
-    setItemInfo(346, 69,0x02);//    Fishing Rod
-    setItemInfo(347, 70,0x03);//    Clock
-    setItemInfo(348, 73,0x02);//    Glowstone Dust
-    setItemInfo(349, 89,0x02);//    Raw Fish
-    setItemInfo(350, 90,0x02);//    Cooked Fish
-    setItemInfo(351, 78,0x06, 1520);//Dyes -> Refer to 1520 - 1535
-    setItemInfo(352, 28,0x02);//    Bone
-    setItemInfo(353, 13,0x02);//    Sugar
-    setItemInfo(354, 29,0x02);//    Cake item
+    setItemInfo(256, mc__::Tex::I_IronShovel,0x02);//    Iron Shovel
+    setItemInfo(257, mc__::Tex::I_IronPick  ,0x02);//    Iron Pick
+    setItemInfo(258, mc__::Tex::I_IronAxe   ,0x02);//    Iron Axe
+    setItemInfo(259, mc__::Tex::I_FlintSteel,0x02);//    Flint n Steel
+    setItemInfo(260, mc__::Tex::I_Apple     ,0x02);//    Apple
+    setItemInfo(261, mc__::Tex::I_Bow       ,0x02);//    Bow
+    setItemInfo(262, mc__::Tex::I_Arrow     ,0x02);//    Arrow
+    setItemInfo(263, mc__::Tex::I_Coal      ,0x02);//    Coal
+    setItemInfo(264, mc__::Tex::I_Diamond   ,0x02);//    Diamond
+    setItemInfo(265, mc__::Tex::I_IronIngot ,0x02);//    Iron Ingot
+    setItemInfo(266, mc__::Tex::I_GoldIngot ,0x02);//    Gold Ingot
+    setItemInfo(267, mc__::Tex::I_IronSword ,0x02);//    Iron Sword
+    setItemInfo(268, mc__::Tex::I_WoodSword ,0x02);//    Wooden Sword
+    setItemInfo(269, mc__::Tex::I_WoodShovel,0x02);//    Wooden Shovel
+    setItemInfo(270, mc__::Tex::I_WoodPick  ,0x02);//    Wooden Pickaxe
+    setItemInfo(271, mc__::Tex::I_WoodAxe   ,0x02);//    Wooden Axe
+    setItemInfo(272, mc__::Tex::I_StoneSword,0x02);//    Stone Sword
+    setItemInfo(273, mc__::Tex::I_StoneShovel,0x02);//    Stone Shovel
+    setItemInfo(274, mc__::Tex::I_StonePick ,0x02);//    Stone Pickaxe
+    setItemInfo(275, mc__::Tex::I_StoneAxe  ,0x02);//    Stone Axe
+    setItemInfo(276, mc__::Tex::I_DiamondSword,0x02);//    Diamond Sword
+    setItemInfo(277, mc__::Tex::I_DiamondShovel,0x02);//    Diamond Shovel
+    setItemInfo(278, mc__::Tex::I_DiamondPick,0x02);//    Diamond Pickaxe
+    setItemInfo(279, mc__::Tex::I_DiamondAxe,0x02);//    Diamond Axe
+    setItemInfo(280, mc__::Tex::I_Stick     ,0x02);//    Stick
+    setItemInfo(281, mc__::Tex::I_Bowl      ,0x02);//    Bowl
+    setItemInfo(282, mc__::Tex::I_BowlSoup  ,0x02);//    Mushroom Soup
+    setItemInfo(283, mc__::Tex::I_GoldSword ,0x02);//    Gold Sword
+    setItemInfo(284, mc__::Tex::I_GoldShovel,0x02);//    Gold Shovel
+    setItemInfo(285, mc__::Tex::I_GoldPick  ,0x02);//    Gold Pickaxe
+    setItemInfo(286, mc__::Tex::I_GoldAxe   ,0x02);//    Gold Axe
+    setItemInfo(287, mc__::Tex::I_Thread    ,0x02);//    String
+    setItemInfo(288, mc__::Tex::I_Feather   ,0x02);//    Feather
+    setItemInfo(289, mc__::Tex::I_Sulphur   ,0x02);//    Sulphur
+    setItemInfo(290, mc__::Tex::I_WoodHoe   ,0x02);//    Wooden Hoe
+    setItemInfo(291, mc__::Tex::I_StoneHoe  ,0x02);//    Stone Hoe
+    setItemInfo(292, mc__::Tex::I_IronHoe   ,0x02);//    Iron Hoe
+    setItemInfo(293, mc__::Tex::I_DiamondHoe,0x02);//    Diamond Hoe
+    setItemInfo(294, mc__::Tex::I_GoldHoe   ,0x02);//    Gold Hoe
+    setItemInfo(295, mc__::Tex::I_Seeds     ,0x02);//    Seeds
+    setItemInfo(296, mc__::Tex::I_Wheat     ,0x02);//    Wheat
+    setItemInfo(297, mc__::Tex::I_Bread     ,0x02);//    Bread
+    setItemInfo(298, mc__::Tex::I_LeatherHelm,0x02);//    Leather Helmet
+    setItemInfo(299, mc__::Tex::I_LeatherChest,0x02);//    Leather Chestplate
+    setItemInfo(300, mc__::Tex::I_LeatherLegs,0x02);//    Leather Leggings
+    setItemInfo(301, mc__::Tex::I_LeatherBoots,0x02);//    Leather Boots
+    setItemInfo(302, mc__::Tex::I_ChainHelm ,0x02);//    Chainmail Helmet
+    setItemInfo(303, mc__::Tex::I_ChainChest,0x02);//    Chainmail Chestplate
+    setItemInfo(304, mc__::Tex::I_ChainLegs ,0x02);//    Chainmail Leggings
+    setItemInfo(305, mc__::Tex::I_ChainBoots,0x02);//    Chainmail Boots
+    setItemInfo(306, mc__::Tex::I_IronHelm  ,0x02);//    Iron Helmet
+    setItemInfo(307, mc__::Tex::I_IronChest ,0x02);//    Iron Chestplate
+    setItemInfo(308, mc__::Tex::I_IronLegs  ,0x02);//    Iron Leggings
+    setItemInfo(309, mc__::Tex::I_IronBoots ,0x02);//    Iron Boots
+    setItemInfo(310, mc__::Tex::I_DiamondHelm,0x02);//    Diamond Helmet
+    setItemInfo(311, mc__::Tex::I_DiamondChest,0x02);//    Diamond Chestplate
+    setItemInfo(312, mc__::Tex::I_DiamondLegs,0x02);//    Diamond Leggings
+    setItemInfo(313, mc__::Tex::I_DiamondBoots,0x02);//    Diamond Boots
+    setItemInfo(314, mc__::Tex::I_GoldHelm  ,0x02);//    Gold Helmet
+    setItemInfo(315, mc__::Tex::I_GoldChest ,0x02);//    Gold Chestplate
+    setItemInfo(316, mc__::Tex::I_GoldLegs  ,0x02);//    Gold Leggings
+    setItemInfo(317, mc__::Tex::I_GoldBoots ,0x02);//    Gold Boots
+    setItemInfo(318, mc__::Tex::I_Flint     ,0x02);//    Flint
+    setItemInfo(319, mc__::Tex::I_Pork      ,0x02);//    Raw Porkchop
+    setItemInfo(320, mc__::Tex::I_PorkCooked,0x02);//    Cooked Porkchop
+    setItemInfo(321, mc__::Tex::I_Painting  ,0x02);//    Paintings
+    setItemInfo(322, mc__::Tex::I_GoldApple ,0x02);//    Golden apple
+    setItemInfo(323, mc__::Tex::I_Sign      ,0x02);//    Sign
+    setItemInfo(324, mc__::Tex::I_Door      ,0x02);//    Wooden door
+    setItemInfo(325, mc__::Tex::I_EmptyBucket,0x02);//    Bucket
+    setItemInfo(326, mc__::Tex::I_WaterBucket,0x02);//    Water bucket
+    setItemInfo(327, mc__::Tex::I_LavaBucket,0x02);//    Lava bucket
+    setItemInfo(328, mc__::Tex::I_Minecart  ,0x02);//    Mine cart
+    setItemInfo(329, mc__::Tex::I_Saddle    ,0x02);//    Saddle
+    setItemInfo(330, mc__::Tex::I_IronDoor  ,0x02);//    Iron door
+    setItemInfo(331, mc__::Tex::I_RedDust   ,0x02);//    Redstone
+    setItemInfo(332, mc__::Tex::I_Snowball  ,0x02);//    Snowball
+    setItemInfo(333, mc__::Tex::I_Boat      ,0x02);//    Boat
+    setItemInfo(334, mc__::Tex::I_Leather   ,0x02);//    Leather
+    setItemInfo(335, mc__::Tex::I_MilkBucket,0x02);//    Milk
+    setItemInfo(336, mc__::Tex::I_Brick     ,0x02);//    Clay Brick
+    setItemInfo(337, mc__::Tex::I_Clay      ,0x02);//    Clay Balls
+    setItemInfo(338, mc__::Tex::I_SugarCane ,0x02);//    Sugarcane
+    setItemInfo(339, mc__::Tex::I_Paper     ,0x02);//    Paper
+    setItemInfo(340, mc__::Tex::I_Book      ,0x02);//    Book
+    setItemInfo(341, mc__::Tex::I_SlimeBall ,0x02);//    Slimeball
+    setItemInfo(342, mc__::Tex::I_ChestCart ,0x02);//    Storage Minecart
+    setItemInfo(343, mc__::Tex::I_PowerCart ,0x02);//    Powered Minecart
+    setItemInfo(344, mc__::Tex::I_Egg       ,0x02);//    Egg
+    setItemInfo(345, mc__::Tex::I_Compass   ,0x03);//    Compass
+    setItemInfo(346, mc__::Tex::I_FishingRod,0x02);//    Fishing Rod
+    setItemInfo(347, mc__::Tex::I_Watch     ,0x03);//    Clock
+    setItemInfo(348, mc__::Tex::I_LightDust ,0x02);//    Glowstone Dust
+    setItemInfo(349, mc__::Tex::I_Fish      ,0x02);//    Raw Fish
+    setItemInfo(350, mc__::Tex::I_FishCooked,0x02);//    Cooked Fish
+        //Dyes -> Refer to 1520 - 1535
+    setItemInfo(351, mc__::Tex::I_InkSack,0x06, 1520);
+    setItemInfo(352, mc__::Tex::I_Bone      ,0x02);//    Bone
+    setItemInfo(353, mc__::Tex::I_Sugar     ,0x02);//    Sugar
+    setItemInfo(354, mc__::Tex::I_Cake      ,0x02);//    Cake item
 
     //Set unimplemented item information to saddle
     for (ID = 355; ID < 1520; ID++) {
-        setItemInfo( ID,104, 0x02);    //[Unimplemented item]
+        setItemInfo( ID,mc__::Tex::I_Saddle, 0x02);//[Unimplemented item]
     }
 
     //Set phony dye item info
-    setItemInfo(1520, 78,0x02);//    "Ink Sack"
-    setItemInfo(1521, 94,0x02);//    "Rose Dye"
-    setItemInfo(1522,110,0x02);//    "Cactus Dye"
-    setItemInfo(1523,126,0x02);//    "Cocoa Dye"
-    setItemInfo(1524,142,0x02);//    "Lapis Dye"
-    setItemInfo(1525,158,0x02);//    "Purple Dye"
-    setItemInfo(1526,174,0x02);//    "Cyan Dye"
-    setItemInfo(1527,190,0x02);//    "Light Gray Dye"
-    setItemInfo(1528, 79,0x02);//    "Gray Dye"
-    setItemInfo(1529, 95,0x02);//    "Pink Dye"
-    setItemInfo(1530,111,0x02);//    "Lime Dye"
-    setItemInfo(1531,127,0x02);//    "Yellow Dye"
-    setItemInfo(1352,143,0x02);//    "Light Blue Dye"
-    setItemInfo(1353,159,0x02);//    "Magenta Dye"
-    setItemInfo(1354,175,0x02);//    "Orange Dye"
-    setItemInfo(1355,191,0x02);//    "Bone Meal"
+    setItemInfo(1520, mc__::Tex::I_InkSack ,0x02);//    "Ink Sack"
+    setItemInfo(1521, mc__::Tex::I_RoseDye ,0x02);//    "Rose Dye"
+    setItemInfo(1522, mc__::Tex::I_CactusDye,0x02);//    "Cactus Dye"
+    setItemInfo(1523, mc__::Tex::I_CocoaDye,0x02);//    "Cocoa Dye"
+    setItemInfo(1524, mc__::Tex::I_LapisDye,0x02);//    "Lapis Dye"
+    setItemInfo(1525, mc__::Tex::I_PurpleDye,0x02);//    "Purple Dye"
+    setItemInfo(1526, mc__::Tex::I_CyanDye ,0x02);//    "Cyan Dye"
+    setItemInfo(1527, mc__::Tex::I_LightGrayDye,0x02);//"Light Gray Dye"
+    setItemInfo(1528, mc__::Tex::I_DarkGrayDye ,0x02);//"Dark Gray Dye"
+    setItemInfo(1529, mc__::Tex::I_PinkDye ,0x02);//    "Pink Dye"
+    setItemInfo(1530, mc__::Tex::I_LimeDye ,0x02);//    "Lime Dye"
+    setItemInfo(1531, mc__::Tex::I_YellowDye,0x02);//    "Yellow Dye"
+    setItemInfo(1352, mc__::Tex::I_LightBlueDye,0x02);// "Light Blue Dye"
+    setItemInfo(1353, mc__::Tex::I_MagentaDye,0x02);//    "Magenta Dye"
+    setItemInfo(1354, mc__::Tex::I_OrangeDye,0x02);//    "Orange Dye"
+    setItemInfo(1355, mc__::Tex::I_BoneMeal,0x02);//    "Bone Meal"
 
     //Set unimplemented item information to saddle
     for (ID = 1536; ID < 2256; ID++) {

@@ -126,7 +126,11 @@ BlockDrawer::BlockDrawer( mc__::World* w, GLuint tex_array[mc__::TEX_MAX] ):
 void BlockDrawer::bindTexture( tex_t index) const
 {
     //glBind texture before assigning it
+    
+    glEnd();
+    //Some video cards don't need to do this outside of glBegin/glEnd, some do
     glBindTexture(GL_TEXTURE_2D, textures[index]);
+    glBegin(GL_QUADS);
 }
 
 
@@ -2017,27 +2021,107 @@ void BlockDrawer::drawTree( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+
+    //Use sign.png
+    bindTexture(TEX_SIGN);
     
+    //Look up texture coordinates for signboard
+    GLfloat tx0[6], tx1[6], ty0[6], ty1[6];
+    uint16_t index;
+    for (index = 0; index < 6; index++) {
+        
+        //Get texture coordinates from TextureInfo
+        TextureInfo *pti = texInfo[texture_INDEX[TEX_SIGN] + index];
+        if (pti != NULL) { pti->getCoords(
+            tx0[index], tx1[index], ty0[index], ty1[index]);
+        }
+    }
+
+    //Cube boundaries
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    
+    //signboard bottom
+    GLint G = C + 7;
+    
+    //signboard top (D + 2)
+    GLint H = D - 1;
+    
+    //Vertices of signboard
+    GLint vX[8], vY[8], vZ[8];
+    
+    //Y values of vertices always the same
+    vY[0] = G  ; vY[2] = G  ; vY[3] = H  ; vY[1] = H  ;
+    vY[6] = G  ; vY[4] = G  ; vY[5] = H  ; vY[7] = H  ;
+
     //TODO: Write message on sign texture
+    
+    uint8_t vmask=0xFF;
     switch (meta & 0x7) {
         case 2: //West side (face east)
-            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04),
-                12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 15);
+            //drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04),
+            //    12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 15);
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B  ;
+            vZ[0] = F-2; vZ[2] = F  ; vZ[3] = F  ; vZ[1] = F-2;
+        
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
+            vZ[6] = F  ; vZ[4] = F-2; vZ[5] = F-2; vZ[7] = F  ;
+            
+            vmask = 0x04;
             break;
         case 3: //East side (face west)
         default:
-            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08),
-                12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 0);
+            //drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08),
+            //    12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 0);
+
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = A; vX[2] = A; vX[3] = A; vX[1] = A; 
+            vZ[0] = E; vZ[2] = E+2; vZ[3] = E+2; vZ[1] = E;
+        
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = B  ; vX[4] = B  ; vX[5] = B  ; vX[7] = B  ;
+            vZ[6] = E+2; vZ[4] = E  ; vZ[5] = E  ; vZ[7] = E+2;
+            
+            vmask = 0x08;
             break;
         case 4: //South side (face north)
-            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40),
-                1.0/16.0, 0.5, 12.0/16.0, true, 15, 7, 2);
+            //drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40),
+            //    1.0/16.0, 0.5, 12.0/16.0, true, 15, 7, 2);
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B  ;
+            vZ[0] = F-2; vZ[2] = F  ; vZ[3] = F-2; vZ[1] = F  ;
+        
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
+            vZ[6] = F  ; vZ[4] = F-2; vZ[5] = F-2; vZ[7] = F  ;
+            vmask = 0x40;
             break;
         case 5: //North side (face south)
-            drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80),
-                1.0/16.0, 0.5, 12.0/16.0, true, 0, 7, 2);
+            //drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80),
+            //    1.0/16.0, 0.5, 12.0/16.0, true, 0, 7, 2);
+            //facing sign, left side: 0, 2, 3, 1
+            vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B  ;
+            vZ[0] = F-2; vZ[2] = F  ; vZ[3] = F-2; vZ[1] = F  ;
+        
+            //facing sign, right side: 6, 4, 5, 7
+            vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
+            vZ[6] = F  ; vZ[4] = F-2; vZ[5] = F-2; vZ[7] = F  ;
+            vmask = 0x80;
             break;
     }
+
+    //I want 6 faces, pronto!
+    drawVertexBlock(vX, vY, vZ, tx0, tx1, ty0, ty1, vflags&vmask);
+
+    //Change back to terrain
+    bindTexture(TEX_TERRAIN);
+
 }
 
 //Draw wall button

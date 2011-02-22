@@ -58,7 +58,7 @@ namespace mc__ {
     //Texture enumerator
     namespace Tex {
         //Enumerator for terrain textures
-        enum Terrain {
+        enum Terrain_t {
             Grass=0, Stone, Dirt, Grass_Side, Wood, Step_Side, Step_Top, Brick,
             TNT_Side, TNT_Top, TNT_Bottom, Web, Rose, Daisy, Sapling=15,
             Cobble=16, Admin, Sand, Gravel, Log_Side, Log_Top, IronBlock,
@@ -86,6 +86,36 @@ namespace mc__ {
             Lava_3, Crack_1, Crack_2, Crack_3, Crack_4, Crack_5, Crack_6,
             Crack_7, Crack_8, Lava_4=254, Lava_5
         };
+        
+        enum Item_t {
+            I_LeatherHelm=0, I_ChainHelm, I_IronHelm, I_DiamondHelm, I_GoldHelm,
+            I_FlintSteel,I_Flint,I_Coal,I_Thread, I_Seeds, I_Apple, I_GoldApple,
+            I_Egg, I_Sugar, I_Snowball, I_AirHelm, I_LeatherChest, I_ChainChest,
+            I_IronChest, I_DiamondChest, I_GoldChest, I_Bow, I_Brick,
+            I_IronIngot, I_Feather, I_Wheat, I_Painting, I_SugarCane, I_Bone,
+            I_Cake, I_SlimeBall, I_AirChest, I_LeatherLegs, I_ChainLegs,
+            I_IronLegs, I_DiamondLegs, I_GoldLegs, I_Arrow, I_Quiver,
+            I_GoldIngot, I_Sulphur, I_Bread, I_Sign, I_Door, I_IronDoor,
+            I_LeatherBoots=48, I_ChainBoots, I_IronBoots, I_DiamondBoots,
+            I_GoldBoots, I_Stick, I_Compass, I_Diamond, I_Clay, I_RedDust,
+            I_Paper, I_Book, I_WoodSword=64, I_StoneSword, I_IronSword,
+            I_DiamondSword, I_GoldSword, I_FishingRod, I_Watch, I_Bowl,
+            I_BowlSoup, I_LightDust, I_EmptyBucket, I_WaterBucket, I_LavaBucket,
+            I_MilkBucket, I_InkSack, I_DarkGrayDye, I_WoodShovel, I_StoneShovel,
+            I_IronShovel, I_DiamondShovel, I_GoldShovel, I_Pork=87,
+            I_PorkCooked, I_Fish, I_FishCooked, I_RoseDye=94, I_PinkDye,
+            I_WoodPick, I_StonePick, I_IronPick, I_DiamondPick, I_GoldPick,
+            I_Leather=103, I_Saddle, I_CactusDye=110, I_LimeDye, I_WoodAxe,
+            I_StoneAxe, I_IronAxe, I_DiamondAxe, I_GoldAxe, I_CocoaDye=126,
+            I_YellowDye, I_WoodHoe, I_StoneHoe, I_IronHoe, I_DiamondHoe,
+            I_GoldHoe, I_Minecart=135, I_Boat, I_LapisDye=142, I_LightBlueDye,
+            I_ChestCart=151, I_PurpleDye=158, I_MagentaDye, I_PowerCart=167,
+            I_CyanDye=174, I_OrangeDye, I_LightGrayDye=190, I_BoneMeal=191,
+            I_GoldRecord=240, I_GreenRecord
+        };
+
+
+
     }
 }
 
