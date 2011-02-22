@@ -3,7 +3,7 @@ libmc--c: MultiCube-- Client Library
 Provides world representation data structures and OpenGL drawing functions.
 
 **********************************************************************
-  Copyright 2010 axus
+  Copyright 2010-2011 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -33,7 +33,12 @@ Prerequisites for Linux (tested on RedHat variants):
    
    #Install the prerequisite libraries
    ./README.linux
-   
+
+Graphics files (not included, copy to binary directory)
+    terrain.png
+    items.png
+    item/sign.png
+
 Build and test instructions
    #Clone the git repository from github
    git clone git://github.com/axus/libmc--c.git
