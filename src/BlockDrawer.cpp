@@ -2063,26 +2063,21 @@ void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
     uint8_t vmask=0xFF;
     switch (meta & 0x7) {
         case 2: //West side (face east)
-            //drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04),
-            //    12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 15);
             //facing sign, left side: 0, 2, 3, 1
             vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B  ;
-            vZ[0] = F-2; vZ[2] = F  ; vZ[3] = F  ; vZ[1] = F-2;
+            vZ[0] = F  ; vZ[2] = F-2; vZ[3] = F-2; vZ[1] = F  ;
         
             //facing sign, right side: 6, 4, 5, 7
             vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
-            vZ[6] = F  ; vZ[4] = F-2; vZ[5] = F-2; vZ[7] = F  ;
+            vZ[6] = F-2; vZ[4] = F  ; vZ[5] = F  ; vZ[7] = F-2;
             
             vmask = 0x04;
             break;
         case 3: //East side (face west)
         default:
-            //drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08),
-            //    12.0/16.0, 0.5, 1.0/16.0, true, 2, 7, 0);
-
             //facing sign, left side: 0, 2, 3, 1
-            vX[0] = A; vX[2] = A; vX[3] = A; vX[1] = A; 
-            vZ[0] = E; vZ[2] = E+2; vZ[3] = E+2; vZ[1] = E;
+            vX[0] = A  ; vX[2] = A  ; vX[3] = A  ; vX[1] = A  ; 
+            vZ[0] = E  ; vZ[2] = E+2; vZ[3] = E+2; vZ[1] = E  ;
         
             //facing sign, right side: 6, 4, 5, 7
             vX[6] = B  ; vX[4] = B  ; vX[5] = B  ; vX[7] = B  ;
@@ -2091,27 +2086,23 @@ void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
             vmask = 0x08;
             break;
         case 4: //South side (face north)
-            //drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40),
-            //    1.0/16.0, 0.5, 12.0/16.0, true, 15, 7, 2);
             //facing sign, left side: 0, 2, 3, 1
-            vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B  ;
-            vZ[0] = F-2; vZ[2] = F  ; vZ[3] = F-2; vZ[1] = F  ;
+            vX[0] = B  ; vX[2] = B-2; vX[3] = B-2; vX[1] = B  ;
+            vZ[0] = E  ; vZ[2] = E  ; vZ[3] = E  ; vZ[1] = E  ;
         
             //facing sign, right side: 6, 4, 5, 7
-            vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
-            vZ[6] = F  ; vZ[4] = F-2; vZ[5] = F-2; vZ[7] = F  ;
+            vX[6] = B-2; vX[4] = B  ; vX[5] = B  ; vX[7] = B-2; 
+            vZ[6] = F  ; vZ[4] = F  ; vZ[5] = F  ; vZ[7] = F  ;
             vmask = 0x40;
             break;
         case 5: //North side (face south)
-            //drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80),
-            //    1.0/16.0, 0.5, 12.0/16.0, true, 0, 7, 2);
             //facing sign, left side: 0, 2, 3, 1
-            vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B  ;
-            vZ[0] = F-2; vZ[2] = F  ; vZ[3] = F-2; vZ[1] = F  ;
+            vX[0] = A  ; vX[2] = A+2; vX[3] = A+2; vX[1] = A  ;
+            vZ[0] = F  ; vZ[2] = F  ; vZ[3] = F  ; vZ[1] = F  ;
         
             //facing sign, right side: 6, 4, 5, 7
-            vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
-            vZ[6] = F  ; vZ[4] = F-2; vZ[5] = F-2; vZ[7] = F  ;
+            vX[6] = A+2; vX[4] = A  ; vX[5] = A  ; vX[7] = A+2; 
+            vZ[6] = E  ; vZ[4] = E  ; vZ[5] = E  ; vZ[7] = E  ;
             vmask = 0x80;
             break;
     }

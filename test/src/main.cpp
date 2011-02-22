@@ -123,7 +123,7 @@ void genWorld(World& world)
     
     //Single workbench made from block put in chunk
     mc__::Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
-    chunk1 = new mc__::Chunk(0, 0, 0, 7, 64, 13);    //1x1x1, location
+    chunk1 = new mc__::Chunk(0, 0, 0, 7, 64, 14);    //1x1x1, location
     chunk1->block_array[0] = workbench1;
     
     //Add the chunk with the workbench
@@ -358,10 +358,10 @@ void genWorld(World& world)
     chunk1->block_array[12] = fenceBlock;
     chunk1->block_array[14] = fenceBlock;
     chunk1->block_array[16] = fenceBlock;
-    sign1.metadata = 2; chunk1->block_array[3] = sign1;
-    sign1.metadata = 4; chunk1->block_array[7] = sign1;
-    sign1.metadata = 5; chunk1->block_array[11] = sign1;
-    sign1.metadata = 3; chunk1->block_array[15] = sign1;
+    sign1.metadata = 4; chunk1->block_array[3] = sign1;
+    sign1.metadata = 2; chunk1->block_array[7] = sign1;
+    sign1.metadata = 3; chunk1->block_array[11] = sign1;
+    sign1.metadata = 5; chunk1->block_array[15] = sign1;
     //Add the chunk
     world.addMapChunk(chunk1);
     delete chunk1;
@@ -378,7 +378,6 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
 
-///*
     //Signpost test (below torch test)
     chunk1 = new mc__::Chunk( 4, 0, 4, -14, 64, 8);   //5x1x5 area
     mc__::Block postBlock = { 63, 0, 0, 0};
@@ -400,11 +399,9 @@ void genWorld(World& world)
     postBlock.metadata=0xC; chunk1->block_array[22] = postBlock;
     postBlock.metadata=0xD; chunk1->block_array[23] = postBlock;
     postBlock.metadata=0xE; chunk1->block_array[24] = postBlock;
-    
     //Add the chunk
     world.addMapChunk(chunk1);
     delete chunk1;
-//*/
 
     //Cactus test
     chunk1 = new mc__::Chunk( 0, 0, 15, 1, 64, -16);   //1x1x15 area for cactus
@@ -430,30 +427,21 @@ void genWorld(World& world)
 
 //Add some test objects to mobile items/entities
 void addItems( mc__::Mobiles& mobiles, const mc__::World& world) {
-    //Add some glass cubes for pickup, next to world spawn, 1/8 yaw
-    mobiles.addItem( mobiles.newEID(), 20, 8,
-        (world.spawn_X - 1) << 5,
-        (world.spawn_Y ) << 5,
-        (world.spawn_Z - 2) << 5, 0x20);
 
-    //Add some brick cubes for pickup, next to world spawn, 1/6 yaw
-    mobiles.addItem( mobiles.newEID(), 45, 8,
-        (world.spawn_X - 2) << 5,
-        (world.spawn_Y ) << 5,
-        (world.spawn_Z - 3) << 5, 0x2B);
-
-    //Add 1 diamond pick 
-    mobiles.addItem( mobiles.newEID(), 278, 1,
-        (world.spawn_X ) << 5,
-        (world.spawn_Y ) << 5,
-        (world.spawn_Z - 3) << 5, 0x2B);
+    //Add all the block items
+    for (uint16_t i = 0; i < 93; i++) {
+        mobiles.addItem( mobiles.newEID(), i, 1,
+            (world.spawn_X + i ) << 5,
+            (world.spawn_Y ) << 5,
+            (world.spawn_Z - 3) << 5, 0x2B);
+    }
     
-    //Add ALL the items
+    //Add ALL the pickup items
     for (uint16_t i = 256; i < 355; i++) {
         mobiles.addItem( mobiles.newEID(), i, 1,
             (world.spawn_X - 256 + i ) << 5,
             (world.spawn_Y ) << 5,
-            (world.spawn_Z - 3) << 5, 0x2B);
+            (world.spawn_Z - 2) << 5, 0x2B);
     }
         
 }

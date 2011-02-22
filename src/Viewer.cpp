@@ -495,9 +495,9 @@ bool Viewer::drawMobiles(const mc__::Mobiles& mobiles)
 
         //Translate world to item coordinates (offset from camera)
         drawFromCamera();
-        glTranslatef( (item->X >> 1) + texmap_TILE_LENGTH/2,
-                      (item->Y >> 1) + 2,
-                      (item->Z >> 1) + texmap_TILE_LENGTH/2);
+        glTranslatef( item->X/2.0 + texmap_TILE_LENGTH/2,
+                      item->Y/2.0 + 2,
+                      item->Z/2.0 + texmap_TILE_LENGTH/2);
         glRotatef( item->yaw + item_rotation, 0.0f, 1.0f, 0.0f);
 
         //Draw the precompiled list
