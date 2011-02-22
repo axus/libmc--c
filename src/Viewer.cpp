@@ -331,10 +331,10 @@ void Viewer::drawDroppedItem( uint16_t itemID )
     //Offset itemID if meta != 0
 
     //Look up texture coordinates for the item
-    tx_0 = itemInfo[itemID].tx[WEST];
-    tx_1 = itemInfo[itemID].tx[WEST] + tmr;
-    ty_0 = itemInfo[itemID].ty[WEST] + tmr;    //flip y
-    ty_1 = itemInfo[itemID].ty[WEST];
+    tx_0 = itemInfo[itemID].tx[LEFT];
+    tx_1 = itemInfo[itemID].tx[LEFT] + tmr;
+    ty_0 = itemInfo[itemID].ty[LEFT] + tmr;    //flip y
+    ty_1 = itemInfo[itemID].ty[LEFT];
     glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
     glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG

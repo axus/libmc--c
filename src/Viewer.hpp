@@ -22,8 +22,8 @@
 #ifndef MC__VIEWER_H
 #define MC__VIEWER_H
 
-//Version 0.1.2
-#define MC__VIEWER_VERSION 0x0102
+//Version 0.2.0
+#define MC__VIEWER_VERSION 0x0200
 
 //mc__
 #include "World.hpp"

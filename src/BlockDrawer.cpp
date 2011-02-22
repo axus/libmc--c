@@ -145,7 +145,7 @@ void BlockDrawer::setBlockColor(uint8_t blockID, face_ID face) const
             glColor3ub( 255, 255, 255);
             break;
         case 2:     //Grass
-            if (face == mc__::UP) {
+            if (face == mc__::TOP) {
                 red=grass_color[0]; green=grass_color[1]; blue=grass_color[2];
             } else {
                 red=255; green=255; blue=255;
@@ -233,11 +233,11 @@ void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t /*meta*/,
 
     //A
     if (!(vflags & 0x80)) {
-        tx_0 = blockInfo[blockID].tx[WEST];
+        tx_0 = blockInfo[blockID].tx[LEFT];
         tx_1 = tx_0 + tmr;
-        ty_1 = blockInfo[blockID].ty[WEST];
+        ty_1 = blockInfo[blockID].ty[LEFT];
         ty_0 = ty_1 + tmr;    //flip y
-        setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
+        setBlockColor(blockID, LEFT);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, F);  //Lower right: ACF
@@ -247,11 +247,11 @@ void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t /*meta*/,
 
     //B
     if (!(vflags & 0x40)) {
-        tx_0 = blockInfo[blockID].tx[EAST];
+        tx_0 = blockInfo[blockID].tx[RIGHT];
         tx_1 = tx_0 + tmr;
-        ty_1 = blockInfo[blockID].ty[EAST];
+        ty_1 = blockInfo[blockID].ty[RIGHT];
         ty_0 = ty_1 + tmr;    //flip y
-        setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
+        setBlockColor(blockID, RIGHT);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  BCF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -261,11 +261,11 @@ void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t /*meta*/,
     
     //C
     if (!(vflags & 0x20)) {
-        tx_0 = blockInfo[blockID].tx[DOWN];
+        tx_0 = blockInfo[blockID].tx[BOTTOM];
         tx_1 = tx_0 + tmr;
-        ty_1 = blockInfo[blockID].ty[DOWN];
+        ty_1 = blockInfo[blockID].ty[BOTTOM];
         ty_0 = ty_1 + tmr;    //flip y
-        setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
+        setBlockColor(blockID, BOTTOM);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -275,11 +275,11 @@ void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t /*meta*/,
     
     //D
     if (!(vflags & 0x10)) {
-        tx_0 = blockInfo[blockID].tx[UP];
+        tx_0 = blockInfo[blockID].tx[TOP];
         tx_1 = tx_0 + tmr;
-        ty_1 = blockInfo[blockID].ty[UP];
+        ty_1 = blockInfo[blockID].ty[TOP];
         ty_0 = ty_1 + tmr;    //flip y
-        setBlockColor(blockID, UP);  //Set leaf/grass color if needed
+        setBlockColor(blockID, TOP);  //Set leaf/grass color if needed
     
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
@@ -289,11 +289,11 @@ void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t /*meta*/,
     
     //E
     if (!(vflags & 0x08)) {
-        tx_0 = blockInfo[blockID].tx[NORTH];
+        tx_0 = blockInfo[blockID].tx[BACK];
         tx_1 = tx_0 + tmr;
-        ty_1 = blockInfo[blockID].ty[NORTH];
+        ty_1 = blockInfo[blockID].ty[BACK];
         ty_0 = ty_1 + tmr;    //flip y
-        setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
+        setBlockColor(blockID, BACK);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E);  //Lower left:  BCE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: ACE
@@ -303,11 +303,11 @@ void BlockDrawer::drawCubeMeta( uint16_t blockID, uint8_t /*meta*/,
     
     //F
     if (!(vflags & 0x04)) {
-        tx_0 = blockInfo[blockID].tx[SOUTH];
+        tx_0 = blockInfo[blockID].tx[FRONT];
         tx_1 = tx_0 + tmr;
-        ty_1 = blockInfo[blockID].ty[SOUTH];
+        ty_1 = blockInfo[blockID].ty[FRONT];
         ty_0 = ty_1 + tmr;    //flip y
-        setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
+        setBlockColor(blockID, FRONT);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  ACF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F);  //Lower right: BCF
@@ -347,21 +347,21 @@ void BlockDrawer::drawFaceCube( uint8_t blockID, uint8_t meta,
     //     |.       |/
     //    ACF ---- BCF
 
-    //Use "WEST" as "side", "SOUTH" as "face" setBlock
-    mc__::face_ID west=WEST, east=WEST, north=WEST, south=WEST;
+    //Use "LEFT" as "side", "FRONT" as "face" setBlock
+    mc__::face_ID west=LEFT, east=LEFT, north=LEFT, south=LEFT;
     
     //Choose face depending on metadata
     switch (meta) {
         case 2:
-            east = SOUTH; break;
+            east = FRONT; break;
         case 3:
-            west = SOUTH; break;
+            west = FRONT; break;
         case 4:
-            north = SOUTH; break;
+            north = FRONT; break;
         case 5:
-            south = SOUTH; break;
+            south = FRONT; break;
         default:
-            south = SOUTH; break;
+            south = FRONT; break;
     }
 
     //A
@@ -392,10 +392,10 @@ void BlockDrawer::drawFaceCube( uint8_t blockID, uint8_t meta,
     
     //C
     if (!(vflags & 0x20)) {
-        tx_0 = blockInfo[blockID].tx[DOWN];
-        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-        ty_1 = blockInfo[blockID].ty[DOWN];
+        tx_0 = blockInfo[blockID].tx[BOTTOM];
+        tx_1 = blockInfo[blockID].tx[BOTTOM] + tmr;
+        ty_0 = blockInfo[blockID].ty[BOTTOM] + tmr;
+        ty_1 = blockInfo[blockID].ty[BOTTOM];
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -405,10 +405,10 @@ void BlockDrawer::drawFaceCube( uint8_t blockID, uint8_t meta,
     
     //D
     if (!(vflags & 0x10)) {
-        tx_0 = blockInfo[blockID].tx[UP];
-        tx_1 = blockInfo[blockID].tx[UP] + tmr;
-        ty_0 = blockInfo[blockID].ty[UP] + tmr;
-        ty_1 = blockInfo[blockID].ty[UP];
+        tx_0 = blockInfo[blockID].tx[TOP];
+        tx_1 = blockInfo[blockID].tx[TOP] + tmr;
+        ty_0 = blockInfo[blockID].ty[TOP] + tmr;
+        ty_1 = blockInfo[blockID].ty[TOP];
     
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
@@ -570,11 +570,11 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     GLfloat tmr_y = tmr*(meta + 1.0)/16.0;
 
     //A always visible
-        tx_0 = blockInfo[blockID].tx[WEST];
-        tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-        ty_0 = blockInfo[blockID].ty[WEST] + tmr_y;    //flip y
-        ty_1 = blockInfo[blockID].ty[WEST];
-        setBlockColor(blockID, WEST);  //Set leaf/grass color if needed
+        tx_0 = blockInfo[blockID].tx[LEFT];
+        tx_1 = blockInfo[blockID].tx[LEFT] + tmr;
+        ty_0 = blockInfo[blockID].ty[LEFT] + tmr_y;    //flip y
+        ty_1 = blockInfo[blockID].ty[LEFT];
+        setBlockColor(blockID, LEFT);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A+1, C, E);
         glTexCoord2f(tx_1,ty_0); glVertex3i( A+1, C, F);
@@ -582,11 +582,11 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
         glTexCoord2f(tx_0,ty_1); glVertex3i( A+1, D, E);
 
     //B
-        tx_0 = blockInfo[blockID].tx[EAST];
-        tx_1 = blockInfo[blockID].tx[EAST] + tmr;
-        ty_0 = blockInfo[blockID].ty[EAST] + tmr_y;
-        ty_1 = blockInfo[blockID].ty[EAST];
-        setBlockColor(blockID, EAST);  //Set leaf/grass color if needed
+        tx_0 = blockInfo[blockID].tx[RIGHT];
+        tx_1 = blockInfo[blockID].tx[RIGHT] + tmr;
+        ty_0 = blockInfo[blockID].ty[RIGHT] + tmr_y;
+        ty_1 = blockInfo[blockID].ty[RIGHT];
+        setBlockColor(blockID, RIGHT);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B-1, C, F);  //Lower left:  BCF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B-1, C, E);  //Lower right: BCE
@@ -595,11 +595,11 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     
     //C not always visible
     if (!(vflags & 0x20)) {
-        tx_0 = blockInfo[blockID].tx[DOWN];
-        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-        ty_1 = blockInfo[blockID].ty[DOWN];
-        setBlockColor(blockID, DOWN);  //Set leaf/grass color if needed
+        tx_0 = blockInfo[blockID].tx[BOTTOM];
+        tx_1 = blockInfo[blockID].tx[BOTTOM] + tmr;
+        ty_0 = blockInfo[blockID].ty[BOTTOM] + tmr;
+        ty_1 = blockInfo[blockID].ty[BOTTOM];
+        setBlockColor(blockID, BOTTOM);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -609,11 +609,11 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     
     //D
     if (!(vflags & 0x10)) {
-        tx_0 = blockInfo[blockID].tx[UP];
-        tx_1 = blockInfo[blockID].tx[UP] + tmr;
-        ty_0 = blockInfo[blockID].ty[UP] + tmr;
-        ty_1 = blockInfo[blockID].ty[UP];
-        setBlockColor(blockID, UP);  //Set leaf/grass color if needed
+        tx_0 = blockInfo[blockID].tx[TOP];
+        tx_1 = blockInfo[blockID].tx[TOP] + tmr;
+        ty_0 = blockInfo[blockID].ty[TOP] + tmr;
+        ty_1 = blockInfo[blockID].ty[TOP];
+        setBlockColor(blockID, TOP);  //Set leaf/grass color if needed
     
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
@@ -622,11 +622,11 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     }
     
     //E always visible
-        tx_0 = blockInfo[blockID].tx[NORTH];
-        tx_1 = blockInfo[blockID].tx[NORTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[NORTH] + tmr_y;
-        ty_1 = blockInfo[blockID].ty[NORTH];
-        setBlockColor(blockID, NORTH);  //Set leaf/grass color if needed
+        tx_0 = blockInfo[blockID].tx[BACK];
+        tx_1 = blockInfo[blockID].tx[BACK] + tmr;
+        ty_0 = blockInfo[blockID].ty[BACK] + tmr_y;
+        ty_1 = blockInfo[blockID].ty[BACK];
+        setBlockColor(blockID, BACK);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, E+1);  //Lower left:  BCE
         glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E+1);  //Lower right: ACE
@@ -634,11 +634,11 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
         glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E+1);  //Top left:    BDE
     
     //F
-        tx_0 = blockInfo[blockID].tx[SOUTH];
-        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr_y;
-        ty_1 = blockInfo[blockID].ty[SOUTH];
-        setBlockColor(blockID, SOUTH);  //Set leaf/grass color if needed
+        tx_0 = blockInfo[blockID].tx[FRONT];
+        tx_1 = blockInfo[blockID].tx[FRONT] + tmr;
+        ty_0 = blockInfo[blockID].ty[FRONT] + tmr_y;
+        ty_1 = blockInfo[blockID].ty[FRONT];
+        setBlockColor(blockID, FRONT);  //Set leaf/grass color if needed
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F-1);  //Lower left:  ACF
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, F-1);  //Lower right: BCF
@@ -700,10 +700,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     // (tx_0, ty_0)      (tx_1, ty_0)
 
     //A
-    mc__::face_ID leftTex = EAST;       //"unsliced" side texture
+    mc__::face_ID leftTex = RIGHT;       //"unsliced" side texture
     GLint A_offset = A + offset;    //Offset by 1 for transparent texture
     if (meta > 0) {
-        leftTex = WEST; //Use "sliced" texture on left side, if eaten
+        leftTex = LEFT; //Use "sliced" texture on left side, if eaten
         A_offset = A;   //No offset for transparent texture
     } 
     
@@ -719,10 +719,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     glTexCoord2f(tx_0,ty_1); glVertex3i( A_offset, D - half, E);
 
     //B
-    tx_0 = blockInfo[blockID].tx[EAST];
-    tx_1 = blockInfo[blockID].tx[EAST] + tmr;
-    ty_0 = blockInfo[blockID].ty[EAST] + tmr;
-    ty_1 = blockInfo[blockID].ty[EAST];
+    tx_0 = blockInfo[blockID].tx[RIGHT];
+    tx_1 = blockInfo[blockID].tx[RIGHT] + tmr;
+    ty_0 = blockInfo[blockID].ty[RIGHT] + tmr;
+    ty_1 = blockInfo[blockID].ty[RIGHT];
     
     glTexCoord2f(tx_0,ty_0); glVertex3i( B - offset, C - half, F);
     glTexCoord2f(tx_1,ty_0); glVertex3i( B - offset, C - half, E);
@@ -731,10 +731,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
 
     //C (might be blocked from below)
     if (!(vflags & 0x20)) {
-        tx_0 = blockInfo[blockID].tx[DOWN] + tmr_eat;
-        tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-        ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-        ty_1 = blockInfo[blockID].ty[DOWN];
+        tx_0 = blockInfo[blockID].tx[BOTTOM] + tmr_eat;
+        tx_1 = blockInfo[blockID].tx[BOTTOM] + tmr;
+        ty_0 = blockInfo[blockID].ty[BOTTOM] + tmr;
+        ty_1 = blockInfo[blockID].ty[BOTTOM];
         
         glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);
         glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);
@@ -743,10 +743,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     }
     
     //D
-    tx_0 = blockInfo[blockID].tx[UP] + tmr_eat;
-    tx_1 = blockInfo[blockID].tx[UP] + tmr;
-    ty_0 = blockInfo[blockID].ty[UP] + tmr;
-    ty_1 = blockInfo[blockID].ty[UP];
+    tx_0 = blockInfo[blockID].tx[TOP] + tmr_eat;
+    tx_1 = blockInfo[blockID].tx[TOP] + tmr;
+    ty_0 = blockInfo[blockID].ty[TOP] + tmr;
+    ty_1 = blockInfo[blockID].ty[TOP];
 
     glTexCoord2f(tx_0,ty_0); glVertex3i( A, D - half, F);
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, D - half, F);
@@ -754,10 +754,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     glTexCoord2f(tx_0,ty_1); glVertex3i( A, D - half, E);
 
     //E always visible
-    tx_0 = blockInfo[blockID].tx[NORTH];
-    tx_1 = blockInfo[blockID].tx[NORTH] + tmr - tmr_eat;
-    ty_0 = blockInfo[blockID].ty[NORTH] + tmr;
-    ty_1 = blockInfo[blockID].ty[NORTH];
+    tx_0 = blockInfo[blockID].tx[BACK];
+    tx_1 = blockInfo[blockID].tx[BACK] + tmr - tmr_eat;
+    ty_0 = blockInfo[blockID].ty[BACK] + tmr;
+    ty_1 = blockInfo[blockID].ty[BACK];
     
     glTexCoord2f(tx_0,ty_0); glVertex3i( B, C - half, E + offset);
     glTexCoord2f(tx_1,ty_0); glVertex3i( A, C - half, E + offset);
@@ -765,10 +765,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     glTexCoord2f(tx_0,ty_1); glVertex3i( B, D - half, E + offset);
 
     //F
-    tx_0 = blockInfo[blockID].tx[SOUTH] + tmr_eat;
-    tx_1 = blockInfo[blockID].tx[SOUTH] + tmr;
-    ty_0 = blockInfo[blockID].ty[SOUTH] + tmr;
-    ty_1 = blockInfo[blockID].ty[SOUTH];
+    tx_0 = blockInfo[blockID].tx[FRONT] + tmr_eat;
+    tx_1 = blockInfo[blockID].tx[FRONT] + tmr;
+    ty_0 = blockInfo[blockID].ty[FRONT] + tmr;
+    ty_1 = blockInfo[blockID].ty[FRONT];
     
     glTexCoord2f(tx_0,ty_0); glVertex3i( A, C - half, F - offset);
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, C - half, F - offset);
@@ -843,10 +843,10 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     //A
     if (!(vflags & 0x80) && (scale_y != 0.0 && scale_z != 0.0) ) {
         //Use offsets and scaling for texture coordinates
-        tx_0 = blockInfo[blockID].tx[WEST] + tmr_off_z;
-        tx_1 = blockInfo[blockID].tx[WEST] + tmr_off_z + tmr_z;
-        ty_0 = blockInfo[blockID].ty[WEST] + tmr_off_y + tmr_y;
-        ty_1 = blockInfo[blockID].ty[WEST] + tmr_off_y;
+        tx_0 = blockInfo[blockID].tx[LEFT] + tmr_off_z;
+        tx_1 = blockInfo[blockID].tx[LEFT] + tmr_off_z + tmr_z;
+        ty_0 = blockInfo[blockID].ty[LEFT] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[LEFT] + tmr_off_y;
         
         //Swap coordinates if needed
         if (mirror & 0x80) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
@@ -860,10 +860,10 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     //B
     if (!(vflags & 0x40) && (scale_y != 0.0 && scale_z != 0.0) ) {
         //Use offsets and scaling for texture coordinates
-        tx_0 = blockInfo[blockID].tx[EAST] + tmr_off_z + tmr_z;
-        tx_1 = blockInfo[blockID].tx[EAST] + tmr_off_z;
-        ty_0 = blockInfo[blockID].ty[EAST] + tmr_off_y + tmr_y;
-        ty_1 = blockInfo[blockID].ty[EAST] + tmr_off_y;
+        tx_0 = blockInfo[blockID].tx[RIGHT] + tmr_off_z + tmr_z;
+        tx_1 = blockInfo[blockID].tx[RIGHT] + tmr_off_z;
+        ty_0 = blockInfo[blockID].ty[RIGHT] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[RIGHT] + tmr_off_y;
         
         //Swap coordinates if needed
         if (mirror & 0x40) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
@@ -877,10 +877,10 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     //C
     if (!(vflags & 0x20) && (scale_x != 0.0 && scale_z != 0.0) ) {
         //Use offsets and scaling for texture coordinates
-        tx_0 = blockInfo[blockID].tx[DOWN] + tmr_off_x;
-        tx_1 = blockInfo[blockID].tx[DOWN] + tmr_off_x + tmr_x;
-        ty_0 = blockInfo[blockID].ty[DOWN] + tmr_off_z + tmr_z;
-        ty_1 = blockInfo[blockID].ty[DOWN] + tmr_off_z;
+        tx_0 = blockInfo[blockID].tx[BOTTOM] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[BOTTOM] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[BOTTOM] + tmr_off_z + tmr_z;
+        ty_1 = blockInfo[blockID].ty[BOTTOM] + tmr_off_z;
         
         //Swap coordinates if needed
         if (mirror & 0x20) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
@@ -894,10 +894,10 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     //D
     if (!(vflags & 0x10) && (scale_x != 0.0 && scale_z != 0.0) ) {
         //Use offsets and scaling for texture coordinates
-        tx_0 = blockInfo[blockID].tx[UP] + tmr_off_x;
-        tx_1 = blockInfo[blockID].tx[UP] + tmr_off_x + tmr_x;
-        ty_0 = blockInfo[blockID].ty[UP] + tmr_off_z + tmr_z;
-        ty_1 = blockInfo[blockID].ty[UP] + tmr_off_z;
+        tx_0 = blockInfo[blockID].tx[TOP] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[TOP] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[TOP] + tmr_off_z + tmr_z;
+        ty_1 = blockInfo[blockID].ty[TOP] + tmr_off_z;
         
         //Swap coordinates if needed
         if (mirror & 0x10) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
@@ -911,10 +911,10 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     //E
     if (!(vflags & 0x08) && (scale_x != 0.0 && scale_y != 0.0) ) {
         //Use offsets and scaling for texture coordinates
-        tx_0 = blockInfo[blockID].tx[NORTH] + tmr_off_x + tmr_x;
-        tx_1 = blockInfo[blockID].tx[NORTH] + tmr_off_x;
-        ty_0 = blockInfo[blockID].ty[NORTH] + tmr_off_y + tmr_y;
-        ty_1 = blockInfo[blockID].ty[NORTH] + tmr_off_y;
+        tx_0 = blockInfo[blockID].tx[BACK] + tmr_off_x + tmr_x;
+        tx_1 = blockInfo[blockID].tx[BACK] + tmr_off_x;
+        ty_0 = blockInfo[blockID].ty[BACK] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[BACK] + tmr_off_y;
         
         //Swap coordinates if needed
         if (mirror & 0x08) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
@@ -928,10 +928,10 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     //F
     if (!(vflags & 0x04) && (scale_x != 0.0 && scale_y != 0.0) ) {
         //Use offsets and scaling for texture coordinates
-        tx_0 = blockInfo[blockID].tx[SOUTH] + tmr_off_x;
-        tx_1 = blockInfo[blockID].tx[SOUTH] + tmr_off_x + tmr_x;
-        ty_0 = blockInfo[blockID].ty[SOUTH] + tmr_off_y + tmr_y;
-        ty_1 = blockInfo[blockID].ty[SOUTH] + tmr_off_y;
+        tx_0 = blockInfo[blockID].tx[FRONT] + tmr_off_x;
+        tx_1 = blockInfo[blockID].tx[FRONT] + tmr_off_x + tmr_x;
+        ty_0 = blockInfo[blockID].ty[FRONT] + tmr_off_y + tmr_y;
+        ty_1 = blockInfo[blockID].ty[FRONT] + tmr_off_y;
         
         //Swap coordinates if needed
         if (mirror & 0x04) { mirrorCoords(tx_0, tx_1, ty_0, ty_1); }
@@ -976,10 +976,10 @@ void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
     GLint F = (z << 4) + texmap_TILE_LENGTH;
 
     //C
-    tx_0 = blockInfo[blockID].tx[DOWN];
-    tx_1 = blockInfo[blockID].tx[DOWN] + tmr;
-    ty_0 = blockInfo[blockID].ty[DOWN] + tmr;
-    ty_1 = blockInfo[blockID].ty[DOWN];
+    tx_0 = blockInfo[blockID].tx[BOTTOM];
+    tx_1 = blockInfo[blockID].tx[BOTTOM] + tmr;
+    ty_0 = blockInfo[blockID].ty[BOTTOM] + tmr;
+    ty_1 = blockInfo[blockID].ty[BOTTOM];
     
     glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
@@ -987,10 +987,10 @@ void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
     glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
 
     //D
-    tx_0 = blockInfo[blockID].tx[UP];
-    tx_1 = blockInfo[blockID].tx[UP] + tmr;
-    ty_0 = blockInfo[blockID].ty[UP] + tmr;
-    ty_1 = blockInfo[blockID].ty[UP];
+    tx_0 = blockInfo[blockID].tx[TOP];
+    tx_1 = blockInfo[blockID].tx[TOP] + tmr;
+    ty_0 = blockInfo[blockID].ty[TOP] + tmr;
+    ty_1 = blockInfo[blockID].ty[TOP];
 
     glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
@@ -1004,10 +1004,10 @@ void BlockDrawer::drawWallItem( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //Texture coords
-    GLfloat tx_0 = blockInfo[blockID].tx[WEST];
-    GLfloat tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-    GLfloat ty_0 = blockInfo[blockID].ty[WEST] + tmr;
-    GLfloat ty_1 = blockInfo[blockID].ty[WEST];
+    GLfloat tx_0 = blockInfo[blockID].tx[LEFT];
+    GLfloat tx_1 = blockInfo[blockID].tx[LEFT] + tmr;
+    GLfloat ty_0 = blockInfo[blockID].ty[LEFT] + tmr;
+    GLfloat ty_1 = blockInfo[blockID].ty[LEFT];
 
     //Block face coordinates (in pixels)
     GLint A = (x << 4) + 0;
@@ -1068,10 +1068,10 @@ void BlockDrawer::drawItem( uint8_t blockID, uint8_t /*meta*/,
     GLint H = (x << 4) + (texmap_TILE_LENGTH/2);    //half-way through x
 
     //Look up texture coordinates for the item
-    tx_0 = blockInfo[blockID].tx[WEST];
-    tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-    ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
-    ty_1 = blockInfo[blockID].ty[WEST];
+    tx_0 = blockInfo[blockID].tx[LEFT];
+    tx_1 = blockInfo[blockID].tx[LEFT] + tmr;
+    ty_0 = blockInfo[blockID].ty[LEFT] + tmr;    //flip y
+    ty_1 = blockInfo[blockID].ty[LEFT];
     glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
     glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
@@ -1084,10 +1084,10 @@ void BlockDrawer::drawItem( uint8_t blockID, uint8_t /*meta*/,
     glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
 
     //Intersecting plane
-    tx_0 = blockInfo[blockID].tx[EAST];
-    tx_1 = blockInfo[blockID].tx[EAST] + tmr;
-    ty_0 = blockInfo[blockID].ty[EAST] + tmr;    //flip y
-    ty_1 = blockInfo[blockID].ty[EAST];
+    tx_0 = blockInfo[blockID].tx[RIGHT];
+    tx_1 = blockInfo[blockID].tx[RIGHT] + tmr;
+    ty_0 = blockInfo[blockID].ty[RIGHT] + tmr;    //flip y
+    ty_1 = blockInfo[blockID].ty[RIGHT];
     glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left:  HCF
     glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
     glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
@@ -1107,18 +1107,18 @@ void BlockDrawer::drawTorch( uint8_t blockID, uint8_t meta,
 {
 
     //Look up texture coordinates for the item
-    GLfloat tx_0 = blockInfo[blockID].tx[WEST];
-    GLfloat tx_1 = blockInfo[blockID].tx[WEST] + tmr;
-    GLfloat ty_0 = blockInfo[blockID].ty[WEST] + tmr;    //flip y
-    GLfloat ty_1 = blockInfo[blockID].ty[WEST];
+    GLfloat tx_0 = blockInfo[blockID].tx[LEFT];
+    GLfloat tx_1 = blockInfo[blockID].tx[LEFT] + tmr;
+    GLfloat ty_0 = blockInfo[blockID].ty[LEFT] + tmr;    //flip y
+    GLfloat ty_1 = blockInfo[blockID].ty[LEFT];
     
     //pieces of torch texture (used for top and bottom)
-    GLfloat tx_m1 = blockInfo[blockID].tx[WEST] + tmr*7.0/16.0;
-    GLfloat tx_m2 = blockInfo[blockID].tx[WEST] + tmr*9.0/16.0;
-    GLfloat ty_m1 = blockInfo[blockID].ty[WEST] + tmr*8.0/16.0;
-    GLfloat ty_m2 = blockInfo[blockID].ty[WEST] + tmr*6.0/16.0;
-    GLfloat ty_b1 = blockInfo[blockID].ty[WEST] + tmr*14.0/16.0;
-    GLfloat ty_b2 = blockInfo[blockID].ty[WEST] + tmr;
+    GLfloat tx_m1 = blockInfo[blockID].tx[LEFT] + tmr*7.0/16.0;
+    GLfloat tx_m2 = blockInfo[blockID].tx[LEFT] + tmr*9.0/16.0;
+    GLfloat ty_m1 = blockInfo[blockID].ty[LEFT] + tmr*8.0/16.0;
+    GLfloat ty_m2 = blockInfo[blockID].ty[LEFT] + tmr*6.0/16.0;
+    GLfloat ty_b1 = blockInfo[blockID].ty[LEFT] + tmr*14.0/16.0;
+    GLfloat ty_b2 = blockInfo[blockID].ty[LEFT] + tmr;
 
     //Cube boundaries
     GLint A = (x << 4) + 0;
@@ -2450,6 +2450,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     return true;
 }
 
+//Swap texture cordinates
 void BlockDrawer::mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
                 GLfloat& ty_0, GLfloat& ty_1, uint8_t mirror_type) const
 {
@@ -2460,17 +2461,63 @@ void BlockDrawer::mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
     
 }
 
-/*
-    //MOVED TO TEXTUREINFO CLASS
-//Calculate texture coordinates (ratio is kept if higher resolution is used)
-void BlockDrawer::setTexCoords(GLsizei max_width, GLsizei max_height,
-    GLsizei x0, GLsizei y0, GLsizei tex_width, GLsizei tex_height,
-    GLfloat& tx_0, GLfloat& tx_1,
-    GLfloat& ty_0, GLfloat& ty_1) const
+//Assign vertices for specified cuboid, facing towards direction
+void BlockDrawer::makeCuboidVertex(GLint x0, GLint y0, GLint z0,
+    GLsizei width, GLsizei height, GLsizei depth,
+    GLint vX[8], GLint vY[8], GLint vZ[8],
+    face_ID facing
+) const
 {
-    tx_0 = (x0)/GLfloat(max_width);
-    tx_1 = (x0 + tex_width)/GLfloat(max_width);
-    ty_0 = (y0)/GLfloat(max_height);
-    ty_1 = (y0 + tex_height)/GLfloat(max_height);
+    GLint& A = x0;
+    GLint B = x0 + width;
+    GLint& E = z0;
+    GLint F = z0 + depth;
+
+    //Y values of vertices always the same
+    vY[0] = y0; vY[2] = y0; vY[3] = y0 + height; vY[1] = y0 + height;
+    vY[6] = y0; vY[4] = y0; vY[5] = y0 + height; vY[7] = y0 + height;
+
+    switch (facing) {
+        case LEFT: //Facing -X
+            //left side: 0, 2, 3, 1
+            vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B  ;
+            vZ[0] = F  ; vZ[2] = F-2; vZ[3] = F-2; vZ[1] = F  ;
+        
+            //right side: 6, 4, 5, 7
+            vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
+            vZ[6] = F-2; vZ[4] = F  ; vZ[5] = F  ; vZ[7] = F-2;
+            
+            break;
+        case RIGHT: //Facing +X
+            //left side: 0, 2, 3, 1
+            vX[0] = A  ; vX[2] = A  ; vX[3] = A  ; vX[1] = A  ; 
+            vZ[0] = E  ; vZ[2] = E+2; vZ[3] = E+2; vZ[1] = E  ;
+        
+            //right side: 6, 4, 5, 7
+            vX[6] = B  ; vX[4] = B  ; vX[5] = B  ; vX[7] = B  ;
+            vZ[6] = E+2; vZ[4] = E  ; vZ[5] = E  ; vZ[7] = E+2;
+            
+            break;
+        case BACK: //Facing +Z
+            //left side: 0, 2, 3, 1
+            vX[0] = B  ; vX[2] = B-2; vX[3] = B-2; vX[1] = B  ;
+            vZ[0] = E  ; vZ[2] = E  ; vZ[3] = E  ; vZ[1] = E  ;
+        
+            //right side: 6, 4, 5, 7
+            vX[6] = B-2; vX[4] = B  ; vX[5] = B  ; vX[7] = B-2; 
+            vZ[6] = F  ; vZ[4] = F  ; vZ[5] = F  ; vZ[7] = F  ;
+            break;
+        default:
+        case FRONT: //Facing -Z
+            //left side: 0, 2, 3, 1
+            vX[0] = A  ; vX[2] = A+2; vX[3] = A+2; vX[1] = A  ;
+            vZ[0] = F  ; vZ[2] = F  ; vZ[3] = F  ; vZ[1] = F  ;
+        
+            //right side: 6, 4, 5, 7
+            vX[6] = A+2; vX[4] = A  ; vX[5] = A  ; vX[7] = A+2; 
+            vZ[6] = E  ; vZ[4] = E  ; vZ[5] = E  ; vZ[7] = E  ;
+            break;
+    }
+
+
 }
-*/

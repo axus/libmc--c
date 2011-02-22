@@ -43,8 +43,9 @@ namespace mc__ {
     //
     // Types for mc__ namespace
     //
-    // THESE NAMES ARE WRONG.. BUT I NEED TO REMAP EVERYTHING TO FIX IT
-    enum face_ID { WEST=0, EAST=1, DOWN=2, UP=3, NORTH=4, SOUTH=5, FACE_MAX};
+    
+    // Index for face of cube or cuboid
+    enum face_ID { LEFT=0, RIGHT=1, BOTTOM=2, TOP=3, BACK=4, FRONT=5, FACE_MAX};
 
     //Physical properties, to associate with blockID (internal to engine)
     typedef struct {
@@ -189,7 +190,7 @@ namespace mc__ {
                 bool scale_textures=true,
                 GLint off_x=0, GLint off_y=0, GLint off_z=0,
                 uint8_t mirror_mask=0) const;
-                
+            
             //Draw a 6-sided volume with specified vertices and tex coords
             void drawVertexBlock( GLint vX[8], GLint vY[8], GLint vZ[8],
                 GLfloat tx_0[6], GLfloat tx_1[6],
@@ -219,8 +220,14 @@ namespace mc__ {
             //Texture mirror. mirror_type mask: 1=vertical, 2=horizontal
             void mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
                 GLfloat& ty_0, GLfloat& ty_1, uint8_t mirror_type=2) const;
-                
-
+            
+            //Assign vertices for cuboid
+            void makeCuboidVertex(GLint x0, GLint y0, GLint z0,
+                GLsizei width, GLsizei height, GLsizei depth,
+                GLint vX[8], GLint vY[8], GLint vZ[8],
+                face_ID facing=FRONT
+            ) const;
+            //TODO: GLfloat version
     };
 }
 

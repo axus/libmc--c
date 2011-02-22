@@ -121,16 +121,8 @@ void genWorld(World& world)
     delete chunk1;
 
     
-    //Single workbench made from block put in chunk
-    mc__::Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
-    chunk1 = new mc__::Chunk(0, 0, 0, 7, 64, 14);    //1x1x1, location
-    chunk1->block_array[0] = workbench1;
-    
-    //Add the chunk with the workbench
-    world.addMapChunk(chunk1);
-    delete chunk1;
-    
     //Table with cakes
+    mc__::Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
     mc__::Block cake1 = { 92, 0, 0, 0};
     chunk1 = new mc__::Chunk(10, 1, 2, 17, 64, 17);    //1x1x1, location
     for (gen_X = 0; gen_X <= 10; gen_X++) {
