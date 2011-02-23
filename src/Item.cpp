@@ -146,6 +146,8 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 90: result = "Portal"; break;
         case 91: result = "Jack-O-Lantern"; break;
         case 92: result = "Cake"; break;
+        case 93: result = "Repeater"; break;
+        case 94: result = "Repeater Lit"; break;
         case 256: result = "Iron shovel"; break;
         case 257: result = "Iron pickaxe"; break;
         case 258: result = "Iron axe"; break;
@@ -248,6 +250,8 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 352: result = "Bone"; break;
         case 353: result = "Sugar"; break;
         case 354: result = "Cake"; break;
+        case 355: result = "Bed"; break;
+        case 356: result = "Repeater"; break;
         case 397: result = "Record"; break; //Not really in the game ;)
         
         //Mad hax time: (("Item ID" - 256) * 16) + damage = fake ID
@@ -379,6 +383,9 @@ uint8_t Item::maxUses() const
         case 89: result = 0; break;
         case 90: result = 0; break;
         case 91: result = 0; break;
+        case 92: result = 0; break;
+        case 93: result = 0; break;
+        case 94: result = 0; break;
         case 256: result = 128; break;  //Iron
         case 257: result = 128; break;
         case 258: result = 128; break;
@@ -478,6 +485,8 @@ uint8_t Item::maxUses() const
         case 352: result = 0; break;
         case 353: result = 0; break;
         case 354: result = 6; break;
+        case 355: result = 0; break;
+        case 356: result = 0; break;
         case 2256: result = 0; break;
         case 2257: result = 0; break;
 

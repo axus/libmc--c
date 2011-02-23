@@ -156,6 +156,10 @@ void BlockDrawer::setBlockColor(uint8_t blockID, face_ID face) const
             red=leaf_color[0]; green=leaf_color[1]; blue=leaf_color[2];
             glColor3ub( red, green, blue);
             break;
+        case 55:    //Redstone wire
+            red=255; green=127; blue=127;
+            glColor3ub( red, green, blue);
+            break;
         default:
             red=255; green=255; blue=255;
             break;
@@ -777,6 +781,22 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     
 }
 
+//Draw a placed bed block (use metadata to determine which half)
+void BlockDrawer::drawBed( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    
+    //Use metadata to determine which half!
+    if (meta) {
+        //Draw top half
+        drawScaledBlock( 256 + blockID, meta, x, y, z, vflags, 1, 0.5, 1);
+    } else {
+        //Draw bottom half
+        drawScaledBlock( 256 + blockID + 1, meta, x, y, z, vflags, 1, 0.5, 1);
+    }
+    //TODO: draw underside up a bit
+}
+
 //Use OpenGL to draw partial solid cube, with offsets, scale, mirroring
 void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     GLint x, GLint y, GLint z, uint8_t vflags,
@@ -1288,7 +1308,6 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     
     //If metadata > 0, wire is active
     uint8_t wireFace = (meta == 0 ? 0 : 2 );   //'+' shape, lit or unlit
-    
 
     const GLfloat scale = 11.0/16.0;    //Ratio for truncated wires
     const GLfloat offset = 5.0/16.0;    //Offset for truncated wires
@@ -1374,6 +1393,13 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     GLint E = (z << 4) + (off_y * texmap_TILE_LENGTH);
     GLint F = E + (scale_y * texmap_TILE_LENGTH);
 
+    //Set color, depending on state
+    if (meta != 0) {
+        glColor3ub( 255, 63, 63);
+    } else {
+        glColor3ub( 127, 0, 0);
+    }
+
     //Top face (seen by player)
     glTexCoord2f(tx[0],ty[0]); glVertex3i( A, D, F);  //Lower left:  ADF
     glTexCoord2f(tx[1],ty[1]); glVertex3i( B, D, F);  //Lower right: BDF
@@ -1406,6 +1432,7 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     D = (y << 4) + texmap_TILE_LENGTH;
     E = (z << 4) + 0;
     F = (z << 4) + texmap_TILE_LENGTH;
+
 
     //A
     if (up_mask & 1) {
@@ -1461,6 +1488,9 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
         glTexCoord2f(tx[1],ty[1]); glVertex3i( B, C, F);  //Lower right: BCF
         glTexCoord2f(tx[0],ty[0]); glVertex3i( A, C, F);  //Lower left:  ACF
     }
+
+    //Return color to normal
+    glColor3ub( 255, 255, 255);
 
 }
 
@@ -1612,6 +1642,22 @@ void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
         0.25, 0.25, 0.5, true, 6, 0, 4);
 
 }
+
+//Draw repeater block with torches (meta affects configuration)
+void BlockDrawer::drawRepeater( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
+{
+    //TODO: handle angle and base location depend on meta
+    
+    //Redstone torch
+    drawTorch( 75, 0, x, y, z);
+    
+    //Cobblestone base
+    drawScaledBlock(4, 0, x, y, z, 0,
+        0.25, 0.25, 0.5, true, 6, 0, 4);
+
+}
+
 
 //Draw signpost (meta affects angle)
 void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
@@ -2296,8 +2342,9 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 24,192,192,208,176,192,192);    //Sandstone
     setBlockInfo( 25, 74, 74, 74, 74, 74, 74);    //Note Block
 
+    setBlockInfo( 26,149,152,  4,135,151,151, &BlockDrawer::drawBed);//Bed (*)
+
     //26 - 36 = Dyed wool (drawDyed will override metadata)
-    setBlockInfo( 26, 64, 64, 64, 64, 64, 64);
     setBlockInfo( 27, 64, 64, 64, 64, 64, 64);
     setBlockInfo( 28, 64, 64, 64, 64, 64, 64);
     setBlockInfo( 29, 64, 64, 64, 64, 64, 64);
@@ -2337,7 +2384,7 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Chest (*)
     setBlockInfo( 54, 26, 26, 25, 25, 26, 27,&BlockDrawer::drawChest);
         //Wire (*)
-    setBlockInfo( 55, 84, 85, 100,101,84,100,&BlockDrawer::drawWire);
+    setBlockInfo( 55,164,165,164,165,164,165,&BlockDrawer::drawWire);
     setBlockInfo( 56, 50, 50, 50, 50, 50, 50);    //DiamondOre
     setBlockInfo( 57, 24, 24, 24, 24, 24, 24);    //DiamondBlock
     setBlockInfo( 58, 60, 60, 43, 43, 59, 59);    //Workbench
@@ -2400,6 +2447,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 91, 118,118,118,102,118,120,&BlockDrawer::drawFaceCube2);
         //Cake block (*)
     setBlockInfo( 92, 123,122,124,121,122,122,&BlockDrawer::drawCake);
+        //Repeater
+    setBlockInfo( 93, 147,147,  6,147,147,147,&BlockDrawer::drawRepeater);
+        //Lit Repeater
+    setBlockInfo( 94, 163,163,  6,163,163,163,&BlockDrawer::drawRepeater);
     
     
     //extra info for metadata blocks
@@ -2410,6 +2461,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     //Birch tree
     setBlockInfo( 512 + 17, 117, 117, 21, 21, 117, 117);
     setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133);
+    
+    //Bed 
+    setBlockInfo( 256 + 26, 149, 152, 4, 134, 150, 150);    //foot
+    setBlockInfo( 256 + 27, 152, 152, 4, 135, 151, 151);    //head
     
     //Dyed wool (256 + 35 + metadata)
     setBlockInfo( 256 + 35, 64, 64, 64, 64, 64, 64);

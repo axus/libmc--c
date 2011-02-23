@@ -229,26 +229,7 @@ bool Chunk::unpackBlocks(bool free_packed)
         } else {
             block->lighting |= ((byte_array[off_light] & 0x0F) << 4);
         }
-/*
-        //Unpack the metadata, light, and sky, according to half-byte
-        if (!half_byte) {
-            block->metadata = (byte_array[off_meta] >> 4);
-            block->lighting = (byte_array[off_sky] >> 4);
-        } else {
-            block->metadata = (byte_array[off_meta] & 0x0F);
-            block->lighting = (byte_array[off_sky] & 0x0F);
-            off_meta++;
-            off_sky++;
-        }
 
-        //Unpack block light depending on odd_size and half-byte
-        if (half_byte ^ odd_size) {
-            block->lighting |= ((byte_array[off_light] & 0x0F) << 4);
-            off_light++;
-        } else {
-            block->lighting |= (byte_array[off_light] & 0xF0);
-        }
-*/
         //Toggle half-byte status, go to next block
         half_byte = !half_byte;
     }
@@ -423,7 +404,8 @@ const bool mc__::Chunk::isOpaque[] = {
     true,   //23 Dispenser
     true,   //24 Sandstone
     true,   //25 Note Block
-    true, true, true, //Cloth
+    false,  //26 Bed
+    true, true, //Cloth
     true, true, true, true, true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
@@ -481,8 +463,8 @@ const bool mc__::Chunk::isOpaque[] = {
     false,  //90 Portal (??)
     true,   //91 PumpkinLit
     false,  //92 Cake
-    true,   //93
-    true,   //94
+    false,  //93 Repeater off
+    false,  //94 Repeater on
     true    //95
 };
 
@@ -515,7 +497,8 @@ const bool mc__::Chunk::isCube[] = {
     true,   //23 Dispenser
     true,   //24 Sandstone
     true,   //25 Note Block
-    true, true, true, //Cloth
+    false,  //26 Bed
+    true, true, //Cloth
     true, true, true, true, true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
@@ -573,8 +556,8 @@ const bool mc__::Chunk::isCube[] = {
     false,  //90 Portal (??)
     true,   //91 PumpkinLit
     false,  //92 Cake
-    true,   //93
-    true,   //94
+    false,  //93 Repeater
+    false,  //94 Repeater On
     true    //95
 };
 
@@ -606,7 +589,7 @@ const char* Chunk::Name[] = {
     "Dispesner",
     "Sandstone",
     "Note Block",
-    "Aqua-green Cloth",
+    "Bed",
     "Cyan Cloth",
     "Blue Cloth",
     "Purple Cloth",
@@ -673,8 +656,8 @@ const char* Chunk::Name[] = {
     "Portal",
     "Jack-O-Lantern",
     "Cake",
-    "Unknown",
-    "Unknown",
+    "Repeater",
+    "Repeater Lit",
     "Unknown",
     "Unknown",
     "Unknown",
@@ -726,7 +709,8 @@ const bool mc__::Chunk::isLogic[] = {
     true,   //23 Dispenser  (different from vanilla client)
     false,  //24 Sandstone
     true,   //25 Note Block (different from vanilla client)
-    false, false, false, //Cloth
+    false,  //26 Bed
+    false, false, //Cloth
     false, false, false, false, false, false, false, false, //Cloth
     false,  //37 Flower
     false,  //38 Rose
@@ -784,7 +768,7 @@ const bool mc__::Chunk::isLogic[] = {
     false,  //90 Portal (??)
     false,  //91 PumpkinLit
     false,  //92 Cake
-    false,  //93
-    false,  //94
+    true,   //93 Repeater
+    true,   //94 Repeater Off
     false   //95
 };
