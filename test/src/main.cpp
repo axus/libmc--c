@@ -395,6 +395,31 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
 
+    //Slab test
+    chunk1 = new mc__::Chunk( 3, 0, 5, -21, 64, 3);   //4x1x6 area for slabs
+    mc__::Block slab = { 44, 0, 0, 0};
+    mc__::Block slabX2 = { 43, 0, 0, 0};
+    mc__::Block other = { 1, 0, 0, 0};
+    //Stone
+    chunk1->block_array[0] = slab; slab.metadata++;
+    chunk1->block_array[2] = slabX2; slabX2.metadata++;
+    chunk1->block_array[4] = other; other.blockID = 24; 
+    //Sandstone
+    chunk1->block_array[7] = slab; slab.metadata++;
+    chunk1->block_array[9] = slabX2; slabX2.metadata++;
+    chunk1->block_array[11] = other; other.blockID = 5;
+    //Wood
+    chunk1->block_array[12] = slab; slab.metadata++;
+    chunk1->block_array[14] = slabX2; slabX2.metadata++;
+    chunk1->block_array[16] = other; other.blockID = 4;
+    //Cobble
+    chunk1->block_array[19] = slab; slab.metadata++;
+    chunk1->block_array[21] = slabX2; slabX2.metadata++;
+    chunk1->block_array[23] = other;
+    //Add the chunk
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
     //Cactus test
     chunk1 = new mc__::Chunk( 0, 0, 15, 1, 64, -16);   //1x1x15 area for cactus
     mc__::Block cactusBlock = { 81, 0, 0, 0};

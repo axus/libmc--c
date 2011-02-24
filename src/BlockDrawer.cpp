@@ -964,19 +964,46 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
 }
 
 //Draw half a block
-void BlockDrawer::drawHalfBlock( uint8_t blockID, uint8_t meta,
+void BlockDrawer::drawSlab( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //Use metadata to determine which half!
-    if (meta) {
-        //Draw top half
-        drawScaledBlock( blockID, meta, x, y, z, vflags, 1, 0.5, 1,
-            true, 0, 8, 0);
-    } else {
-        //Draw bottom half
-        drawScaledBlock( blockID, meta, x, y, z, vflags, 1, 0.5, 1);
+    
+    //Use metadata to determine which texture
+    uint16_t material=blockID;
+    switch (meta) {
+        default:
+        case 0: material = blockID; break;  //Stone
+        case 1: material = 24; break;       //Sandstone
+        case 2: material = 5; break;        //Wood
+        case 3: material = 4; break;        //Cobble
     }
+    //Draw bottom half
+    drawScaledBlock( material, meta, x, y, z, vflags&0xEF, 1, 0.5, 1);
+
 }
+
+//Draw two stacked half blocks
+void BlockDrawer::drawDoubleSlab( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    
+    //Use metadata to determine which texture
+    uint16_t material=blockID;
+    switch (meta) {
+        default:
+        case 0: material = blockID; break;  //Stone
+        case 1: material = 24; break;       //Sandstone
+        case 2: material = 5; break;        //Wood
+        case 3: material = 4; break;        //Cobble
+    }
+    //Draw top half
+    drawScaledBlock( material, meta, x, y, z, vflags|0x20, 1, 0.5, 1,
+        true, 0, 8, 0);
+    //Draw bottom half
+    drawScaledBlock( material, meta, x, y, z, vflags|0x10, 1, 0.5, 1);
+
+}
+
 
 //Draw minecart track (meta affects angle, direction, intersection)
 void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
@@ -1624,7 +1651,7 @@ void BlockDrawer::drawStairs( uint8_t blockID, uint8_t meta,
     }
     
     //Bottom step
-    drawHalfBlock( blockID, 0, x, y, z, vflags);
+    drawSlab( blockID, 0/*meta, affects material*/, x, y, z, vflags);
 
 }
 
@@ -2366,9 +2393,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 40, 28, 28, 28, 28, 28, 28,&BlockDrawer::drawItem);
     setBlockInfo( 41, 23, 23, 23, 23, 23, 23);    //GoldBlock
     setBlockInfo( 42, 22, 22, 22, 22, 22, 22);    //IronBlock
-    setBlockInfo( 43, 5,  5,  6,  6,  5,  5 );    //DoubleStep
+        //DoubleStep
+    setBlockInfo( 43, 5,  5,  6,  6,  5,  5 ,&BlockDrawer::drawDoubleSlab);
         //Step
-    setBlockInfo( 44, 5,  5,  6,  6,  5,  5,&BlockDrawer::drawHalfBlock);
+    setBlockInfo( 44, 5,  5,  6,  6,  5,  5,&BlockDrawer::drawSlab);
     setBlockInfo( 45, 7,  7,  7,  7,  7,  7 );    //Brick
     setBlockInfo( 46, 8,  8, 10,  9,  8,  8 );    //TNT
     setBlockInfo( 47, 35, 35, 4,  4,  35, 35);    //Bookshelf
@@ -2523,54 +2551,81 @@ void BlockDrawer::makeCuboidVertex(GLint x0, GLint y0, GLint z0,
     face_ID facing
 ) const
 {
+    //Cuboid bounds
     GLint& A = x0;
     GLint B = x0 + width;
+    GLint& C = y0;
+    GLint D = y0 + height;
     GLint& E = z0;
     GLint F = z0 + depth;
 
-    //Y values of vertices always the same
-    vY[0] = y0; vY[2] = y0; vY[3] = y0 + height; vY[1] = y0 + height;
-    vY[6] = y0; vY[4] = y0; vY[5] = y0 + height; vY[7] = y0 + height;
+    //Y values of vertices for LEFT, RIGHT, BACK, FRONT
+    vY[0] = C; vY[2] = C; vY[3] = D; vY[1] = D;
+    vY[6] = C; vY[4] = C; vY[5] = D; vY[7] = D;
 
     switch (facing) {
-        case LEFT: //Facing -X
+        case LEFT: //Facing -X (A side)
             //left side: 0, 2, 3, 1
-            vX[0] = B  ; vX[2] = B  ; vX[3] = B  ; vX[1] = B  ;
-            vZ[0] = F  ; vZ[2] = F-2; vZ[3] = F-2; vZ[1] = F  ;
+            vX[0] = B; vX[2] = A; vX[3] = A; vX[1] = B;
+            vZ[0] = E; vZ[2] = E; vZ[3] = E; vZ[1] = E;
         
             //right side: 6, 4, 5, 7
-            vX[6] = A  ; vX[4] = A  ; vX[5] = A  ; vX[7] = A  ; 
-            vZ[6] = F-2; vZ[4] = F  ; vZ[5] = F  ; vZ[7] = F-2;
+            vX[6] = A; vX[4] = B; vX[5] = B; vX[7] = A; 
+            vZ[6] = F; vZ[4] = F; vZ[5] = F; vZ[7] = F;
             
             break;
-        case RIGHT: //Facing +X
+        case RIGHT: //Facing +X (B side)
             //left side: 0, 2, 3, 1
-            vX[0] = A  ; vX[2] = A  ; vX[3] = A  ; vX[1] = A  ; 
-            vZ[0] = E  ; vZ[2] = E+2; vZ[3] = E+2; vZ[1] = E  ;
+            vX[0] = A; vX[2] = B; vX[3] = B; vX[1] = A; 
+            vZ[0] = F; vZ[2] = F; vZ[3] = F; vZ[1] = F;
         
             //right side: 6, 4, 5, 7
-            vX[6] = B  ; vX[4] = B  ; vX[5] = B  ; vX[7] = B  ;
-            vZ[6] = E+2; vZ[4] = E  ; vZ[5] = E  ; vZ[7] = E+2;
+            vX[6] = B; vX[4] = A; vX[5] = A; vX[7] = B;
+            vZ[6] = E; vZ[4] = E; vZ[5] = E; vZ[7] = E;
             
             break;
-        case BACK: //Facing +Z
+        case BOTTOM: //Facing -Y (C side)
             //left side: 0, 2, 3, 1
-            vX[0] = B  ; vX[2] = B-2; vX[3] = B-2; vX[1] = B  ;
-            vZ[0] = E  ; vZ[2] = E  ; vZ[3] = E  ; vZ[1] = E  ;
+            vX[0] = A; vX[2] = A; vX[3] = A; vX[1] = A; 
+            vY[0] = D; vY[2] = C; vY[3] = C; vY[1] = D;
+            vZ[0] = E; vZ[2] = E; vZ[3] = F; vZ[1] = F;
         
             //right side: 6, 4, 5, 7
-            vX[6] = B-2; vX[4] = B  ; vX[5] = B  ; vX[7] = B-2; 
-            vZ[6] = F  ; vZ[4] = F  ; vZ[5] = F  ; vZ[7] = F  ;
+            vX[6] = B; vX[4] = B; vX[5] = B; vX[7] = B;
+            vY[6] = C; vY[4] = D; vY[5] = D; vY[7] = C;
+            vZ[6] = E; vZ[4] = E; vZ[5] = F; vZ[7] = F;
+            
+            break;
+        case TOP: //Facing +Y (D side)
+            //left side: 0, 2, 3, 1
+            vX[0] = A; vX[2] = A; vX[3] = A; vX[1] = A;
+            vY[0] = C; vY[2] = D; vY[3] = D; vY[1] = C;
+            vZ[0] = F; vZ[2] = F; vZ[3] = E; vZ[1] = E;
+        
+            //right side: 6, 4, 5, 7
+            vX[6] = B; vX[4] = B; vX[5] = B; vX[7] = B; 
+            vY[6] = D; vY[4] = C; vY[5] = C; vY[7] = D;
+            vZ[6] = F; vZ[4] = F; vZ[5] = E; vZ[7] = E;
+            
+            break;
+        case BACK: //Facing +Z (E side)
+            //left side: 0, 2, 3, 1
+            vX[0] = B; vX[2] = B; vX[3] = B; vX[1] = B;
+            vZ[0] = F; vZ[2] = E; vZ[3] = E; vZ[1] = F;
+        
+            //right side: 6, 4, 5, 7
+            vX[6] = A; vX[4] = A; vX[5] = A; vX[7] = A;
+            vZ[6] = E; vZ[4] = F; vZ[5] = F; vZ[7] = E;
             break;
         default:
         case FRONT: //Facing -Z
             //left side: 0, 2, 3, 1
-            vX[0] = A  ; vX[2] = A+2; vX[3] = A+2; vX[1] = A  ;
-            vZ[0] = F  ; vZ[2] = F  ; vZ[3] = F  ; vZ[1] = F  ;
+            vX[0] = A; vX[2] = A; vX[3] = A; vX[1] = A;
+            vZ[0] = E; vZ[2] = F; vZ[3] = F; vZ[1] = E;
         
             //right side: 6, 4, 5, 7
-            vX[6] = A+2; vX[4] = A  ; vX[5] = A  ; vX[7] = A+2; 
-            vZ[6] = E  ; vZ[4] = E  ; vZ[5] = E  ; vZ[7] = E  ;
+            vX[6] = B; vX[4] = B; vX[5] = B; vX[7] = B; 
+            vZ[6] = F; vZ[4] = E; vZ[5] = E; vZ[7] = F;
             break;
     }
 
