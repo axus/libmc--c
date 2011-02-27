@@ -135,7 +135,7 @@ void BlockDrawer::bindTexture( tex_t index) const
 
 
 //Set glColor if needed by block type and face
-void BlockDrawer::setBlockColor(uint8_t blockID, face_ID face) const
+void BlockDrawer::setBlockColor(uint16_t blockID, face_ID face) const
 {
     //return; Uncomment to disable block coloring
     
@@ -153,6 +153,8 @@ void BlockDrawer::setBlockColor(uint8_t blockID, face_ID face) const
             glColor3ub( red, green, blue);
             break;
         case 18:    //Leaves
+        case (256+18):
+        case (512+18):
             red=leaf_color[0]; green=leaf_color[1]; blue=leaf_color[2];
             glColor3ub( red, green, blue);
             break;
@@ -795,6 +797,66 @@ void BlockDrawer::drawBed( uint8_t blockID, uint8_t meta,
         drawScaledBlock( 256 + blockID + 1, meta, x, y, z, vflags, 1, 0.5, 1);
     }
     //TODO: draw underside up a bit
+}
+
+//Adjust cuboid shape of block
+void BlockDrawer::adjustTexture(uint16_t blockID,
+    GLint off_x, GLint off_y, GLint off_z,
+    GLsizei width, GLsizei height, GLsizei depth)
+{
+    //Scaled texture map ratios (1/block length)
+    GLfloat tmr_x, tmr_y, tmr_z, tmr_off_x, tmr_off_y, tmr_off_z;
+
+    tmr_x  = (width/TILE_LENGTH) * tmr;
+    tmr_y = (height/TILE_LENGTH) * tmr;
+    tmr_z  = (depth/TILE_LENGTH) * tmr;
+    tmr_off_x = fabs(tmr*off_x/TILE_LENGTH);
+    tmr_off_y = fabs(tmr*off_y/TILE_LENGTH);
+    tmr_off_z = fabs(tmr*off_z/TILE_LENGTH);
+    
+    //Sup3r s3(R37 c++ array reference technique
+    GLfloat (&tx_0)[6] = blockInfo[blockID].tx;
+    GLfloat (&ty_0)[6] = blockInfo[blockID].ty;
+    GLfloat (&tx_1)[6] = blockInfo[blockID].tx_1;
+    GLfloat (&ty_1)[6] = blockInfo[blockID].ty_1;
+    
+    //LEFT
+    tx_0[LEFT] = tx_0[LEFT] + tmr_off_z;
+    tx_1[LEFT] = tx_0[LEFT] + tmr_off_z + tmr_z;
+    ty_1[LEFT] = ty_0[LEFT] + tmr_off_y;
+    ty_0[LEFT] = ty_0[LEFT] + tmr_off_y + tmr_y;    //Set ty_0 after ty_1
+    
+    //RIGHT...
+    tx_0[RIGHT] = tx_0[RIGHT] + tmr_off_z + tmr_z;
+    tx_1[RIGHT] = tx_0[RIGHT] + tmr_off_z;
+    ty_1[RIGHT] = ty_0[RIGHT] + tmr_off_y;
+    ty_0[RIGHT] = ty_0[RIGHT] + tmr_off_y + tmr_y;
+    
+    tx_0[BOTTOM] = tx_0[BOTTOM] + tmr_off_x;
+    tx_1[BOTTOM] = tx_0[BOTTOM] + tmr_off_x + tmr_x;
+    ty_1[BOTTOM] = ty_0[BOTTOM] + tmr_off_z;
+    ty_0[BOTTOM] = ty_0[BOTTOM] + tmr_off_z + tmr_z;
+
+    tx_0[TOP] = tx_0[TOP] + tmr_off_x;
+    tx_1[TOP] = tx_0[TOP] + tmr_off_x + tmr_x;
+    ty_1[TOP] = ty_0[TOP] + tmr_off_z;
+    ty_0[TOP] = ty_0[TOP] + tmr_off_z + tmr_z;
+
+    tx_0[BACK] = tx_0[BACK] + tmr_off_x + tmr_x;
+    tx_1[BACK] = tx_0[BACK] + tmr_off_x;
+    ty_1[BACK] = ty_0[BACK] + tmr_off_y;
+    ty_0[BACK] = ty_0[BACK] + tmr_off_y + tmr_y;
+
+    tx_0[FRONT] = tx_0[FRONT] + tmr_off_x;
+    tx_1[FRONT] = tx_0[FRONT] + tmr_off_x + tmr_x;
+    ty_1[FRONT] = ty_0[FRONT] + tmr_off_y;
+    ty_0[FRONT] = ty_0[FRONT] + tmr_off_y + tmr_y;
+
+/*    
+    //Debug coordinates
+    cout << "Front tex coords: (" << tx_0[FRONT]*16 << "," << ty_0[FRONT]*16
+         << ") (" << tx_1[FRONT]*16 << "," << ty_1[FRONT]*16 << ")" << endl;
+*/
 }
 
 //Use OpenGL to draw partial solid cube, with offsets, scale, mirroring
@@ -1670,18 +1732,38 @@ void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
 
 }
 
-//Draw repeater block with torches (meta affects configuration)
-void BlockDrawer::drawRepeater( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
+//Draw diode block with torches (meta affects configuration)
+void BlockDrawer::drawDiode( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: handle angle and base location depend on meta
+    //TODO: handle angle and base orientation depend on meta
     
-    //Redstone torch
-    drawTorch( 75, 0, x, y, z);
+    //Redstone torches depending on metadata
+    uint8_t torchID = Blk::RedTorch;
+    if (meta & 0x08) {
+        torchID = Blk::RedTorchOn;
+    }
+    face_ID facing;
+    switch (meta & 0x03) {
+        default:
+        case 0: facing = FRONT; break;
+        case 1: facing = LEFT; break;
+        case 2: facing = BACK; break;
+        case 3: facing = RIGHT; break;
+    }
     
-    //Cobblestone base
-    drawScaledBlock(4, 0, x, y, z, 0,
-        0.25, 0.25, 0.5, true, 6, 0, 4);
+    drawTorch( Blk::RedTorchOn, 0, x, y, z);
+    
+    //Diode base
+    //drawScaledBlock(blockID, 0, x, y, z, vflags&0x20, 1.0, 0.125, 1.0);
+    
+    //Create vertices for diode base
+                
+    GLint vX[8], vY[8], vZ[8];
+    makeCuboidVertex(x, y, z, 16, 2, 16, vX, vY, vZ, facing);
+    drawVertexBlock( vX, vY, vZ, blockInfo[blockID].tx,
+        blockInfo[blockID].tx_1, blockInfo[blockID].ty,
+        blockInfo[blockID].ty_1, vflags&0x20);
 
 }
 
@@ -1915,56 +1997,62 @@ void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
 
 //Draw a 6-sided volume with specified vertices and tex coords
 void BlockDrawer::drawVertexBlock( GLint vX[8], GLint vY[8], GLint vZ[8],
-    GLfloat tx_0[6], GLfloat tx_1[6],
-    GLfloat ty_0[6], GLfloat ty_1[6], uint8_t vflags ) const
+    const GLfloat tx_0[6], const GLfloat tx_1[6],
+    const GLfloat ty_0[6], const GLfloat ty_1[6], uint8_t vflags ) const
 {
     //Vertex order: Lower left, lower right, top right, top left
     //A side: 0, 2, 3, 1
     if (! (vflags&0x80)) {
-        glTexCoord2f(tx_0[0],ty_0[0]); glVertex3i( vX[0], vY[0], vZ[0]);
-        glTexCoord2f(tx_1[0],ty_0[0]); glVertex3i( vX[2], vY[2], vZ[2]);
-        glTexCoord2f(tx_1[0],ty_1[0]); glVertex3i( vX[3], vY[3], vZ[3]);
-        glTexCoord2f(tx_0[0],ty_1[0]); glVertex3i( vX[1], vY[1], vZ[1]);
+        glTexCoord2f(tx_0[0],ty_1[0]); glVertex3i( vX[0], vY[0], vZ[0]);
+        glTexCoord2f(tx_1[0],ty_1[0]); glVertex3i( vX[2], vY[2], vZ[2]);
+        glTexCoord2f(tx_1[0],ty_0[0]); glVertex3i( vX[3], vY[3], vZ[3]);
+        glTexCoord2f(tx_0[0],ty_0[0]); glVertex3i( vX[1], vY[1], vZ[1]);
     }
     
     //B side: 6, 4, 5, 7
     if (! (vflags&0x40)) {
-        glTexCoord2f(tx_0[1],ty_0[1]); glVertex3i( vX[6], vY[6], vZ[6]);
-        glTexCoord2f(tx_1[1],ty_0[1]); glVertex3i( vX[4], vY[4], vZ[4]);
-        glTexCoord2f(tx_1[1],ty_1[1]); glVertex3i( vX[5], vY[5], vZ[5]);
-        glTexCoord2f(tx_0[1],ty_1[1]); glVertex3i( vX[7], vY[7], vZ[7]);
+        glTexCoord2f(tx_0[1],ty_1[1]); glVertex3i( vX[6], vY[6], vZ[6]);
+        glTexCoord2f(tx_1[1],ty_1[1]); glVertex3i( vX[4], vY[4], vZ[4]);
+        glTexCoord2f(tx_1[1],ty_0[1]); glVertex3i( vX[5], vY[5], vZ[5]);
+        glTexCoord2f(tx_0[1],ty_0[1]); glVertex3i( vX[7], vY[7], vZ[7]);
     }
 
     //Bottom side (C): 0, 4, 6, 2
     if (! (vflags&0x20)) {
-        glTexCoord2f(tx_0[2],ty_0[2]); glVertex3i( vX[0], vY[0], vZ[0]);
-        glTexCoord2f(tx_1[2],ty_0[2]); glVertex3i( vX[4], vY[4], vZ[4]);
-        glTexCoord2f(tx_1[2],ty_1[2]); glVertex3i( vX[6], vY[6], vZ[6]);
-        glTexCoord2f(tx_0[2],ty_1[2]); glVertex3i( vX[2], vY[2], vZ[2]);
+        glTexCoord2f(tx_0[2],ty_1[2]); glVertex3i( vX[0], vY[0], vZ[0]);
+        glTexCoord2f(tx_1[2],ty_1[2]); glVertex3i( vX[4], vY[4], vZ[4]);
+        glTexCoord2f(tx_1[2],ty_0[2]); glVertex3i( vX[6], vY[6], vZ[6]);
+        glTexCoord2f(tx_0[2],ty_0[2]); glVertex3i( vX[2], vY[2], vZ[2]);
     }
     
     //Top side (D): 3, 7, 5, 1
     if (! (vflags&0x10)) {
-        glTexCoord2f(tx_0[3],ty_0[3]); glVertex3f( vX[3], vY[3], vZ[3]);
-        glTexCoord2f(tx_1[3],ty_0[3]); glVertex3f( vX[7], vY[7], vZ[7]);
-        glTexCoord2f(tx_1[3],ty_1[3]); glVertex3f( vX[5], vY[5], vZ[5]);
-        glTexCoord2f(tx_0[3],ty_1[3]); glVertex3f( vX[1], vY[1], vZ[1]);
+        glTexCoord2f(tx_0[3],ty_1[3]); glVertex3f( vX[3], vY[3], vZ[3]);
+        glTexCoord2f(tx_1[3],ty_1[3]); glVertex3f( vX[7], vY[7], vZ[7]);
+        glTexCoord2f(tx_1[3],ty_0[3]); glVertex3f( vX[5], vY[5], vZ[5]);
+        glTexCoord2f(tx_0[3],ty_0[3]); glVertex3f( vX[1], vY[1], vZ[1]);
     }
     
     //E side: 4, 0, 1, 5
     if (! (vflags&0x08)) {
-        glTexCoord2f(tx_0[4],ty_0[4]); glVertex3i( vX[4], vY[4], vZ[4]);
-        glTexCoord2f(tx_1[4],ty_0[4]); glVertex3i( vX[0], vY[0], vZ[0]);
-        glTexCoord2f(tx_1[4],ty_1[4]); glVertex3i( vX[1], vY[1], vZ[1]);
-        glTexCoord2f(tx_0[4],ty_1[4]); glVertex3i( vX[5], vY[5], vZ[5]);
+        glTexCoord2f(tx_0[4],ty_1[4]); glVertex3i( vX[4], vY[4], vZ[4]);
+        glTexCoord2f(tx_1[4],ty_1[4]); glVertex3i( vX[0], vY[0], vZ[0]);
+        glTexCoord2f(tx_1[4],ty_0[4]); glVertex3i( vX[1], vY[1], vZ[1]);
+        glTexCoord2f(tx_0[4],ty_0[4]); glVertex3i( vX[5], vY[5], vZ[5]);
     }
     
     //F side: 2, 6, 7, 3
     if (! (vflags&0x04)) {
-        glTexCoord2f(tx_0[5],ty_0[5]); glVertex3i( vX[2], vY[2], vZ[2]);
-        glTexCoord2f(tx_1[5],ty_0[5]); glVertex3i( vX[6], vY[6], vZ[6]);
-        glTexCoord2f(tx_1[5],ty_1[5]); glVertex3i( vX[7], vY[7], vZ[7]);
-        glTexCoord2f(tx_0[5],ty_1[5]); glVertex3i( vX[3], vY[3], vZ[3]);
+        glTexCoord2f(tx_0[5],ty_1[5]); glVertex3i( vX[2], vY[2], vZ[2]);
+        glTexCoord2f(tx_1[5],ty_1[5]); glVertex3i( vX[6], vY[6], vZ[6]);
+        glTexCoord2f(tx_1[5],ty_0[5]); glVertex3i( vX[7], vY[7], vZ[7]);
+        glTexCoord2f(tx_0[5],ty_0[5]); glVertex3i( vX[3], vY[3], vZ[3]);
+
+/*
+    //Debug coordinates
+    cout << "Front tex coords: (" << tx_0[FRONT]*16 << "," << ty_0[FRONT]*16
+         << ") (" << tx_1[FRONT]*16 << "," << ty_1[FRONT]*16 << ")" << endl;
+*/
     }
     
 }
@@ -1979,6 +2067,16 @@ void BlockDrawer::drawPortal( uint8_t blockID, uint8_t /*meta*/,
         1.0, 1.0, 0.25, true, 0, 0, 8);
 
 }
+
+//Draw fluid, such as water and lava
+void BlockDrawer::drawFluid( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    //TODO: Use metadata and adjacent blocks for flow angles
+    drawCubeMeta( blockID, meta, x, y, z, vflags);
+
+}
+
 
 //Draw fence
 void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
@@ -2100,6 +2198,7 @@ void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
     
     //Look up texture coordinates for signboard
     GLfloat tx0[6], tx1[6], ty0[6], ty1[6];
+
     uint16_t index;
     for (index = 0; index < 6; index++) {
         
@@ -2211,30 +2310,42 @@ void BlockDrawer::setBlockInfo( uint16_t index,
 
     //For each face,  precompute OpenGL texture offsets in texture map
     // (Remember that texture map was loaded upside down!)
-    blockInfo[index].textureID[0] = A;
+    blockInfo[index].textureID[LEFT] = A;
     blockInfo[index].tx[0] = float(A & (texmap_TILES-1))/((float)texmap_TILES);
     blockInfo[index].ty[0] = float(A/texmap_TILES)/((float)texmap_TILES);
+    blockInfo[index].tx_1[0] = blockInfo[index].tx[0] + tmr;
+    blockInfo[index].ty_1[0] = blockInfo[index].ty[0] + tmr;
 
-    blockInfo[index].textureID[1] = B;
+    blockInfo[index].textureID[RIGHT] = B;
     blockInfo[index].tx[1] = float(B & (texmap_TILES-1))/((float)texmap_TILES);
     blockInfo[index].ty[1] = float(B/texmap_TILES)/((float)texmap_TILES);
+    blockInfo[index].tx_1[1] = blockInfo[index].tx[1] + tmr;
+    blockInfo[index].ty_1[1] = blockInfo[index].ty[1] + tmr;
 
-    blockInfo[index].textureID[2] = C;
+    blockInfo[index].textureID[BOTTOM] = C;
     blockInfo[index].tx[2] = float(C & (texmap_TILES-1))/((float)texmap_TILES);
     blockInfo[index].ty[2] = float(C/texmap_TILES)/((float)texmap_TILES);
+    blockInfo[index].tx_1[2] = blockInfo[index].tx[2] + tmr;
+    blockInfo[index].ty_1[2] = blockInfo[index].ty[2] + tmr;
 
-    blockInfo[index].textureID[3] = D;
+    blockInfo[index].textureID[TOP] = D;
     blockInfo[index].tx[3] = float(D & (texmap_TILES-1))/((float)texmap_TILES);
     blockInfo[index].ty[3] = float(D/texmap_TILES)/((float)texmap_TILES);
+    blockInfo[index].tx_1[3] = blockInfo[index].tx[3] + tmr;
+    blockInfo[index].ty_1[3] = blockInfo[index].ty[3] + tmr;
 
-    blockInfo[index].textureID[4] = E;
+    blockInfo[index].textureID[BACK] = E;
     blockInfo[index].tx[4] = float(E & (texmap_TILES-1))/((float)texmap_TILES);
     blockInfo[index].ty[4] = float(E/texmap_TILES)/((float)texmap_TILES);
-    
-    blockInfo[index].textureID[5] = F;
+    blockInfo[index].tx_1[4] = blockInfo[index].tx[4] + tmr;
+    blockInfo[index].ty_1[4] = blockInfo[index].ty[4] + tmr;
+
+    blockInfo[index].textureID[FRONT] = F;
     blockInfo[index].tx[5] = float(F & (texmap_TILES-1))/((float)texmap_TILES);
     blockInfo[index].ty[5] = float(F/texmap_TILES)/((float)texmap_TILES);
-    
+    blockInfo[index].tx_1[5] = blockInfo[index].tx[5] + tmr;
+    blockInfo[index].ty_1[5] = blockInfo[index].ty[5] + tmr;
+
     drawFunction[index] = drawFunc;
 
 }
@@ -2337,149 +2448,242 @@ Normal block = 0x00: cube, dark, opaque, solid
 
 // 11 is the transparent texture
 
-    //Set specific blocks
-    setBlockInfo( 0, 11, 11, 11, 11, 11, 11);     //Air
+    //Air
+    setBlockInfo( Blk::Air, Tex::Web, Tex::Web, Tex::Web,
+        Tex::Web, Tex::Web, Tex::Web);
+        
     setBlockInfo( 1, 1, 1, 1, 1, 1, 1      );     //Stone
+    
     setBlockInfo( 2, 3, 3, 2, 0, 3, 3      );     //Grass
+    
     setBlockInfo( 3, 2, 2, 2, 2, 2, 2      );     //Dirt
+    
     setBlockInfo( 4, 16, 16, 16, 16, 16, 16);     //Cobble
+    
     setBlockInfo( 5, 4, 4, 4, 4, 4, 4      );     //Wood
-         //Sapling
+    
+    //Sapling     
     setBlockInfo( 6, 15, 15, 15, 15, 15, 15, &BlockDrawer::drawItem);
+    
     setBlockInfo( 7, 17, 17, 17, 17, 17, 17);     //Bedrock
-    setBlockInfo( 8, 0xCE, 0xDE, 0xCD, 0xCD, 0xDF, 0xCF);     //Water(*)
-    setBlockInfo( 9, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD);     //WaterStill
-    setBlockInfo( 10, 0xEE, 0xFE, 0xED, 0xED, 0xFF, 0xEF);    //Lava(*)
-    setBlockInfo( 11, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED);    //LavaStill
-    setBlockInfo( 12, 18, 18, 18, 18, 18, 18);    //Sand
-    setBlockInfo( 13, 19, 19, 19, 19, 19, 19);    //Gravel
-    setBlockInfo( 14, 32, 32, 32, 32, 32, 32);    //GoldOre
-    setBlockInfo( 15, 33, 33, 33, 33, 33, 33);    //IronOre
-    setBlockInfo( 16, 34, 34, 34, 34, 34, 34);    //CoalOre
+         //Water(*)
+    setBlockInfo( 8, 0xCE, 0xDE, 0xCD, 0xCD, 0xDF, 0xCF);
+         //WaterStill
+    setBlockInfo( 9, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD);
+        //Lava(*)
+    setBlockInfo( 10, 0xEE, 0xFE, 0xED, 0xED, 0xFF, 0xEF);
+        //LavaStill
+    setBlockInfo( 11, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED);
+        //Sand
+    setBlockInfo( 12, 18, 18, 18, 18, 18, 18);
+        //Gravel
+    setBlockInfo( 13, 19, 19, 19, 19, 19, 19);
+        //GoldOre
+    setBlockInfo( 14, 32, 32, 32, 32, 32, 32);
+        //IronOre
+    setBlockInfo( 15, 33, 33, 33, 33, 33, 33);
+        //CoalOre
+    setBlockInfo( 16, 34, 34, 34, 34, 34, 34);
+    
         //Log
     setBlockInfo( 17, 20, 20, 21, 21, 20, 20,&BlockDrawer::drawTree);
+    
         //Leaves
     setBlockInfo( 18, 52, 52, 52, 53, 52, 52,&BlockDrawer::drawTree);
-    setBlockInfo( 19, 48, 48, 48, 48, 48, 48);    //Sponge
-    setBlockInfo( 20, 49, 49, 49, 49, 49, 49);    //Glass
-    setBlockInfo( 21,160,160,160,160,160,160);    //Lapis Ore
-    setBlockInfo( 22,144,144,144,144,144,144);    //Lapis Block
+        //Sponge
+    setBlockInfo( 19, 48, 48, 48, 48, 48, 48);
+        //Glass
+    setBlockInfo( 20, 49, 49, 49, 49, 49, 49);
+        //Lapis Ore
+    setBlockInfo( 21,160,160,160,160,160,160);
+        //Lapis Block
+    setBlockInfo( 22,144,144,144,144,144,144);
+    
         //Dispenser (*)
     setBlockInfo( 23, 45, 45, 62, 62, 45, 46,&BlockDrawer::drawFaceCube);
-    setBlockInfo( 24,192,192,208,176,192,192);    //Sandstone
-    setBlockInfo( 25, 74, 74, 74, 74, 74, 74);    //Note Block
+        //Sandstone
+    setBlockInfo( 24,192,192,208,176,192,192);
+        //Note Block
+    setBlockInfo( 25, 74, 74, 74, 74, 74, 74);
+        //Bed (*)
+    setBlockInfo( 26,149,152,  4,135,151,151, &BlockDrawer::drawBed);
 
-    setBlockInfo( 26,149,152,  4,135,151,151, &BlockDrawer::drawBed);//Bed (*)
-
-    //26 - 36 = Dyed wool (drawDyed will override metadata)
+    //27 - 36 = Dyed wool (drawDyed will override metadata)
     setBlockInfo( 27, 64, 64, 64, 64, 64, 64);
+    
     setBlockInfo( 28, 64, 64, 64, 64, 64, 64);
+    
     setBlockInfo( 29, 64, 64, 64, 64, 64, 64);
+    
     setBlockInfo( 30, 64, 64, 64, 64, 64, 64);
+    
     setBlockInfo( 31, 64, 64, 64, 64, 64, 64);
+    
     setBlockInfo( 32, 64, 64, 64, 64, 64, 64);
+    
     setBlockInfo( 33, 64, 64, 64, 64, 64, 64);
+    
     setBlockInfo( 34, 64, 64, 64, 64, 64, 64);
+    
     setBlockInfo( 35, 64, 64, 64, 64, 64, 64,&BlockDrawer::drawDyed);
+    
     setBlockInfo( 36, 64, 64, 64, 64, 64, 64);
     
-        //Flower
+    //Flower
     setBlockInfo( 37, 13, 13, 13, 13, 13, 13,&BlockDrawer::drawItem);
-        //Rose
+    
+    //Rose
     setBlockInfo( 38, 12, 12, 12, 12, 12, 12,&BlockDrawer::drawItem);
-        //BrownShroom
+    
+    //BrownShroom
     setBlockInfo( 39, 29, 29, 29, 29, 29, 29,&BlockDrawer::drawItem);
-        //RedShroom
+    
+    //RedShroom
     setBlockInfo( 40, 28, 28, 28, 28, 28, 28,&BlockDrawer::drawItem);
-    setBlockInfo( 41, 23, 23, 23, 23, 23, 23);    //GoldBlock
-    setBlockInfo( 42, 22, 22, 22, 22, 22, 22);    //IronBlock
-        //DoubleStep
+        //GoldBlock
+    setBlockInfo( 41, 23, 23, 23, 23, 23, 23);
+        //IronBlock
+    setBlockInfo( 42, 22, 22, 22, 22, 22, 22);
+    
+    //DoubleStep
     setBlockInfo( 43, 5,  5,  6,  6,  5,  5 ,&BlockDrawer::drawDoubleSlab);
-        //Step
+    
+    //Step
     setBlockInfo( 44, 5,  5,  6,  6,  5,  5,&BlockDrawer::drawSlab);
-    setBlockInfo( 45, 7,  7,  7,  7,  7,  7 );    //Brick
-    setBlockInfo( 46, 8,  8, 10,  9,  8,  8 );    //TNT
-    setBlockInfo( 47, 35, 35, 4,  4,  35, 35);    //Bookshelf
-    setBlockInfo( 48, 36, 36, 16, 36, 36, 36);    //Mossy
-    setBlockInfo( 49, 37, 37, 37, 37, 37, 37);    //Obsidian
-        //Torch
+        //Brick
+    setBlockInfo( 45, 7,  7,  7,  7,  7,  7 );
+        //TNT
+    setBlockInfo( 46, 8,  8, 10,  9,  8,  8 );
+        //Bookshelf
+    setBlockInfo( 47, 35, 35, 4,  4,  35, 35);
+        //Mossy
+    setBlockInfo( 48, 36, 36, 16, 36, 36, 36);
+        //Obsidian
+    setBlockInfo( 49, 37, 37, 37, 37, 37, 37);
+    
+    //Torch
     setBlockInfo( 50, 80, 80, 80, 80, 80, 80,&BlockDrawer::drawTorch);
-        //Fire
+    
+    //Fire
     setBlockInfo( 51, 31, 31, 47, 47, 31, 31,&BlockDrawer::drawFire);
-    setBlockInfo( 52, 65, 65, 65, 65, 65, 65);    //Spawner
-        //WoodStairs
+        //Spawner
+    setBlockInfo( 52, 65, 65, 65, 65, 65, 65);
+    
+    //WoodStairs
     setBlockInfo( 53, 4,  4,  4,  4,  4,  4, &BlockDrawer::drawStairs);
-        //Chest (*)
+    
+    //Chest (*)
     setBlockInfo( 54, 26, 26, 25, 25, 26, 27,&BlockDrawer::drawChest);
-        //Wire (*)
+    
+    //Wire (*)
     setBlockInfo( 55,164,165,164,165,164,165,&BlockDrawer::drawWire);
-    setBlockInfo( 56, 50, 50, 50, 50, 50, 50);    //DiamondOre
-    setBlockInfo( 57, 24, 24, 24, 24, 24, 24);    //DiamondBlock
-    setBlockInfo( 58, 60, 60, 43, 43, 59, 59);    //Workbench
-        //Crops (*)
+        //DiamondOre
+    setBlockInfo( 56, 50, 50, 50, 50, 50, 50);
+        //DiamondBlock
+    setBlockInfo( 57, 24, 24, 24, 24, 24, 24);
+        //Workbench
+    setBlockInfo( 58, 60, 60, 43, 43, 59, 59);
+    
+    //Crops (*)
     setBlockInfo( 59, 88, 89, 90, 91, 93, 95, &BlockDrawer::drawCrops);
+    
     setBlockInfo( 60, 2,  2,  2,  86, 2,  2 );    //Soil
-        //Furnace (+)
+    
+    //Furnace (+)
     setBlockInfo( 61, 45, 45, 62, 62, 45, 44,&BlockDrawer::drawFaceCube);
-        //LitFurnace (+)
+    
+    //LitFurnace (+)
     setBlockInfo( 62, 45, 45, 62, 62, 45, 61,&BlockDrawer::drawFaceCube);
-        //SignPost (*)
+    
+    //SignPost (*)
     setBlockInfo( 63, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawSignpost);
-        //WoodDoor (*)
+    
+    //WoodDoor (*)
     setBlockInfo( 64, 97, 81, 97, 81, 97, 81,&BlockDrawer::drawDoor);
-        //Ladder (*)
+    
+    //Ladder (*)
     setBlockInfo( 65, 83, 83, 83, 83, 83, 83, &BlockDrawer::drawWallItem);
-        //Track (*)
+    
+    //Track (*)
     setBlockInfo( 66, 112,112,128,128,128,128,&BlockDrawer::drawTrack);
-        //CobbleStairs
+    
+    //CobbleStairs
     setBlockInfo( 67, 16, 16, 16, 16, 16, 16,&BlockDrawer::drawStairs);
-        //WallSign (*)
+    
+    //WallSign (*)
     setBlockInfo( 68, 4,  4,  4,  4,  4,  4, &BlockDrawer::drawWallSign);
-        //Lever
+    
+    //Lever
     setBlockInfo( 69, 96, 96, 96, 96, 96, 16,&BlockDrawer::drawLever);
-        //StonePlate
+    
+    //StonePlate
     setBlockInfo( 70, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawFloorplate);
-        //IronDoor (*)
+    
+    //IronDoor (*)
     setBlockInfo( 71, 98, 82, 98, 82, 98, 82,&BlockDrawer::drawDoor);
-        //WoodPlate
+    
+    //WoodPlate
     setBlockInfo( 72, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFloorplate);
+    
     setBlockInfo( 73, 51, 51, 51, 51, 51, 51);    //RedstoneOre
+    
     setBlockInfo( 74, 51, 51, 51, 51, 51, 51);    //RedstoneOreLit(*)
+    
         //RedstoneTorch
     setBlockInfo( 75, 115,115,115,115,115,115,&BlockDrawer::drawTorch);
-        //RedstoneTorchLit
-    setBlockInfo( 76, 99, 99, 99, 99, 99, 99,&BlockDrawer::drawTorch);
-        //StoneButton
-    setBlockInfo( 77, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawButton);
-        //SnowLayer(*)
-    setBlockInfo( 78, 66, 66, 66, 66, 66, 66,&BlockDrawer::draw4thBlock);
-        //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
-    setBlockInfo( 79, 67, 67, 67, 67, 67, 67);    //Ice
-    setBlockInfo( 80, 66, 66, 66, 66, 66, 66);    //SnowBlock
-        //Cactus
-    setBlockInfo( 81, 70, 70, 71, 69, 70, 70,&BlockDrawer::drawCactus);
-    setBlockInfo( 82, 72, 72, 72, 72, 72, 72);    //Clay
-        //Sugarcane (*)
-    setBlockInfo( 83, 73, 73, 73, 73, 73, 73,&BlockDrawer::drawItem);
-    setBlockInfo( 84, 74, 74, 43, 75, 74, 74);    //Jukebox
-        //Fence (*)
-    setBlockInfo( 85, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFence);
-        //Pumpkin
-    setBlockInfo( 86, 118,118,118,102,118,119,&BlockDrawer::drawFaceCube2);
-    setBlockInfo( 87, 103,103,103,103,103,103);    //Netherstone
-    setBlockInfo( 88, 104,104,104,104,104,104);    //SlowSand
-    setBlockInfo( 89, 105,105,105,105,105,105);    //Lightstone
-        //Portal
-    setBlockInfo( 90, 205,206,207,222,223,205,&BlockDrawer::drawPortal);
-        //PumpkinLit
-    setBlockInfo( 91, 118,118,118,102,118,120,&BlockDrawer::drawFaceCube2);
-        //Cake block (*)
-    setBlockInfo( 92, 123,122,124,121,122,122,&BlockDrawer::drawCake);
-        //Repeater
-    setBlockInfo( 93, 147,147,  6,147,147,147,&BlockDrawer::drawRepeater);
-        //Lit Repeater
-    setBlockInfo( 94, 163,163,  6,163,163,163,&BlockDrawer::drawRepeater);
     
+    //RedstoneTorchLit
+    setBlockInfo( 76, 99, 99, 99, 99, 99, 99,&BlockDrawer::drawTorch);
+    
+    //StoneButton
+    setBlockInfo( 77, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawButton);
+    
+    //SnowLayer(*)
+    setBlockInfo( 78, 66, 66, 66, 66, 66, 66,&BlockDrawer::draw4thBlock);
+    
+    //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
+    setBlockInfo( 79, 67, 67, 67, 67, 67, 67);    //Ice
+    
+    setBlockInfo( 80, 66, 66, 66, 66, 66, 66);    //SnowBlock
+    
+    //Cactus
+    setBlockInfo( 81, 70, 70, 71, 69, 70, 70,&BlockDrawer::drawCactus);
+    
+    setBlockInfo( 82, 72, 72, 72, 72, 72, 72);    //Clay
+    
+    //Sugarcane (*)
+    setBlockInfo( 83, 73, 73, 73, 73, 73, 73,&BlockDrawer::drawItem);
+    
+    setBlockInfo( 84, 74, 74, 43, 75, 74, 74);    //Jukebox
+    
+    //Fence (*)
+    setBlockInfo( 85, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFence);
+    
+    //Pumpkin
+    setBlockInfo( 86, 118,118,118,102,118,119,&BlockDrawer::drawFaceCube2);
+    
+    setBlockInfo( 87, 103,103,103,103,103,103);    //Netherstone
+    
+    setBlockInfo( 88, 104,104,104,104,104,104);    //SlowSand
+    
+    setBlockInfo( 89, 105,105,105,105,105,105);    //Lightstone
+    
+    //Portal
+    setBlockInfo( 90, 205,206,207,222,223,205,&BlockDrawer::drawPortal);
+    
+    //PumpkinLit
+    setBlockInfo( 91, 118,118,118,102,118,120,&BlockDrawer::drawFaceCube2);
+    
+    //Cake block (*)
+    setBlockInfo( 92, 123,122,124,121,122,122,&BlockDrawer::drawCake);
+    
+    //Diode off (Repeater)
+    setBlockInfo( Blk::Diode, Tex::Diode_Off, Tex::Diode_Off, Tex::Step_Top,
+    Tex::Diode_Off, Tex::Diode_Off, Tex::Diode_Off, &BlockDrawer::drawDiode);
+    
+    //Diode on (Repeater)
+    setBlockInfo( Blk::DiodeOn, Tex::Diode_On, Tex::Diode_On, Tex::Step_Top,
+    Tex::Diode_On, Tex::Diode_On, Tex::Diode_On, &BlockDrawer::drawDiode);
     
     //extra info for metadata blocks
     
@@ -2522,13 +2726,11 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 256 + 71, 98, 98, 98, 98, 98, 98); //bottom
     setBlockInfo( 256 + 72, 82, 82, 82, 82, 82, 82); //top
 
-//0xF0: Shape : 0=cube, 1=stairs, 2=toggle, 3=halfblock,
-//              4=signpost, 5=ladder, 6=track, 7=fire
-//              8=portal, 9=fence, A=door, B=floorplate
-//              C=snow?, D=wallsign, E=button, F=planted
-//0x08: Bright: 0=dark, 1=lightsource
-//0x04: Vision: 0=opqaue, 1=see-through
-//0x03: State : 0=solid, 1=loose, 2=liquid, 3=gas
+
+    //Adjust cuboid shapes of blocks.  Needed for blocks that are not cubes.
+    adjustTexture(Blk::Diode  , 0,  0,  0, 16,  2, 16);
+    adjustTexture(Blk::DiodeOn, 0,  0,  0, 16,  2, 16);
+
 
     return true;
 }
@@ -2544,6 +2746,23 @@ void BlockDrawer::mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
     
 }
 
+//Look up texture coordinates for block/other
+bool BlockDrawer::getTexInfo(uint16_t blockID, GLfloat tx_0[6], GLfloat tx_1[6],
+    GLfloat ty_0[6], GLfloat ty_1[6])
+{
+
+    uint16_t index;
+    for (index = 0; index < 6; index++) {
+        
+        //Get texture coordinates from TextureInfo
+        TextureInfo *pti = texInfo[ blockInfo[blockID].textureID[index] ];
+        if (pti == NULL) { return false; }
+        pti->getCoords( tx_0[index], tx_1[index], ty_0[index], ty_1[index]);
+    }
+
+    return true;
+}
+
 //Assign vertices for specified cuboid, facing towards direction
 void BlockDrawer::makeCuboidVertex(GLint x0, GLint y0, GLint z0,
     GLsizei width, GLsizei height, GLsizei depth,
@@ -2552,12 +2771,12 @@ void BlockDrawer::makeCuboidVertex(GLint x0, GLint y0, GLint z0,
 ) const
 {
     //Cuboid bounds
-    GLint& A = x0;
-    GLint B = x0 + width;
-    GLint& C = y0;
-    GLint D = y0 + height;
-    GLint& E = z0;
-    GLint F = z0 + depth;
+    GLint A = (x0 << 4);
+    GLint B = (x0 << 4) + width;
+    GLint C = (y0 << 4);
+    GLint D = (y0 << 4) + height;
+    GLint E = (z0 << 4);
+    GLint F = (z0 << 4) + depth;
 
     //Y values of vertices for LEFT, RIGHT, BACK, FRONT
     vY[0] = C; vY[2] = C; vY[3] = D; vY[1] = D;

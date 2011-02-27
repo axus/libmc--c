@@ -65,7 +65,8 @@ namespace mc__ {
             //  VISIBLE     = draw this chunk
             //  UPDATED     = recalculate visible faces, update adjacent, redraw
             //  LOADED      = received complete map chunk from server
-            enum FLAGS { VISIBLE=0x1, UPDATED=0x2, LOADED=0x4, DRAWABLE=0x5, ADJ_UPDATED=0x8};
+            enum FLAGS { VISIBLE=0x1, UPDATED=0x2, LOADED=0x4, DRAWABLE=0x5,
+                ADJ_UPDATED=0x8};
             uint32_t flags;
         protected:
             bool updateVisFlags(uint16_t i, bool adj[6], indexList_t& changes);

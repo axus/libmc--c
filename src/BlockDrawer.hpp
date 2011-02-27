@@ -50,8 +50,10 @@ namespace mc__ {
     //Physical properties, to associate with blockID (internal to engine)
     typedef struct {
         uint16_t textureID[FACE_MAX];  //texture of faces A, B, C, D, E, F
-        GLfloat tx[FACE_MAX];          //X texture coordinate (0.0 - 1.0)
-        GLfloat ty[FACE_MAX];          //Y texture coordinate (0.0 - 1.0)
+        GLfloat tx[FACE_MAX];          //X texture coordinate (0.0)
+        GLfloat ty[FACE_MAX];          //Y texture coordinate (0.0)
+        GLfloat tx_1[FACE_MAX];        //X texture coordinate (1.0)
+        GLfloat ty_1[FACE_MAX];        //Y texture coordinate (1.0)
         uint8_t  properties;
         uint16_t dataOffset;            //If != 0, ID = dataOffset + hitpoints
 
@@ -63,6 +65,7 @@ namespace mc__ {
 
     //Constants
     const size_t texmap_TILE_LENGTH = 16;   //openGL coords per tile
+    const float TILE_LENGTH = 16.0;
     const size_t texmap_TILES = 16;         //tiles in map (1D)
     const unsigned short texmap_TILE_MAX = texmap_TILES * texmap_TILES;
     const uint16_t block_id_MAX = 256;
@@ -151,6 +154,8 @@ namespace mc__ {
             void drawChest(uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             
+            void drawFluid( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawPortal( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFence( uint8_t blockID, uint8_t meta,
@@ -175,7 +180,7 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTorch( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
-            void drawRepeater( uint8_t blockID, uint8_t meta,
+            void drawDiode( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFire( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
@@ -199,15 +204,16 @@ namespace mc__ {
             
             //Draw a 6-sided volume with specified vertices and tex coords
             void drawVertexBlock( GLint vX[8], GLint vY[8], GLint vZ[8],
-                GLfloat tx_0[6], GLfloat tx_1[6],
-                GLfloat ty_0[6], GLfloat ty_1[6], uint8_t visflags=0 ) const;
+                const GLfloat tx_0[6], const GLfloat tx_1[6],
+                const GLfloat ty_0[6], const GLfloat ty_1[6],
+                uint8_t visflags=0 ) const;
 
 
             //Use terrain texture again
             void bindTexture(tex_t bindme) const;
             
             //Use biome color on block face
-            void setBlockColor(uint8_t blockID, face_ID face) const;
+            void setBlockColor(uint16_t blockID, face_ID face) const;
             
             //Initialization functions
             bool loadBlockInfo();
@@ -226,6 +232,15 @@ namespace mc__ {
             //Texture mirror. mirror_type mask: 1=vertical, 2=horizontal
             void mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
                 GLfloat& ty_0, GLfloat& ty_1, uint8_t mirror_type=2) const;
+            
+            //Look up texture coordinates for block/other
+            bool getTexInfo(uint16_t texID, GLfloat tx_0[6], GLfloat tx_1[6],
+                GLfloat ty_0[6], GLfloat ty_1[6]);
+            
+            //Adjust cuboid shape of block
+            void adjustTexture(uint16_t blockID,
+                GLint off_x, GLint off_y, GLint off_z,
+                GLsizei width, GLsizei height, GLsizei depth);
             
             //Assign vertices for cuboid
             void makeCuboidVertex(GLint x0, GLint y0, GLint z0,

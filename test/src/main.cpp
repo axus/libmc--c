@@ -239,6 +239,33 @@ void genWorld(World& world)
     delete chunk1;
 
     //
+    // Diode test
+    //
+    chunk1 = new mc__::Chunk( 7, 0, 3, -24, 64, 20);   //8x4 area for diodes
+    mc__::Block diodeBlock = { 93, 0, 0, 0};
+    chunk1->block_array[0] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[2] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[5] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[7] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[8] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[10] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[13] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[15] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[16] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[18] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[21] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[23] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[24] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[26] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[29] = diodeBlock; diodeBlock.metadata++;
+    chunk1->block_array[31] = diodeBlock;
+    //Add the chunk
+    world.addMapChunk(chunk1);    
+    delete chunk1;
+
+
+
+    //
     //  Raised redstone, floorplate, and ladder test
     //
     chunk1 = new mc__::Chunk(3, 1, 3, -8, 65, 9);   //4x2x4 chunk
