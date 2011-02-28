@@ -59,13 +59,11 @@ UserInterface::UserInterface(
             Player& p, Events& ev, bool dbg):
 
     //initialize objects here
-    texture_map_filename("terrain.png"),    //block textures
-    item_icon_filename("items.png"),        //item icons
     mouseSensitivity(UI_mouse_sensitivity), //Mouselook sensitivity
     Settings(UI_bpp, 0, 0),                 //32bpp, 0 stencil, 0 anti-aliasing
     App(sf::VideoMode(UI_width, UI_height, UI_bpp), //860x480, 32-bit color
         name, sf::Style::Resize|sf::Style::Close, Settings),    //Resizable
-    viewer(UI_width, UI_height),
+    viewer(&w, UI_width, UI_height),
     world(w), mobiles(m), player(p), events(ev), debugging(dbg),
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window
@@ -96,8 +94,13 @@ UserInterface::UserInterface(
     status_string.SetSize(20);
     status_string.Move(10.f, 10.f);
 
+    //Get texture
+    texture_files[TEX_TERRAIN] = string("terrain.png");  //block textures
+    texture_files[TEX_ITEM] = string("items.png");       //item icons
+    texture_files[TEX_SIGN] = string("item/sign.png");   //signpost texture
+
     //Load textures   //TODO: configurable
-    viewer.init(texture_map_filename, item_icon_filename, true);
+    viewer.init(texture_files, true);
 
     //Reset camera
     resetCamera();
@@ -118,7 +121,6 @@ UserInterface::UserInterface(
 
     //Clear the window
     viewer.clear();
-    //viewer.drawWorld(world);
 
     App.Display();
 }
@@ -503,7 +505,7 @@ bool UserInterface::handleKeys()
     bool movement[MOVE_COUNT] = {false, false, false, false, false, false, false, false};
     
     //Handle single keypresses in order
-    if (keys_typed >= 1024) { keys_typed = 1024; }
+    if (keys_typed >= 1024) { keys_typed = 1024; }  //Can anyone type that fast?
     for( index = 0; index < keys_typed; index++) {
       
         //Game in "PLAYING" state... Do something else for text input
@@ -560,6 +562,11 @@ bool UserInterface::handleKeys()
             //Toggle status display
             case sf::Key::F3:
                 showStatus = !showStatus;
+                break;
+            //Write block information near camera
+            case sf::Key::F4:
+                viewer.saveLocalBlocks(world);
+                cout << "Wrote nearby block info to local_blocks.txt" << endl;
                 break;
             //Redraw everything
             case sf::Key::F5:
@@ -627,24 +634,30 @@ bool UserInterface::handleKeys()
         viewer.leaf_color[2] += 2;
     }
 
+    //Movement speed, changes if Shift key is held
+    GLfloat moveRate = 4.0;
+    if (key_held[sf::Key::LShift] || key_held[sf::Key::RShift]) {
+        moveRate = 2.0;
+    }
+
     //Finally, move the viewer based on movement options
     if (movement[MOVE_BACK]) {
-        viewer.move(0, 0, -4);
+        viewer.move(0, 0, -moveRate);
     }
     if (movement[MOVE_FORWARD]) {
-        viewer.move(0, 0, 4);
+        viewer.move(0, 0, moveRate);
     }
     if (movement[MOVE_LEFT]) {
-        viewer.move(-4, 0, 0);
+        viewer.move(-moveRate, 0, 0);
     }
     if (movement[MOVE_RIGHT]) {
-        viewer.move(4, 0, 0);
+        viewer.move(moveRate, 0, 0);
     }
     if (movement[MOVE_UP]) {
-        viewer.move(0, 4, 0);
+        viewer.move(0, moveRate, 0);
     }
     if (movement[MOVE_DOWN]) {
-        viewer.move(0, -4, 0);
+        viewer.move(0, -moveRate, 0);
     }
     if (movement[TURN_LEFT]) {
         viewer.turn(-5);
@@ -656,7 +669,7 @@ bool UserInterface::handleKeys()
     return result;
 }
 
-//Responses to keys read from key buffer during PLAYING (not CHAT or CONFIG)
+//Additional key responses.  Override this if you don't want to rewrite
 void UserInterface::customHandleKey(sf::Key::Code keycode)
 {
     switch (keycode) {

@@ -162,18 +162,18 @@ void Chunk::packBlocks()
         
         //Pack the metadata and sky (don't care if odd number of blocks)
         if (!half_byte) {
-            byte_array[off_meta] |= (block->metadata << 4);
-            byte_array[off_sky] = (block->lighting << 4);
+            byte_array[off_meta] |= (block->metadata & 0x0F);
+            byte_array[off_sky] |= (block->lighting & 0x0F);
         } else {
-            byte_array[off_meta] |= (block->metadata & 0x0F); off_meta++;
-            byte_array[off_sky] |= (block->lighting & 0x0F); off_sky++;
+            byte_array[off_meta] |= (block->metadata << 4); off_meta++;
+            byte_array[off_sky] = (block->lighting << 4); off_sky++;
         }
         
         //Pack block light (depends on odd number of blocks)
         if (half_byte ^ odd_size) {
-            byte_array[off_light] |= (block->lighting >> 4); off_light++;
+            byte_array[off_light] |= (block->lighting & 0xF0); off_light++;
         } else {
-            byte_array[off_light] |= (block->lighting & 0xF0);
+            byte_array[off_light] |= (block->lighting >> 4);
         }
                 
         //Toggle half-byte status, go to next block
@@ -210,25 +210,26 @@ bool Chunk::unpackBlocks(bool free_packed)
         block = block_array + index;
         block->blockID = byte_array[index];
 
+        //Unpack half-bytes: low 4 bits first, high 4 bits second
         //Unpack the metadata, light, and sky, according to half-byte
         if (!half_byte) {
-            block->metadata = (byte_array[off_meta] >> 4);
-            block->lighting = (byte_array[off_sky] >> 4);
-        } else {
             block->metadata = (byte_array[off_meta] & 0x0F);
             block->lighting = (byte_array[off_sky] & 0x0F);
+        } else {
+            block->metadata = (byte_array[off_meta] >> 4);
+            block->lighting = (byte_array[off_sky] >> 4);
             off_meta++;
             off_sky++;
         }
 
         //Unpack block light depending on odd_size and half-byte
         if (half_byte ^ odd_size) {
-            block->lighting |= ((byte_array[off_light] & 0x0F) << 4);
+            block->lighting |= (byte_array[off_light] & 0xF0);
             off_light++;
         } else {
-            block->lighting |= (byte_array[off_light] & 0xF0);
+            block->lighting |= ((byte_array[off_light] & 0x0F) << 4);
         }
-        
+
         //Toggle half-byte status, go to next block
         half_byte = !half_byte;
     }
@@ -403,7 +404,8 @@ const bool mc__::Chunk::isOpaque[] = {
     true,   //23 Dispenser
     true,   //24 Sandstone
     true,   //25 Note Block
-    true, true, true, //Cloth
+    false,  //26 Bed
+    true, true, //Cloth
     true, true, true, true, true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
@@ -461,8 +463,8 @@ const bool mc__::Chunk::isOpaque[] = {
     false,  //90 Portal (??)
     true,   //91 PumpkinLit
     false,  //92 Cake
-    true,   //93
-    true,   //94
+    false,  //93 Repeater off
+    false,  //94 Repeater on
     true    //95
 };
 
@@ -495,7 +497,8 @@ const bool mc__::Chunk::isCube[] = {
     true,   //23 Dispenser
     true,   //24 Sandstone
     true,   //25 Note Block
-    true, true, true, //Cloth
+    false,  //26 Bed
+    true, true, //Cloth
     true, true, true, true, true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
@@ -553,8 +556,8 @@ const bool mc__::Chunk::isCube[] = {
     false,  //90 Portal (??)
     true,   //91 PumpkinLit
     false,  //92 Cake
-    true,   //93
-    true,   //94
+    false,  //93 Repeater
+    false,  //94 Repeater On
     true    //95
 };
 
@@ -586,7 +589,7 @@ const char* Chunk::Name[] = {
     "Dispesner",
     "Sandstone",
     "Note Block",
-    "Aqua-green Cloth",
+    "Bed",
     "Cyan Cloth",
     "Blue Cloth",
     "Purple Cloth",
@@ -653,6 +656,8 @@ const char* Chunk::Name[] = {
     "Portal",
     "Jack-O-Lantern",
     "Cake",
+    "Repeater",
+    "Repeater Lit",
     "Unknown",
     "Unknown",
     "Unknown",
@@ -674,6 +679,96 @@ const char* Chunk::Name[] = {
     "Unknown",
     "Unknown",
     "Unknown",
-    "Unknown",
-    "Unknown",
+};
+
+//Check if block is part of redstone circuit
+const bool mc__::Chunk::isLogic[] = {
+    false,  // 0 Air
+    false,  // 1 Stone
+    false,  // 2 Grass
+    false,  // 3 Dirt
+    false,  // 4 Cobble
+    false,  // 5 Wood
+    false,  // 6 Sapling
+    false,  // 7 Bedrock
+    false,  // 8 Water(*)
+    false,  // 9 WaterStill
+    false,  //10 Lava(*)
+    false,  //11 LavaStill
+    false,  //12 Sand
+    false,  //13 Gravel
+    false,  //14 GoldOre
+    false,  //15 IronOre
+    false,  //16 CoalOre
+    false,  //17 Log
+    false,  //18 Leaves
+    false,  //19 Sponge
+    false,  //20 Glass
+    false,  //21 Lapis Ore
+    false,  //22 Lapis Block
+    true,   //23 Dispenser  (different from vanilla client)
+    false,  //24 Sandstone
+    true,   //25 Note Block (different from vanilla client)
+    false,  //26 Bed
+    false, false, //Cloth
+    false, false, false, false, false, false, false, false, //Cloth
+    false,  //37 Flower
+    false,  //38 Rose
+    false,  //39 BrownShroom
+    false,  //40 RedShroom
+    false,  //41 GoldBlock
+    false,  //42 IronBlock
+    false,  //43 DoubleStep
+    false,  //44 Step
+    false,  //45 Brick
+    false,  //46 TNT
+    false,  //47 Bookshelf
+    false,  //48 Mossy
+    false,  //49 Obsidian
+    false,  //50 Torch
+    false,  //51 Fire
+    false,  //52 Spawner
+    false,  //53 WoodStairs
+    false,  //54 Chest (*)
+    true,   //55 Wire (*)
+    false,  //56 DiamondOre
+    false,  //57 DiamondBlock
+    false,  //58 Workbench
+    false,  //59 Crops (*)
+    false,  //60 Soil
+    false,  //61 Furnace
+    false,  //62 LitFurnace
+    false,  //63 SignPost (*)
+    false,  //64 WoodDoor (*)
+    false,  //65 Ladder (*)
+    false,  //66 Track (*)
+    false,  //67 CobbleStairs
+    false,  //68 WallSign (*)
+    true,   //69 Lever
+    true,   //70 StonePlate
+    false,  //71 IronDoor (*)
+    true,   //72 WoodPlate
+    true,   //73 RedstoneOre
+    true,   //74 RedstoneOreLit(*)
+    true,   //75 RedstoneTorch
+    true,   //76 RedstoneTorchLit
+    true,   //77 StoneButton
+    false,  //78 SnowCover
+    false,  //79 Ice
+    false,  //80 Snow
+    false,  //81 Cactus
+    false,  //82 Clay
+    false,  //83 Sugarcane (*)
+    false,  //84 Jukebox
+    false,  //85 Fence (*)
+    false,  //86 Pumpkin
+    false,  //87 Netherstone
+    false,  //88 91 SlowSand
+    false,  //89 Lightstone
+    false,  //90 Portal (??)
+    false,  //91 PumpkinLit
+    false,  //92 Cake
+    true,   //93 Repeater
+    true,   //94 Repeater Off
+    false   //95
 };

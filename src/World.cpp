@@ -174,7 +174,7 @@ mc__::MapChunk* World::getChunk(int32_t X, int32_t Z)
 {
     mc__::MapChunk* result=NULL;
     
-    uint64_t key = getKey(X, Z);
+    uint64_t key = getKey(X&0xFFFFFFF0, Z&0xFFFFFFF0);
     XZMapChunk_t::const_iterator iter_xz = coordMapChunks.find(key);
     if (iter_xz != coordMapChunks.end()) {
         result = iter_xz->second;
@@ -227,6 +227,23 @@ mc__::Chunk* World::newChunk(int32_t X, int8_t Y, int32_t Z,
     
     //Return chunk at location    
     return chunk;
+}
+
+//Return copy of block at X,Y,Z (0xFF if failed)
+mc__::Block World::getBlock(int32_t X, int8_t Y, int32_t Z) const {
+    
+    //Return "air" if not found.
+    mc__::Block result = {0, 0, 0, 0};
+    
+    const Chunk *chunk = getChunk( X&0xFFFFFFF0, Z&0xFFFFFFF0);
+    if (chunk != NULL && Y >= 0)
+    {
+        //Get block @ X,Y,Z
+        uint16_t index = ((X&0xF)<<11)|((Z&0xF)<<7)|(Y&0x7F);
+        result = chunk->block_array[index];
+    }
+    
+    return result;
 }
 
 //Unzip/copy one mini-chunk to appropriate map chunk
@@ -452,8 +469,12 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     
     //Add top to doors
     firstBlockArray[3].blockID = 64;
+    firstBlockArray[3].metadata |= 0x8;
     firstBlockArray[3 + size_Y*7].blockID = 71;
+    firstBlockArray[3 + size_Y*7].metadata |= 0x8;
     
+    //Set cactus metadata
+    firstBlockArray[size_Y].metadata = 15;
 
     //Add chunk to map
     bool result=addMapChunk(testChunk );
@@ -612,13 +633,14 @@ bool World::genWall(int32_t X, int8_t Y, int32_t Z,
 
 //Generate a leafy tree with base at (X,Y,Z), chunk origin will be different
 bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
-    uint8_t size_X, uint8_t size_Y, uint8_t size_Z, uint8_t leavesID)
+    uint8_t size_X, uint8_t size_Y, uint8_t size_Z, uint8_t metadata)
 {
     //Offsets
     uint8_t off_x, off_y, off_z;
     
     //Block ID for log
     const uint8_t logID=17;
+    const uint8_t leavesID=18;
     
     //Calculate chunk origin
     int32_t origin_X = X - size_X/2;
@@ -637,7 +659,7 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
         origin_X, Y, origin_Z);
     
     //Allocate array of blocks
-    Block *&firstBlockArray = treeChunk->block_array;
+    Block *&blocks = treeChunk->block_array;
 
     //index = y + (z * (Size_Y+1)) + (x * (Size_Y+1) * (Size_Z+1))
     size_t index=0;
@@ -673,16 +695,16 @@ bool World::genTree(const int32_t X, const int8_t Y, const int32_t Z,
                     }
                 }
         
-                //Assign block ID and increment
-                firstBlockArray[index].blockID = ID;
+                //Assign block ID
+                blocks[index].blockID = ID;
+                //Assign metadata if not "air"
+                if (ID != 0) {
+                    blocks[index].metadata = metadata;
+                }
                 index++;
             }
         }
     }
-
-    //Pack blocks in chunk, and zip
-    //treeChunk->packBlocks();
-    //treeChunk->zip();
 
     //Map (X | Z | Y) -> Chunk*
     bool result=addMapChunk(treeChunk );
