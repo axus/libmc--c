@@ -180,6 +180,8 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTorch( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawTorchOffset( uint8_t blockID, GLint x, GLint y, GLint z,
+                GLint off_x=0, GLint off_y=0, GLint off_z=0) const;
             void drawDiode( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFire( uint8_t blockID, uint8_t meta,

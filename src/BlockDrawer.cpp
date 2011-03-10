@@ -820,43 +820,40 @@ void BlockDrawer::adjustTexture(uint16_t blockID,
     GLfloat (&tx_1)[6] = blockInfo[blockID].tx_1;
     GLfloat (&ty_1)[6] = blockInfo[blockID].ty_1;
     
+    //Careful, adjust tx_1 and ty_1 before tx_0 and ty_0
+    
     //LEFT
-    tx_0[LEFT] = tx_0[LEFT] + tmr_off_z;
     tx_1[LEFT] = tx_0[LEFT] + tmr_off_z + tmr_z;
+    tx_0[LEFT] = tx_0[LEFT] + tmr_off_z;
     ty_1[LEFT] = ty_0[LEFT] + tmr_off_y;
     ty_0[LEFT] = ty_0[LEFT] + tmr_off_y + tmr_y;    //Set ty_0 after ty_1
     
     //RIGHT...
-    tx_0[RIGHT] = tx_0[RIGHT] + tmr_off_z + tmr_z;
     tx_1[RIGHT] = tx_0[RIGHT] + tmr_off_z;
+    tx_0[RIGHT] = tx_0[RIGHT] + tmr_off_z + tmr_z;
     ty_1[RIGHT] = ty_0[RIGHT] + tmr_off_y;
     ty_0[RIGHT] = ty_0[RIGHT] + tmr_off_y + tmr_y;
     
-    tx_0[BOTTOM] = tx_0[BOTTOM] + tmr_off_x;
     tx_1[BOTTOM] = tx_0[BOTTOM] + tmr_off_x + tmr_x;
+    tx_0[BOTTOM] = tx_0[BOTTOM] + tmr_off_x;
     ty_1[BOTTOM] = ty_0[BOTTOM] + tmr_off_z;
     ty_0[BOTTOM] = ty_0[BOTTOM] + tmr_off_z + tmr_z;
 
-    tx_0[TOP] = tx_0[TOP] + tmr_off_x;
     tx_1[TOP] = tx_0[TOP] + tmr_off_x + tmr_x;
+    tx_0[TOP] = tx_0[TOP] + tmr_off_x;
     ty_1[TOP] = ty_0[TOP] + tmr_off_z;
     ty_0[TOP] = ty_0[TOP] + tmr_off_z + tmr_z;
 
-    tx_0[BACK] = tx_0[BACK] + tmr_off_x + tmr_x;
     tx_1[BACK] = tx_0[BACK] + tmr_off_x;
+    tx_0[BACK] = tx_0[BACK] + tmr_off_x + tmr_x;
     ty_1[BACK] = ty_0[BACK] + tmr_off_y;
     ty_0[BACK] = ty_0[BACK] + tmr_off_y + tmr_y;
 
-    tx_0[FRONT] = tx_0[FRONT] + tmr_off_x;
     tx_1[FRONT] = tx_0[FRONT] + tmr_off_x + tmr_x;
+    tx_0[FRONT] = tx_0[FRONT] + tmr_off_x;
     ty_1[FRONT] = ty_0[FRONT] + tmr_off_y;
     ty_0[FRONT] = ty_0[FRONT] + tmr_off_y + tmr_y;
 
-/*    
-    //Debug coordinates
-    cout << "Front tex coords: (" << tx_0[FRONT]*16 << "," << ty_0[FRONT]*16
-         << ") (" << tx_1[FRONT]*16 << "," << ty_1[FRONT]*16 << ")" << endl;
-*/
 }
 
 //Use OpenGL to draw partial solid cube, with offsets, scale, mirroring
@@ -1732,35 +1729,133 @@ void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
 
 }
 
+
+//Draw torch on ground, offset by small amount from center (used for diode)
+void BlockDrawer::drawTorchOffset( uint8_t blockID, GLint x, GLint y, GLint z,
+    GLint off_x, GLint off_y, GLint off_z) const
+{
+
+    //Look up texture coordinates for the item
+    GLfloat tx_0 = blockInfo[blockID].tx[LEFT];
+    GLfloat tx_1 = blockInfo[blockID].tx[LEFT] + tmr;
+    GLfloat ty_0 = blockInfo[blockID].ty[LEFT] + tmr;    //flip y
+    GLfloat ty_1 = blockInfo[blockID].ty[LEFT];
+    
+    //pieces of torch texture (used for top and bottom)
+    GLfloat tx_m1 = blockInfo[blockID].tx[LEFT] + tmr*7.0/16.0;
+    GLfloat tx_m2 = blockInfo[blockID].tx[LEFT] + tmr*9.0/16.0;
+    GLfloat ty_m1 = blockInfo[blockID].ty[LEFT] + tmr*8.0/16.0;
+    GLfloat ty_m2 = blockInfo[blockID].ty[LEFT] + tmr*6.0/16.0;
+    GLfloat ty_b1 = blockInfo[blockID].ty[LEFT] + tmr*14.0/16.0;
+    GLfloat ty_b2 = blockInfo[blockID].ty[LEFT] + tmr;
+
+    //Cube boundaries
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    
+    //torch top (10/16 block over bottom)
+    GLint H = C + 10;
+
+    //Vertices of "parallelocube"
+    GLint vX[8], vY[8], vZ[8];
+    
+    //A: 0, 2, 3, 1
+    vX[0] = A; vX[1] = A; vX[2] = A; vX[3] = A;
+    vY[0] = C; vY[1] = D; vY[2] = C; vY[3] = D;
+    vZ[0] = E; vZ[1] = E; vZ[2] = F; vZ[3] = F;
+
+    //B: 6, 4, 5, 7
+    vX[6] = B; vX[4] = B; vX[5] = B; vX[7] = B;
+    vY[6] = C; vY[4] = C; vY[5] = D; vY[7] = D;
+    vZ[6] = F; vZ[4] = E; vZ[5] = E; vZ[7] = F;
+
+    //Edge offsets for faces of torch
+    GLint AC = 7, AD = 7, BC = -7, BD = -7, EC = 7, ED = 7, FC = -7, FD = -7;
+    
+    //Torch offsets
+    GLint dY = off_y, dXC = off_x, dXD = off_x, dZC = off_z, dZD = off_z;
+
+    //Vertex order: Lower left, lower right, top right, top left
+    //A side: 0, 2, 3, 1
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[0]+AC, vY[0]+dY, dZC+vZ[0]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[2]+AC, vY[2]+dY, dZC+vZ[2]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[3]+AD, vY[3]+dY, dZD+vZ[3]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[1]+AD, vY[1]+dY, dZD+vZ[1]);
+    //B side: 6, 4, 5, 7
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[6]+BC, vY[6]+dY, dZC+vZ[6]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[4]+BC, vY[4]+dY, dZC+vZ[4]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[5]+BD, vY[5]+dY, dZD+vZ[5]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[7]+BD, vY[7]+dY, dZD+vZ[7]);
+    //E side: 4, 0, 1, 5
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[4], vY[4]+dY, dZC+vZ[4]+EC);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[0], vY[0]+dY, dZC+vZ[0]+EC);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[1], vY[1]+dY, dZD+vZ[1]+ED);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[5], vY[5]+dY, dZD+vZ[5]+ED);
+    //F side: 2, 6, 7, 3
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[2], vY[2]+dY, dZC+vZ[2]+FC);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[6], vY[6]+dY, dZC+vZ[6]+FC);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[7], vY[7]+dY, dZD+vZ[7]+FD);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[3], vY[3]+dY, dZD+vZ[3]+FD);
+    
+    //Bottom side (C): 0, 4, 6, 2
+    glTexCoord2f(tx_m1,ty_b1); glVertex3i( dXC+vX[0]+AC, C+dY, dZC+vZ[0]+EC);
+    glTexCoord2f(tx_m2,ty_b1); glVertex3i( dXC+vX[4]+BC, C+dY, dZC+vZ[4]+EC);
+    glTexCoord2f(tx_m2,ty_b2); glVertex3i( dXC+vX[6]+BC, C+dY, dZC+vZ[6]+FC);
+    glTexCoord2f(tx_m1,ty_b2); glVertex3i( dXC+vX[2]+AC, C+dY, dZC+vZ[2]+FC);
+    
+    //Calculate offsets of torch top (linear interpolation of XC<->XD, ZC<->ZD)
+    GLfloat dX = (10*dXD + 6*dXC)/16.0;
+    GLfloat dZ = (10*dZD + 6*dZC)/16.0;
+    //Top side (D): 3, 7, 5, 1
+    glTexCoord2f(tx_m1,ty_m1); glVertex3f( dX+vX[3]+AD, H+dY, dZ+vZ[3]+FD);
+    glTexCoord2f(tx_m2,ty_m1); glVertex3f( dX+vX[7]+BD, H+dY, dZ+vZ[7]+FD);
+    glTexCoord2f(tx_m2,ty_m2); glVertex3f( dX+vX[5]+BD, H+dY, dZ+vZ[5]+ED);
+    glTexCoord2f(tx_m1,ty_m2); glVertex3f( dX+vX[1]+AD, H+dY, dZ+vZ[1]+ED);
+
+}
+
+
 //Draw diode block with torches (meta affects configuration)
 void BlockDrawer::drawDiode( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-    //TODO: handle angle and base orientation depend on meta
-    
-    //Redstone torches depending on metadata
+    //Redstone torches depending on blockID
     uint8_t torchID = Blk::RedTorch;
-    if (meta & 0x08) {
+    if (blockID == Blk::DiodeOn) {
         torchID = Blk::RedTorchOn;
     }
+    
+    //Determine delay (affects torch position)
+    GLint off_x_1=0, off_z_1=0, off_x_2=0, off_z_2=0, delay_offset=1;
+    delay_offset = 1 - ((meta & 0xC) >> 1);
+
+    //Determine direction.  Needed for top texture
     face_ID facing;
     switch (meta & 0x03) {
         default:
-        case 0: facing = FRONT; break;
-        case 1: facing = LEFT; break;
-        case 2: facing = BACK; break;
-        case 3: facing = RIGHT; break;
+        case 0: facing = BACK; off_z_1=-5; off_z_2=-delay_offset;
+            break;
+        case 1: facing = RIGHT;  off_x_1=5; off_x_2=delay_offset;
+            break;
+        case 2: facing = FRONT;  off_z_1=5; off_z_2=delay_offset;
+            break;
+        case 3: facing = LEFT; off_x_1=-5; off_x_2=-delay_offset;
+            break;
     }
-    
-    drawTorch( Blk::RedTorchOn, 0, x, y, z);
-    
-    //Diode base
-    //drawScaledBlock(blockID, 0, x, y, z, vflags&0x20, 1.0, 0.125, 1.0);
+
+    //Draw the redstone torches    
+    drawTorchOffset( torchID, x, y, z, off_x_1, 0, off_z_1);
+    drawTorchOffset( torchID, x, y, z, off_x_2, 0, off_z_2);
     
     //Create vertices for diode base
-                
     GLint vX[8], vY[8], vZ[8];
     makeCuboidVertex(x, y, z, 16, 2, 16, vX, vY, vZ, facing);
+    
+    //Draw diode base
     drawVertexBlock( vX, vY, vZ, blockInfo[blockID].tx,
         blockInfo[blockID].tx_1, blockInfo[blockID].ty,
         blockInfo[blockID].ty_1, vflags&0x20);
