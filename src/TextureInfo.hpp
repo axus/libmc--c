@@ -80,7 +80,7 @@ namespace mc__ {
             Cake_Bottom, Track=128, Wool_Red, Wool_Pink, Diode_Off,
             Leaf2=132, Leaf3, BedFoot_Top, BedHead_Top, 
             Cake=140, LapisBlock=144, Wool_DarkGreen, Wool_Green, Diode_On,
-            BedFoot_Side, BedFoot_Face, BedHead_Face, BedHead_Side,
+            BedFoot_Side=149, BedFoot_Face, BedHead_Face, BedHead_Side,
             LapisOre=160, Wool_Brown, Wool_Yellow, WireX, Wire,
             SandStone_Top=176, Wool_Blue,
             Wool_LightBlue, Sandstone_Side=192, Wool_Purple, Wool_Magenta,

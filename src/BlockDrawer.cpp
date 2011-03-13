@@ -2601,7 +2601,8 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Note Block
     setBlockInfo( 25, 74, 74, 74, 74, 74, 74);
         //Bed (*)
-    setBlockInfo( 26,149,152,  4,135,151,151, &BlockDrawer::drawBed);
+    setBlockInfo( 26,Tex::BedFoot_Side,Tex::BedFoot_Side,  4, Tex::BedFoot_Top,
+        Tex::BedFoot_Face,Tex::BedFoot_Face, &BlockDrawer::drawBed);
 
     //27 - 36 = Dyed wool (drawDyed will override metadata)
     setBlockInfo( 27, 64, 64, 64, 64, 64, 64);
@@ -2790,8 +2791,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133);
     
     //Bed 
-    setBlockInfo( 256 + 26, 149, 152, 4, 134, 150, 150);    //foot
-    setBlockInfo( 256 + 27, 152, 152, 4, 135, 151, 151);    //head
+    setBlockInfo( 256 + 26, Tex::BedFoot_Side, Tex::BedFoot_Side, 4,
+        Tex::BedFoot_Top, Tex::BedFoot_Face, Tex::BedFoot_Face);    //foot
+    setBlockInfo( 256 + 27, Tex::BedHead_Side, Tex::BedHead_Side, 4,
+        Tex::BedHead_Top, Tex::BedHead_Face, Tex::BedHead_Face);    //foot
     
     //Dyed wool (256 + 35 + metadata)
     setBlockInfo( 256 + 35, 64, 64, 64, 64, 64, 64);
