@@ -787,19 +787,88 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawBed( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+
+    //Top or bottom half
+    bool top_half = ((meta & 0x8) != 0);
     
-    //Use metadata to determine which half!
-    if (meta) {
-        //Draw top half
-        drawScaledBlock( 256 + blockID, meta, x, y, z, vflags, 1, 0.5, 1);
-    } else {
-        //Draw bottom half
-        drawScaledBlock( 256 + blockID + 1, meta, x, y, z, vflags, 1, 0.5, 1);
+    //Direction of block depends on metadata.
+    //  drawVertexBlock rotates the block depending on facing,
+    //  and the vflags rotate with it!
+    face_ID facing;
+    switch (meta & 0xB) {
+        //Direction
+        case 0x0: facing = LEFT;  vflags |= 0x04; break;
+        case 0x1: facing = BACK;  vflags |= 0x80; break;
+        case 0x2: facing = RIGHT; vflags |= 0x08; break;
+        case 0x3: facing = FRONT; vflags |= 0x40; break;
+        case 0x8: facing = LEFT;  vflags |= 0x08; break;
+        case 0x9: facing = BACK;  vflags |= 0x40; break;
+        case 0xA: facing = RIGHT; vflags |= 0x04; break;
+        case 0xB: facing = FRONT; vflags |= 0x80; break;
+        default:  facing = FRONT;
     }
-    //TODO: draw underside up a bit
+    // facing points to right side of pillow
+    
+    //Use block ID offset for top or bottom half of bed
+    uint16_t blockOffset = blockID + 256;
+    if ( top_half ) {
+        blockOffset++;
+    }
+    const BlockInfo& binfo = blockInfo[blockOffset];
+
+    //Create vertices for bed half
+    GLint vX[8], vY[8], vZ[8];
+    makeCuboidVertex(x, y, z, 16, 9, 16, vX, vY, vZ, facing);
+    
+    //Draw bed half.  Always remove bottom.
+    drawVertexBlock( vX, vY, vZ, binfo.tx, binfo.tx_1, binfo.ty, binfo.ty_1,
+        vflags |= 0x20, facing);
+
+    //Draw the bottom, raised by 3/16
+    glTexCoord2f(binfo.tx[2],binfo.ty_1[2]);
+    glVertex3i( vX[0], vY[0]+3, vZ[0]);
+    
+    glTexCoord2f(binfo.tx_1[2],binfo.ty_1[2]);
+    glVertex3i( vX[4], vY[4]+3, vZ[4]);
+    
+    glTexCoord2f(binfo.tx_1[2],binfo.ty[2]);
+    glVertex3i( vX[6], vY[6]+3, vZ[6]);
+    
+    glTexCoord2f(binfo.tx[2],binfo.ty[2]);
+    glVertex3i( vX[2], vY[2]+3, vZ[2]);
+
+
 }
 
-//Adjust cuboid shape of block
+//  adjustTexture: Reduce texture coordinates to match cuboid
+//
+//  blockID = normal or "special" ID for this block
+//  off_x =   The cuboid X offset, used to calculate the texture adjustment
+//  off_y =   The cuboid Y offset
+//  off_z =   The cuboid Z offset
+//  width =   Cuboid X size
+//  height =  Cuboid Y size
+//  depth =   Cuboid Z size
+    //  Before
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //  After     off_x
+    //           /
+    //       ADE ---- BDE
+    //       / +------+--- off_z  
+    //      / /      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |------------ off_y
+    //    ACF ---- BCF
 void BlockDrawer::adjustTexture(uint16_t blockID,
     GLint off_x, GLint off_y, GLint off_z,
     GLsizei width, GLsizei height, GLsizei depth)
@@ -825,34 +894,34 @@ void BlockDrawer::adjustTexture(uint16_t blockID,
     //LEFT
     tx_1[LEFT] = tx_0[LEFT] + tmr_off_z + tmr_z;
     tx_0[LEFT] = tx_0[LEFT] + tmr_off_z;
-    ty_1[LEFT] = ty_0[LEFT] + tmr_off_y;
-    ty_0[LEFT] = ty_0[LEFT] + tmr_off_y + tmr_y;    //Set ty_0 after ty_1
+    ty_1[LEFT] = ty_0[LEFT] + tmr_off_y + tmr_y;
+    ty_0[LEFT] = ty_0[LEFT] + tmr_off_y;    //Set ty_0 after ty_1
     
     //RIGHT...
     tx_1[RIGHT] = tx_0[RIGHT] + tmr_off_z;
     tx_0[RIGHT] = tx_0[RIGHT] + tmr_off_z + tmr_z;
-    ty_1[RIGHT] = ty_0[RIGHT] + tmr_off_y;
-    ty_0[RIGHT] = ty_0[RIGHT] + tmr_off_y + tmr_y;
+    ty_1[RIGHT] = ty_0[RIGHT] + tmr_off_y + tmr_y;
+    ty_0[RIGHT] = ty_0[RIGHT] + tmr_off_y;
     
     tx_1[BOTTOM] = tx_0[BOTTOM] + tmr_off_x + tmr_x;
     tx_0[BOTTOM] = tx_0[BOTTOM] + tmr_off_x;
-    ty_1[BOTTOM] = ty_0[BOTTOM] + tmr_off_z;
-    ty_0[BOTTOM] = ty_0[BOTTOM] + tmr_off_z + tmr_z;
+    ty_1[BOTTOM] = ty_0[BOTTOM] + tmr_off_z + tmr_z;
+    ty_0[BOTTOM] = ty_0[BOTTOM] + tmr_off_z;
 
     tx_1[TOP] = tx_0[TOP] + tmr_off_x + tmr_x;
     tx_0[TOP] = tx_0[TOP] + tmr_off_x;
-    ty_1[TOP] = ty_0[TOP] + tmr_off_z;
-    ty_0[TOP] = ty_0[TOP] + tmr_off_z + tmr_z;
+    ty_1[TOP] = ty_0[TOP] + tmr_off_z + tmr_z;
+    ty_0[TOP] = ty_0[TOP] + tmr_off_z;
 
     tx_1[BACK] = tx_0[BACK] + tmr_off_x;
     tx_0[BACK] = tx_0[BACK] + tmr_off_x + tmr_x;
-    ty_1[BACK] = ty_0[BACK] + tmr_off_y;
-    ty_0[BACK] = ty_0[BACK] + tmr_off_y + tmr_y;
+    ty_1[BACK] = ty_0[BACK] + tmr_off_y + tmr_y;
+    ty_0[BACK] = ty_0[BACK] + tmr_off_y;
 
     tx_1[FRONT] = tx_0[FRONT] + tmr_off_x + tmr_x;
     tx_0[FRONT] = tx_0[FRONT] + tmr_off_x;
-    ty_1[FRONT] = ty_0[FRONT] + tmr_off_y;
-    ty_0[FRONT] = ty_0[FRONT] + tmr_off_y + tmr_y;
+    ty_1[FRONT] = ty_0[FRONT] + tmr_off_y + tmr_y;
+    ty_0[FRONT] = ty_0[FRONT] + tmr_off_y;
 
 }
 
@@ -1837,13 +1906,13 @@ void BlockDrawer::drawDiode( uint8_t blockID, uint8_t meta,
     face_ID facing;
     switch (meta & 0x03) {
         default:
-        case 0: facing = BACK; off_z_1=-5; off_z_2=-delay_offset;
+        case 0: facing = FRONT; off_z_1=-5; off_z_2=-delay_offset;
             break;
-        case 1: facing = RIGHT;  off_x_1=5; off_x_2=delay_offset;
+        case 1: facing = LEFT;  off_x_1=5; off_x_2=delay_offset;
             break;
-        case 2: facing = FRONT;  off_z_1=5; off_z_2=delay_offset;
+        case 2: facing = BACK;  off_z_1=5; off_z_2=delay_offset;
             break;
-        case 3: facing = LEFT; off_x_1=-5; off_x_2=-delay_offset;
+        case 3: facing = RIGHT; off_x_1=-5; off_x_2=-delay_offset;
             break;
     }
 
@@ -1858,7 +1927,7 @@ void BlockDrawer::drawDiode( uint8_t blockID, uint8_t meta,
     //Draw diode base
     drawVertexBlock( vX, vY, vZ, blockInfo[blockID].tx,
         blockInfo[blockID].tx_1, blockInfo[blockID].ty,
-        blockInfo[blockID].ty_1, vflags&0x20);
+        blockInfo[blockID].ty_1, vflags&0x20, facing);
 
 }
 
@@ -2093,8 +2162,22 @@ void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
 //Draw a 6-sided volume with specified vertices and tex coords
 void BlockDrawer::drawVertexBlock( GLint vX[8], GLint vY[8], GLint vZ[8],
     const GLfloat tx_0[6], const GLfloat tx_1[6],
-    const GLfloat ty_0[6], const GLfloat ty_1[6], uint8_t vflags ) const
+    const GLfloat ty_0[6], const GLfloat ty_1[6],
+    uint8_t vflags, face_ID fid) const
 {
+    //Adjust vflags to consider facing
+    switch (fid) {
+        case LEFT: vflags = (vflags&0x80)>>5|(vflags&0x40)>>3|(vflags&0x0C)<<4|
+            (vflags&0x33); break;
+        case RIGHT:vflags = (vflags&0xC0)>>4|(vflags&0x08)<<3|(vflags&0x04)<<5|
+            (vflags&0x33); break;
+        case BACK:vflags = (vflags&0x88)>>1 | (vflags&0x44)<<1 | (vflags&0x33);
+                break;
+        case FRONT:
+        default:
+            break;  //No change
+    }
+  
     //Vertex order: Lower left, lower right, top right, top left
     //A side: 0, 2, 3, 1
     if (! (vflags&0x80)) {
@@ -2791,10 +2874,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133);
     
     //Bed 
-    setBlockInfo( 256 + 26, Tex::BedFoot_Side, Tex::BedFoot_Side, 4,
+    setBlockInfo( 256 + Blk::Bed, Tex::BedFoot_Side, Tex::BedFoot_Side, 4,
         Tex::BedFoot_Top, Tex::BedFoot_Face, Tex::BedFoot_Face);    //foot
-    setBlockInfo( 256 + 27, Tex::BedHead_Side, Tex::BedHead_Side, 4,
-        Tex::BedHead_Top, Tex::BedHead_Face, Tex::BedHead_Face);    //foot
+    setBlockInfo( 256 + Blk::Bed + 1, Tex::BedHead_Side, Tex::BedHead_Side, 4,
+        Tex::BedHead_Top, Tex::BedHead_Face, Tex::BedHead_Face);    //Head
     
     //Dyed wool (256 + 35 + metadata)
     setBlockInfo( 256 + 35, 64, 64, 64, 64, 64, 64);
@@ -2828,6 +2911,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     //Adjust cuboid shapes of blocks.  Needed for blocks that are not cubes.
     adjustTexture(Blk::Diode  , 0,  0,  0, 16,  2, 16);
     adjustTexture(Blk::DiodeOn, 0,  0,  0, 16,  2, 16);
+    
+    adjustTexture(Blk::Bed, 0,  0,  0, 16,  9, 16);
+    adjustTexture(256 + Blk::Bed, 0,  0,  0, 16,  9, 16);
+    adjustTexture(256 + 1 + Blk::Bed, 0,  0,  0, 16,  9, 16);
 
 
     return true;
