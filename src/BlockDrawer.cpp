@@ -534,11 +534,15 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
     
+    //Cactus height is a function of metadata
+    GLint cactusHeight = 1 + (meta + 15)%16;
+    
     //Face coordinates (in pixels)
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
     GLint C = (y << 4) + 0;
-    GLint D = (y << 4) + meta + 1/*texmap_TILE_LENGTH*/;
+    //Adjust cactus height based on metadata
+    GLint D = (y << 4) + cactusHeight;
     GLint E = (z << 4) + 0;
     GLint F = (z << 4) + texmap_TILE_LENGTH;
 
@@ -572,8 +576,8 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     //
     // (tx_0, ty_0)      (tx_1, ty_0)
 
-    // For cactus, the face coordinates are inset from the face
-    GLfloat tmr_y = tmr*(meta + 1.0)/16.0;
+    //Scale texture to adjusted cactus height
+    GLfloat tmr_y = tmr*(cactusHeight)/16.0;
 
     //A always visible
         tx_0 = blockInfo[blockID].tx[LEFT];
@@ -582,6 +586,7 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
         ty_1 = blockInfo[blockID].ty[LEFT];
         setBlockColor(blockID, LEFT);  //Set leaf/grass color if needed
         
+    // For cactus, the face coordinates are inset from the face. A+1
         glTexCoord2f(tx_0,ty_0); glVertex3i( A+1, C, E);
         glTexCoord2f(tx_1,ty_0); glVertex3i( A+1, C, F);
         glTexCoord2f(tx_1,ty_1); glVertex3i( A+1, D, F);
