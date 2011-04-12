@@ -250,6 +250,12 @@ namespace mc__ {
                 GLint vX[8], GLint vY[8], GLint vZ[8],
                 face_ID facing=FRONT
             ) const;
+            
+            //Add offset to cuboid vertices
+            void addVertexOffset(  GLint vX[8], GLint vY[8], GLint vZ[8],
+                GLint dX, GLint dY, GLint dZ) const;
+
+            
             //TODO: GLfloat version
     };
 }

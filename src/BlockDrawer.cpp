@@ -1937,8 +1937,8 @@ void BlockDrawer::drawDiode( uint8_t blockID, uint8_t meta,
 }
 
 
-//Draw signpost (meta affects angle)
-void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
+//Draw signpost (meta affects angle).  Don't use blockID, it has another tex.
+void BlockDrawer::drawSignpost( uint8_t /*blockID*/, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
 
@@ -2371,8 +2371,8 @@ void BlockDrawer::drawTree( uint8_t blockID, uint8_t meta,
     drawCubeMeta(ID, meta, x, y, z, vflags);
 }
 
-//Draw sign on a wall
-void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
+//Draw sign on a wall.  Don't use block ID, it has another texture
+void BlockDrawer::drawWallSign( uint8_t /*blockID*/, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
 
@@ -2474,10 +2474,44 @@ void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawButton( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
-    //TODO: meta affects which wall the button is on, and pressed/not pressed
-    drawScaledBlock( blockID, meta, x, y, z, 0,
-        0.5, 0.25, 0.125, true, 4, 8, 0);
 
+    //Button is offset 6 right, 5 up, and 0 off wall.  Size is 6x5x2
+    GLint dX=6, dY=5, dZ=0, lX=6, lY=5, lZ=2;
+    face_ID facing;
+    uint16_t blockOffset = blockID;
+    
+    //Determine facing and wall offset from meta.
+    //   Offset is assigned here to avoid rotation calculation.  I know, right!
+    switch (meta & 0xF) {
+        //Not pressed, with direction
+        case 0x1: facing = RIGHT; dX=0;  lX=2; dZ=5; lZ=6; break;
+        case 0x2: facing = LEFT;  dX=14; lX=2; dZ=5; lZ=6; break;
+        
+        case 0x3: facing = FRONT; dX=5; lX=6; dZ=0;  lZ=2; break;
+        case 0x4: facing = BACK;  dX=5; lX=6; dZ=14; lZ=2; break;
+        
+        //Button pressed, with direction
+        case 0x9: facing = RIGHT; dX=-1; lX=2; dZ=5; lZ=6; break;
+        case 0xA: facing = LEFT;  dX=15; lX=2; dZ=5; lZ=6; break;
+        
+        case 0xB: facing = FRONT; dX=5; lX=6;  dZ=1; lZ=2; break;
+        case 0xC: facing = BACK;  dX=5; lX=6; dZ=13; lZ=2; break;
+        default:  facing = FRONT; dX=5; lX=6; dZ=0; lZ=2; 
+    }
+
+    //Create vertices for button
+    GLint vX[8], vY[8], vZ[8];
+    makeCuboidVertex(x, y, z, lX, lY, lZ, vX, vY, vZ, facing);
+
+    //Add location offset to button
+    addVertexOffset( vX, vY, vZ, dX, dY, dZ);
+    
+    //Get block info for texture info
+    const BlockInfo& binfo = blockInfo[blockOffset];
+
+    //Draw the block using calculated vertices
+    drawVertexBlock( vX, vY, vZ, binfo.tx, binfo.tx_1, binfo.ty, binfo.ty_1,
+        0, facing);
 }
 
 
@@ -2821,7 +2855,8 @@ Normal block = 0x00: cube, dark, opaque, solid
     
     //StoneButton
     setBlockInfo( 77, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawButton);
-    
+    adjustTexture(Blk::Button , 0,  5,  0, 6, 4, 2);
+
     //SnowLayer(*)
     setBlockInfo( 78, 66, 66, 66, 66, 66, 66,&BlockDrawer::draw4thBlock);
     
@@ -3039,4 +3074,16 @@ void BlockDrawer::makeCuboidVertex(GLint x0, GLint y0, GLint z0,
     }
 
 
+}
+
+//Add small offset to the OpenGL vertices.
+void BlockDrawer::addVertexOffset( GLint vX[8], GLint vY[8], GLint vZ[8],
+        GLint dX, GLint dY, GLint dZ) const
+{
+    size_t i;
+    for (i = 0; i < 8; i++) {
+        vX[i] += dX;
+        vY[i] += dY;
+        vZ[i] += dZ;
+    }
 }
