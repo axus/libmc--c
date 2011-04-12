@@ -119,7 +119,7 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 63: result = "Sign post"; break;
         case 64: result = "Wooden door"; break;
         case 65: result = "Ladder"; break;
-        case 66: result = "Minecart tracks"; break;
+        case 66: result = "Rails"; break;
         case 67: result = "Cobblestone stairs"; break;
         case 68: result = "Wall sign"; break;
         case 69: result = "Lever"; break;
@@ -576,7 +576,7 @@ uint8_t Item::maxUses() const
      === === ==========
 	 64	 40	Wooden Door D I
 	 65	 41	Ladder D
-	 66	 42	Minecart Tracks D
+	 66	 42	Minecart Rails D
 	 67	 43	Cobblestone Stairs D
 	 68	 44	Wall Sign D I
 	 69	 45	Lever D

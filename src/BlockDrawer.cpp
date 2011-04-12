@@ -1144,38 +1144,71 @@ void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
 {
     //TODO: metadata to determine track type and orientation
 
-    //Texture map coordinates (0.0 - 1.0)
-    GLfloat tx_0, tx_1, ty_0, ty_1;
 
     //Object boundaries... flat square 1 pixel off the ground
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
-    GLint C = (y << 4) + 0;
-    GLint D = (y << 4) + 1;
+    GLint C = (y << 4) + 1;
+    GLint D = (y << 4) + 17;
     GLint E = (z << 4) + 0;
     GLint F = (z << 4) + texmap_TILE_LENGTH;
 
-    //C
-    tx_0 = blockInfo[blockID].tx[BOTTOM];
-    tx_1 = blockInfo[blockID].tx[BOTTOM] + tmr;
-    ty_0 = blockInfo[blockID].ty[BOTTOM] + tmr;
-    ty_1 = blockInfo[blockID].ty[BOTTOM];
+    //3D coords for Bottom-left, bottom-right, top-right, top-left
+    GLint X[4], Y[4], Z[4];
+    //Defaults
+    X[0] = X[3] = A; X[1] = X[2] = B;
+    Y[0] = Y[1] = Y[2] = Y[3] = C;
+    Z[0] = Z[1] = F; Z[2] = Z[3] = E;
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    //Texture index: 0 is straight, 1 is turn
+    face_ID t_index=LEFT;
 
-    //D
-    tx_0 = blockInfo[blockID].tx[TOP];
-    tx_1 = blockInfo[blockID].tx[TOP] + tmr;
-    ty_0 = blockInfo[blockID].ty[TOP] + tmr;
-    ty_1 = blockInfo[blockID].ty[TOP];
+    //Metadata determines track orientation, shape
+    switch (meta) {
+        case 1: //East-West
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; break;
+        case 2: //Ascend South
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; //rotate
+            Y[2] = Y[3] = D; break;
+        case 3: //Ascend North
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; //rotate
+                Y[0] = Y[1] = D; break;
+        case 4: //Ascend East
+            Y[2] = Y[3] = D; break;  
+        case 5: //Ascend West
+            Y[0] = Y[1] = D; break;
+        case 6: //NorthEast corner
+            t_index = RIGHT; break;
+        case 7: //SouthEast corner
+            t_index = RIGHT;
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; break;
+        case 8: //SouthWest corner
+            t_index = RIGHT; X[0] = X[3] = B; X[1] = X[2] = A;
+            Z[0] = Z[1] = E; Z[2] = Z[3] = F; break;
+        case 9: //NorthWest corner
+            t_index = RIGHT; X[0] = B; X[2] = A;
+            Z[1] = E; Z[3] = F; break;
+        default: break; //default, flat track on ground
+    }
 
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    //Texture coordinates
+    const BlockInfo& binfo = blockInfo[blockID];
+    GLfloat tx_0 = binfo.tx[t_index];
+    GLfloat tx_1 = binfo.tx[t_index] + tmr;
+    GLfloat ty_0 = binfo.ty[t_index] + tmr;
+    GLfloat ty_1 = binfo.ty[t_index];
+    
+    //Top side?
+    glTexCoord2f(tx_0,ty_0); glVertex3i( X[0], Y[0], Z[0]);  //Lower left:  ACE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( X[1], Y[1], Z[1]);  //Lower right: BCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( X[2], Y[2], Z[2]);  //Top right:   BCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( X[3], Y[3], Z[3]);  //Top left:    ACF
+
+    //Reverse side
+    glTexCoord2f(tx_0,ty_0); glVertex3i( X[3], Y[3], Z[3]);  //Lower left:  ADF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( X[2], Y[2], Z[2]);  //Lower right: BDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( X[1], Y[1], Z[1]);  //Top right:   BDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( X[0], Y[0], Z[0]);  //Top left:    ADE
 
 }
 
@@ -1789,7 +1822,7 @@ void BlockDrawer::drawStairs( uint8_t blockID, uint8_t meta,
 }
 
 //Draw floor or wall lever (meta affects position)
-void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
+void BlockDrawer::drawLever( uint8_t blockID, uint8_t /*TODO: meta*/,
     GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //TODO: handle angle and base location depend on meta
@@ -2823,7 +2856,8 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 65, 83, 83, 83, 83, 83, 83, &BlockDrawer::drawWallItem);
     
     //Track (*)
-    setBlockInfo( 66, 112,112,128,128,128,128,&BlockDrawer::drawTrack);
+    setBlockInfo( 66, Tex::Track, Tex::Track_Turn,
+       Tex::Track, Tex::Track, Tex::Track, Tex::Track,&BlockDrawer::drawTrack);
     
     //CobbleStairs
     setBlockInfo( 67, 16, 16, 16, 16, 16, 16,&BlockDrawer::drawStairs);

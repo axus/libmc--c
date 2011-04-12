@@ -45,7 +45,7 @@ namespace mc__ {
             Bricks, TNT, Bookshelf, MossStone, Obsidian, Torch, Fire, Spawner,
             StairsWood, Chest, Wire, DiamondOre, DiamondBlock, Workbench,
             Crops, Soil, Furnace, FurnaceOn, Signpost, DoorWood=64, Ladder,
-            Tracks, StairsCobble, Wallsign, Lever, PlateStone, DoorIron,
+            Rails, StairsCobble, Wallsign, Lever, PlateStone, DoorIron,
             PlateWood, RedstoneOre, RedstoneOreOn, RedTorch, RedTorchOn,
             Button, Snow, Ice, SnowBlock, Cactus, ClayBlock, SugarCane,
             Jukebox, Fence, Pumpkin, Netherrack, SoulSand, Glowstone, Portal,
@@ -131,7 +131,7 @@ namespace mc__ {
     63          0x3F        SignPost            Orientation 0-15
     64          0x40        Wooden Door         Open|Hinge  0-7
     65          0x41        Ladder              Orientation 2-5
-    66          0x42        Tracks              Orientation 0-9
+    66          0x42        Rails               Orientation 0-9
     67          0x43        Rock Stairs         Orientation 0-3
     68          0x44        WallSign            Orientation 2-5
     69          0x45        Lever               Pull|Ori.   0-15
