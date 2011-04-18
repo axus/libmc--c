@@ -180,6 +180,8 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTorch( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawTorchOffset( uint8_t blockID, GLint x, GLint y, GLint z,
+                GLint off_x=0, GLint off_y=0, GLint off_z=0) const;
             void drawDiode( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFire( uint8_t blockID, uint8_t meta,
@@ -206,7 +208,7 @@ namespace mc__ {
             void drawVertexBlock( GLint vX[8], GLint vY[8], GLint vZ[8],
                 const GLfloat tx_0[6], const GLfloat tx_1[6],
                 const GLfloat ty_0[6], const GLfloat ty_1[6],
-                uint8_t visflags=0 ) const;
+                uint8_t visflags=0, face_ID fid=FRONT) const;
 
 
             //Use terrain texture again
@@ -248,6 +250,12 @@ namespace mc__ {
                 GLint vX[8], GLint vY[8], GLint vZ[8],
                 face_ID facing=FRONT
             ) const;
+            
+            //Add offset to cuboid vertices
+            void addVertexOffset(  GLint vX[8], GLint vY[8], GLint vZ[8],
+                GLint dX, GLint dY, GLint dZ) const;
+
+            
             //TODO: GLfloat version
     };
 }

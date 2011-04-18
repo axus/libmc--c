@@ -79,17 +79,17 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 23: result = "Dispenser"; break;
         case 24: result = "Sandstone"; break;
         case 25: result = "Note block"; break;
-        case 26: result = "Aqua cloth"; break;
-        case 27: result = "Cyan cloth"; break;
-        case 28: result = "Blue cloth"; break;
-        case 29: result = "Purple cloth"; break;
-        case 30: result = "Indigo cloth"; break;
-        case 31: result = "Violet cloth"; break;
-        case 32: result = "Magenta cloth"; break;
-        case 33: result = "Pink cloth"; break;
-        case 34: result = "Black wool"; break;
-        case 35: result = "Gray wool"; break;
-        case 36: result = "White wool"; break;
+        case 26: result = "Bed"; break;
+        case 27: result = "Unknown 0x27"; break;
+        case 28: result = "Unknown 0x28"; break;
+        case 29: result = "Unknown 0x29"; break;
+        case 30: result = "Unknown 0x30"; break;
+        case 31: result = "Unknown 0x31"; break;
+        case 32: result = "Unknown 0x32"; break;
+        case 33: result = "Unknown 0x33"; break;
+        case 34: result = "Unknown 0x34"; break;
+        case 35: result = "Wool"; break;
+        case 36: result = "Unknown 0x36"; break;
         case 37: result = "Yellow flower"; break;
         case 38: result = "Red rose"; break;
         case 39: result = "Brown mushroom"; break;
@@ -119,7 +119,7 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 63: result = "Sign post"; break;
         case 64: result = "Wooden door"; break;
         case 65: result = "Ladder"; break;
-        case 66: result = "Minecart tracks"; break;
+        case 66: result = "Rails"; break;
         case 67: result = "Cobblestone stairs"; break;
         case 68: result = "Wall sign"; break;
         case 69: result = "Lever"; break;
@@ -146,8 +146,8 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 90: result = "Portal"; break;
         case 91: result = "Jack-O-Lantern"; break;
         case 92: result = "Cake"; break;
-        case 93: result = "Repeater"; break;
-        case 94: result = "Repeater Lit"; break;
+        case 93: result = "Diode"; break;
+        case 94: result = "Diode Lit"; break;
         case 256: result = "Iron shovel"; break;
         case 257: result = "Iron pickaxe"; break;
         case 258: result = "Iron axe"; break;
@@ -251,7 +251,7 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 353: result = "Sugar"; break;
         case 354: result = "Cake"; break;
         case 355: result = "Bed"; break;
-        case 356: result = "Repeater"; break;
+        case 356: result = "Diode"; break;
         case 397: result = "Record"; break; //Not really in the game ;)
         
         //Mad hax time: (("Item ID" - 256) * 16) + damage = fake ID
@@ -576,7 +576,7 @@ uint8_t Item::maxUses() const
      === === ==========
 	 64	 40	Wooden Door D I
 	 65	 41	Ladder D
-	 66	 42	Minecart Tracks D
+	 66	 42	Minecart Rails D
 	 67	 43	Cobblestone Stairs D
 	 68	 44	Wall Sign D I
 	 69	 45	Lever D

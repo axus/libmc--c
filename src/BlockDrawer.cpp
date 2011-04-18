@@ -534,11 +534,15 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
     
+    //Cactus height is a function of metadata
+    GLint cactusHeight = 1 + (meta + 15)%16;
+    
     //Face coordinates (in pixels)
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
     GLint C = (y << 4) + 0;
-    GLint D = (y << 4) + meta + 1/*texmap_TILE_LENGTH*/;
+    //Adjust cactus height based on metadata
+    GLint D = (y << 4) + cactusHeight;
     GLint E = (z << 4) + 0;
     GLint F = (z << 4) + texmap_TILE_LENGTH;
 
@@ -572,8 +576,8 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
     //
     // (tx_0, ty_0)      (tx_1, ty_0)
 
-    // For cactus, the face coordinates are inset from the face
-    GLfloat tmr_y = tmr*(meta + 1.0)/16.0;
+    //Scale texture to adjusted cactus height
+    GLfloat tmr_y = tmr*(cactusHeight)/16.0;
 
     //A always visible
         tx_0 = blockInfo[blockID].tx[LEFT];
@@ -582,6 +586,7 @@ void BlockDrawer::drawCactus( uint8_t blockID, uint8_t meta,
         ty_1 = blockInfo[blockID].ty[LEFT];
         setBlockColor(blockID, LEFT);  //Set leaf/grass color if needed
         
+    // For cactus, the face coordinates are inset from the face. A+1
         glTexCoord2f(tx_0,ty_0); glVertex3i( A+1, C, E);
         glTexCoord2f(tx_1,ty_0); glVertex3i( A+1, C, F);
         glTexCoord2f(tx_1,ty_1); glVertex3i( A+1, D, F);
@@ -787,19 +792,88 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawBed( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+
+    //Top or bottom half
+    bool top_half = ((meta & 0x8) != 0);
     
-    //Use metadata to determine which half!
-    if (meta) {
-        //Draw top half
-        drawScaledBlock( 256 + blockID, meta, x, y, z, vflags, 1, 0.5, 1);
-    } else {
-        //Draw bottom half
-        drawScaledBlock( 256 + blockID + 1, meta, x, y, z, vflags, 1, 0.5, 1);
+    //Direction of block depends on metadata.
+    //  drawVertexBlock rotates the block depending on facing,
+    //  and the vflags rotate with it!
+    face_ID facing;
+    switch (meta & 0xB) {
+        //Direction
+        case 0x0: facing = LEFT;  vflags |= 0x04; break;
+        case 0x1: facing = BACK;  vflags |= 0x80; break;
+        case 0x2: facing = RIGHT; vflags |= 0x08; break;
+        case 0x3: facing = FRONT; vflags |= 0x40; break;
+        case 0x8: facing = LEFT;  vflags |= 0x08; break;
+        case 0x9: facing = BACK;  vflags |= 0x40; break;
+        case 0xA: facing = RIGHT; vflags |= 0x04; break;
+        case 0xB: facing = FRONT; vflags |= 0x80; break;
+        default:  facing = FRONT;
     }
-    //TODO: draw underside up a bit
+    // facing points to right side of pillow
+    
+    //Use block ID offset for top or bottom half of bed
+    uint16_t blockOffset = blockID + 256;
+    if ( top_half ) {
+        blockOffset++;
+    }
+    const BlockInfo& binfo = blockInfo[blockOffset];
+
+    //Create vertices for bed half
+    GLint vX[8], vY[8], vZ[8];
+    makeCuboidVertex(x, y, z, 16, 9, 16, vX, vY, vZ, facing);
+    
+    //Draw bed half.  Always remove bottom.
+    drawVertexBlock( vX, vY, vZ, binfo.tx, binfo.tx_1, binfo.ty, binfo.ty_1,
+        vflags |= 0x20, facing);
+
+    //Draw the bottom, raised by 3/16
+    glTexCoord2f(binfo.tx[2],binfo.ty_1[2]);
+    glVertex3i( vX[0], vY[0]+3, vZ[0]);
+    
+    glTexCoord2f(binfo.tx_1[2],binfo.ty_1[2]);
+    glVertex3i( vX[4], vY[4]+3, vZ[4]);
+    
+    glTexCoord2f(binfo.tx_1[2],binfo.ty[2]);
+    glVertex3i( vX[6], vY[6]+3, vZ[6]);
+    
+    glTexCoord2f(binfo.tx[2],binfo.ty[2]);
+    glVertex3i( vX[2], vY[2]+3, vZ[2]);
+
+
 }
 
-//Adjust cuboid shape of block
+//  adjustTexture: Reduce texture coordinates to match cuboid
+//
+//  blockID = normal or "special" ID for this block
+//  off_x =   The cuboid X offset, used to calculate the texture adjustment
+//  off_y =   The cuboid Y offset
+//  off_z =   The cuboid Z offset
+//  width =   Cuboid X size
+//  height =  Cuboid Y size
+//  depth =   Cuboid Z size
+    //  Before
+    //       ADE ---- BDE
+    //       /.       /|
+    //      / .      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |.       |/
+    //    ACF ---- BCF
+
+    //  After     off_x
+    //           /
+    //       ADE ---- BDE
+    //       / +------+--- off_z  
+    //      / /      / |
+    //    ADF ---- BDF |
+    //     | ACE . .| BCE
+    //     | .      | /
+    //     |------------ off_y
+    //    ACF ---- BCF
 void BlockDrawer::adjustTexture(uint16_t blockID,
     GLint off_x, GLint off_y, GLint off_z,
     GLsizei width, GLsizei height, GLsizei depth)
@@ -820,43 +894,40 @@ void BlockDrawer::adjustTexture(uint16_t blockID,
     GLfloat (&tx_1)[6] = blockInfo[blockID].tx_1;
     GLfloat (&ty_1)[6] = blockInfo[blockID].ty_1;
     
+    //Careful, adjust tx_1 and ty_1 before tx_0 and ty_0
+    
     //LEFT
-    tx_0[LEFT] = tx_0[LEFT] + tmr_off_z;
     tx_1[LEFT] = tx_0[LEFT] + tmr_off_z + tmr_z;
-    ty_1[LEFT] = ty_0[LEFT] + tmr_off_y;
-    ty_0[LEFT] = ty_0[LEFT] + tmr_off_y + tmr_y;    //Set ty_0 after ty_1
+    tx_0[LEFT] = tx_0[LEFT] + tmr_off_z;
+    ty_1[LEFT] = ty_0[LEFT] + tmr_off_y + tmr_y;
+    ty_0[LEFT] = ty_0[LEFT] + tmr_off_y;    //Set ty_0 after ty_1
     
     //RIGHT...
-    tx_0[RIGHT] = tx_0[RIGHT] + tmr_off_z + tmr_z;
     tx_1[RIGHT] = tx_0[RIGHT] + tmr_off_z;
-    ty_1[RIGHT] = ty_0[RIGHT] + tmr_off_y;
-    ty_0[RIGHT] = ty_0[RIGHT] + tmr_off_y + tmr_y;
+    tx_0[RIGHT] = tx_0[RIGHT] + tmr_off_z + tmr_z;
+    ty_1[RIGHT] = ty_0[RIGHT] + tmr_off_y + tmr_y;
+    ty_0[RIGHT] = ty_0[RIGHT] + tmr_off_y;
     
-    tx_0[BOTTOM] = tx_0[BOTTOM] + tmr_off_x;
     tx_1[BOTTOM] = tx_0[BOTTOM] + tmr_off_x + tmr_x;
-    ty_1[BOTTOM] = ty_0[BOTTOM] + tmr_off_z;
-    ty_0[BOTTOM] = ty_0[BOTTOM] + tmr_off_z + tmr_z;
+    tx_0[BOTTOM] = tx_0[BOTTOM] + tmr_off_x;
+    ty_1[BOTTOM] = ty_0[BOTTOM] + tmr_off_z + tmr_z;
+    ty_0[BOTTOM] = ty_0[BOTTOM] + tmr_off_z;
 
-    tx_0[TOP] = tx_0[TOP] + tmr_off_x;
     tx_1[TOP] = tx_0[TOP] + tmr_off_x + tmr_x;
-    ty_1[TOP] = ty_0[TOP] + tmr_off_z;
-    ty_0[TOP] = ty_0[TOP] + tmr_off_z + tmr_z;
+    tx_0[TOP] = tx_0[TOP] + tmr_off_x;
+    ty_1[TOP] = ty_0[TOP] + tmr_off_z + tmr_z;
+    ty_0[TOP] = ty_0[TOP] + tmr_off_z;
 
-    tx_0[BACK] = tx_0[BACK] + tmr_off_x + tmr_x;
     tx_1[BACK] = tx_0[BACK] + tmr_off_x;
-    ty_1[BACK] = ty_0[BACK] + tmr_off_y;
-    ty_0[BACK] = ty_0[BACK] + tmr_off_y + tmr_y;
+    tx_0[BACK] = tx_0[BACK] + tmr_off_x + tmr_x;
+    ty_1[BACK] = ty_0[BACK] + tmr_off_y + tmr_y;
+    ty_0[BACK] = ty_0[BACK] + tmr_off_y;
 
-    tx_0[FRONT] = tx_0[FRONT] + tmr_off_x;
     tx_1[FRONT] = tx_0[FRONT] + tmr_off_x + tmr_x;
-    ty_1[FRONT] = ty_0[FRONT] + tmr_off_y;
-    ty_0[FRONT] = ty_0[FRONT] + tmr_off_y + tmr_y;
+    tx_0[FRONT] = tx_0[FRONT] + tmr_off_x;
+    ty_1[FRONT] = ty_0[FRONT] + tmr_off_y + tmr_y;
+    ty_0[FRONT] = ty_0[FRONT] + tmr_off_y;
 
-/*    
-    //Debug coordinates
-    cout << "Front tex coords: (" << tx_0[FRONT]*16 << "," << ty_0[FRONT]*16
-         << ") (" << tx_1[FRONT]*16 << "," << ty_1[FRONT]*16 << ")" << endl;
-*/
 }
 
 //Use OpenGL to draw partial solid cube, with offsets, scale, mirroring
@@ -1073,38 +1144,71 @@ void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
 {
     //TODO: metadata to determine track type and orientation
 
-    //Texture map coordinates (0.0 - 1.0)
-    GLfloat tx_0, tx_1, ty_0, ty_1;
 
     //Object boundaries... flat square 1 pixel off the ground
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
-    GLint C = (y << 4) + 0;
-    GLint D = (y << 4) + 1;
+    GLint C = (y << 4) + 1;
+    GLint D = (y << 4) + 17;
     GLint E = (z << 4) + 0;
     GLint F = (z << 4) + texmap_TILE_LENGTH;
 
-    //C
-    tx_0 = blockInfo[blockID].tx[BOTTOM];
-    tx_1 = blockInfo[blockID].tx[BOTTOM] + tmr;
-    ty_0 = blockInfo[blockID].ty[BOTTOM] + tmr;
-    ty_1 = blockInfo[blockID].ty[BOTTOM];
+    //3D coords for Bottom-left, bottom-right, top-right, top-left
+    GLint X[4], Y[4], Z[4];
+    //Defaults
+    X[0] = X[3] = A; X[1] = X[2] = B;
+    Y[0] = Y[1] = Y[2] = Y[3] = C;
+    Z[0] = Z[1] = F; Z[2] = Z[3] = E;
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, E);  //Lower left:  ACE
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: BCE
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, C, F);  //Top right:   BCF
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, C, F);  //Top left:    ACF
+    //Texture index: 0 is straight, 1 is turn
+    face_ID t_index=LEFT;
 
-    //D
-    tx_0 = blockInfo[blockID].tx[TOP];
-    tx_1 = blockInfo[blockID].tx[TOP] + tmr;
-    ty_0 = blockInfo[blockID].ty[TOP] + tmr;
-    ty_1 = blockInfo[blockID].ty[TOP];
+    //Metadata determines track orientation, shape
+    switch (meta) {
+        case 1: //East-West
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; break;
+        case 2: //Ascend South
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; //rotate
+            Y[2] = Y[3] = D; break;
+        case 3: //Ascend North
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; //rotate
+                Y[0] = Y[1] = D; break;
+        case 4: //Ascend East
+            Y[2] = Y[3] = D; break;  
+        case 5: //Ascend West
+            Y[0] = Y[1] = D; break;
+        case 6: //NorthEast corner
+            t_index = RIGHT; break;
+        case 7: //SouthEast corner
+            t_index = RIGHT;
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; break;
+        case 8: //SouthWest corner
+            t_index = RIGHT; X[0] = X[3] = B; X[1] = X[2] = A;
+            Z[0] = Z[1] = E; Z[2] = Z[3] = F; break;
+        case 9: //NorthWest corner
+            t_index = RIGHT; X[0] = B; X[2] = A;
+            Z[1] = E; Z[3] = F; break;
+        default: break; //default, flat track on ground
+    }
 
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, D, F);  //Lower left:  ADF
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, D, F);  //Lower right: BDF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, E);  //Top right:   BDE
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, E);  //Top left:    ADE
+    //Texture coordinates
+    const BlockInfo& binfo = blockInfo[blockID];
+    GLfloat tx_0 = binfo.tx[t_index];
+    GLfloat tx_1 = binfo.tx[t_index] + tmr;
+    GLfloat ty_0 = binfo.ty[t_index] + tmr;
+    GLfloat ty_1 = binfo.ty[t_index];
+    
+    //Top side?
+    glTexCoord2f(tx_0,ty_0); glVertex3i( X[0], Y[0], Z[0]);  //Lower left:  ACE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( X[1], Y[1], Z[1]);  //Lower right: BCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( X[2], Y[2], Z[2]);  //Top right:   BCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( X[3], Y[3], Z[3]);  //Top left:    ACF
+
+    //Reverse side
+    glTexCoord2f(tx_0,ty_0); glVertex3i( X[3], Y[3], Z[3]);  //Lower left:  ADF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( X[2], Y[2], Z[2]);  //Lower right: BDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( X[1], Y[1], Z[1]);  //Top right:   BDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( X[0], Y[0], Z[0]);  //Top left:    ADE
 
 }
 
@@ -1718,7 +1822,7 @@ void BlockDrawer::drawStairs( uint8_t blockID, uint8_t meta,
 }
 
 //Draw floor or wall lever (meta affects position)
-void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
+void BlockDrawer::drawLever( uint8_t blockID, uint8_t /*TODO: meta*/,
     GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
     //TODO: handle angle and base location depend on meta
@@ -1732,44 +1836,142 @@ void BlockDrawer::drawLever( uint8_t blockID, uint8_t meta,
 
 }
 
-//Draw diode block with torches (meta affects configuration)
-void BlockDrawer::drawDiode( uint8_t blockID, uint8_t meta,
-    GLint x, GLint y, GLint z, uint8_t vflags) const
+
+//Draw torch on ground, offset by small amount from center (used for diode)
+void BlockDrawer::drawTorchOffset( uint8_t blockID, GLint x, GLint y, GLint z,
+    GLint off_x, GLint off_y, GLint off_z) const
 {
-    //TODO: handle angle and base orientation depend on meta
+
+    //Look up texture coordinates for the item
+    GLfloat tx_0 = blockInfo[blockID].tx[LEFT];
+    GLfloat tx_1 = blockInfo[blockID].tx[LEFT] + tmr;
+    GLfloat ty_0 = blockInfo[blockID].ty[LEFT] + tmr;    //flip y
+    GLfloat ty_1 = blockInfo[blockID].ty[LEFT];
     
-    //Redstone torches depending on metadata
-    uint8_t torchID = Blk::RedTorch;
-    if (meta & 0x08) {
-        torchID = Blk::RedTorchOn;
-    }
-    face_ID facing;
-    switch (meta & 0x03) {
-        default:
-        case 0: facing = FRONT; break;
-        case 1: facing = LEFT; break;
-        case 2: facing = BACK; break;
-        case 3: facing = RIGHT; break;
-    }
+    //pieces of torch texture (used for top and bottom)
+    GLfloat tx_m1 = blockInfo[blockID].tx[LEFT] + tmr*7.0/16.0;
+    GLfloat tx_m2 = blockInfo[blockID].tx[LEFT] + tmr*9.0/16.0;
+    GLfloat ty_m1 = blockInfo[blockID].ty[LEFT] + tmr*8.0/16.0;
+    GLfloat ty_m2 = blockInfo[blockID].ty[LEFT] + tmr*6.0/16.0;
+    GLfloat ty_b1 = blockInfo[blockID].ty[LEFT] + tmr*14.0/16.0;
+    GLfloat ty_b2 = blockInfo[blockID].ty[LEFT] + tmr;
+
+    //Cube boundaries
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
     
-    drawTorch( Blk::RedTorchOn, 0, x, y, z);
-    
-    //Diode base
-    //drawScaledBlock(blockID, 0, x, y, z, vflags&0x20, 1.0, 0.125, 1.0);
-    
-    //Create vertices for diode base
-                
+    //torch top (10/16 block over bottom)
+    GLint H = C + 10;
+
+    //Vertices of "parallelocube"
     GLint vX[8], vY[8], vZ[8];
-    makeCuboidVertex(x, y, z, 16, 2, 16, vX, vY, vZ, facing);
-    drawVertexBlock( vX, vY, vZ, blockInfo[blockID].tx,
-        blockInfo[blockID].tx_1, blockInfo[blockID].ty,
-        blockInfo[blockID].ty_1, vflags&0x20);
+    
+    //A: 0, 2, 3, 1
+    vX[0] = A; vX[1] = A; vX[2] = A; vX[3] = A;
+    vY[0] = C; vY[1] = D; vY[2] = C; vY[3] = D;
+    vZ[0] = E; vZ[1] = E; vZ[2] = F; vZ[3] = F;
+
+    //B: 6, 4, 5, 7
+    vX[6] = B; vX[4] = B; vX[5] = B; vX[7] = B;
+    vY[6] = C; vY[4] = C; vY[5] = D; vY[7] = D;
+    vZ[6] = F; vZ[4] = E; vZ[5] = E; vZ[7] = F;
+
+    //Edge offsets for faces of torch
+    GLint AC = 7, AD = 7, BC = -7, BD = -7, EC = 7, ED = 7, FC = -7, FD = -7;
+    
+    //Torch offsets
+    GLint dY = off_y, dXC = off_x, dXD = off_x, dZC = off_z, dZD = off_z;
+
+    //Vertex order: Lower left, lower right, top right, top left
+    //A side: 0, 2, 3, 1
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[0]+AC, vY[0]+dY, dZC+vZ[0]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[2]+AC, vY[2]+dY, dZC+vZ[2]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[3]+AD, vY[3]+dY, dZD+vZ[3]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[1]+AD, vY[1]+dY, dZD+vZ[1]);
+    //B side: 6, 4, 5, 7
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[6]+BC, vY[6]+dY, dZC+vZ[6]);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[4]+BC, vY[4]+dY, dZC+vZ[4]);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[5]+BD, vY[5]+dY, dZD+vZ[5]);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[7]+BD, vY[7]+dY, dZD+vZ[7]);
+    //E side: 4, 0, 1, 5
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[4], vY[4]+dY, dZC+vZ[4]+EC);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[0], vY[0]+dY, dZC+vZ[0]+EC);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[1], vY[1]+dY, dZD+vZ[1]+ED);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[5], vY[5]+dY, dZD+vZ[5]+ED);
+    //F side: 2, 6, 7, 3
+    glTexCoord2f(tx_0,ty_0); glVertex3i( dXC+vX[2], vY[2]+dY, dZC+vZ[2]+FC);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( dXC+vX[6], vY[6]+dY, dZC+vZ[6]+FC);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( dXD+vX[7], vY[7]+dY, dZD+vZ[7]+FD);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( dXD+vX[3], vY[3]+dY, dZD+vZ[3]+FD);
+    
+    //Bottom side (C): 0, 4, 6, 2
+    glTexCoord2f(tx_m1,ty_b1); glVertex3i( dXC+vX[0]+AC, C+dY, dZC+vZ[0]+EC);
+    glTexCoord2f(tx_m2,ty_b1); glVertex3i( dXC+vX[4]+BC, C+dY, dZC+vZ[4]+EC);
+    glTexCoord2f(tx_m2,ty_b2); glVertex3i( dXC+vX[6]+BC, C+dY, dZC+vZ[6]+FC);
+    glTexCoord2f(tx_m1,ty_b2); glVertex3i( dXC+vX[2]+AC, C+dY, dZC+vZ[2]+FC);
+    
+    //Calculate offsets of torch top (linear interpolation of XC<->XD, ZC<->ZD)
+    GLfloat dX = (10*dXD + 6*dXC)/16.0;
+    GLfloat dZ = (10*dZD + 6*dZC)/16.0;
+    //Top side (D): 3, 7, 5, 1
+    glTexCoord2f(tx_m1,ty_m1); glVertex3f( dX+vX[3]+AD, H+dY, dZ+vZ[3]+FD);
+    glTexCoord2f(tx_m2,ty_m1); glVertex3f( dX+vX[7]+BD, H+dY, dZ+vZ[7]+FD);
+    glTexCoord2f(tx_m2,ty_m2); glVertex3f( dX+vX[5]+BD, H+dY, dZ+vZ[5]+ED);
+    glTexCoord2f(tx_m1,ty_m2); glVertex3f( dX+vX[1]+AD, H+dY, dZ+vZ[1]+ED);
 
 }
 
 
-//Draw signpost (meta affects angle)
-void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
+//Draw diode block with torches (meta affects configuration)
+void BlockDrawer::drawDiode( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    //Redstone torches depending on blockID
+    uint8_t torchID = Blk::RedTorch;
+    if (blockID == Blk::DiodeOn) {
+        torchID = Blk::RedTorchOn;
+    }
+    
+    //Determine delay (affects torch position)
+    GLint off_x_1=0, off_z_1=0, off_x_2=0, off_z_2=0, delay_offset=1;
+    delay_offset = 1 - ((meta & 0xC) >> 1);
+
+    //Determine direction.  Needed for top texture
+    face_ID facing;
+    switch (meta & 0x03) {
+        default:
+        case 0: facing = FRONT; off_z_1=-5; off_z_2=-delay_offset;
+            break;
+        case 1: facing = LEFT;  off_x_1=5; off_x_2=delay_offset;
+            break;
+        case 2: facing = BACK;  off_z_1=5; off_z_2=delay_offset;
+            break;
+        case 3: facing = RIGHT; off_x_1=-5; off_x_2=-delay_offset;
+            break;
+    }
+
+    //Draw the redstone torches    
+    drawTorchOffset( torchID, x, y, z, off_x_1, 0, off_z_1);
+    drawTorchOffset( torchID, x, y, z, off_x_2, 0, off_z_2);
+    
+    //Create vertices for diode base
+    GLint vX[8], vY[8], vZ[8];
+    makeCuboidVertex(x, y, z, 16, 2, 16, vX, vY, vZ, facing);
+    
+    //Draw diode base
+    drawVertexBlock( vX, vY, vZ, blockInfo[blockID].tx,
+        blockInfo[blockID].tx_1, blockInfo[blockID].ty,
+        blockInfo[blockID].ty_1, vflags&0x20, facing);
+
+}
+
+
+//Draw signpost (meta affects angle).  Don't use blockID, it has another tex.
+void BlockDrawer::drawSignpost( uint8_t /*blockID*/, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
 
@@ -1998,8 +2200,22 @@ void BlockDrawer::drawSignpost( uint8_t blockID, uint8_t meta,
 //Draw a 6-sided volume with specified vertices and tex coords
 void BlockDrawer::drawVertexBlock( GLint vX[8], GLint vY[8], GLint vZ[8],
     const GLfloat tx_0[6], const GLfloat tx_1[6],
-    const GLfloat ty_0[6], const GLfloat ty_1[6], uint8_t vflags ) const
+    const GLfloat ty_0[6], const GLfloat ty_1[6],
+    uint8_t vflags, face_ID fid) const
 {
+    //Adjust vflags to consider facing
+    switch (fid) {
+        case LEFT: vflags = (vflags&0x80)>>5|(vflags&0x40)>>3|(vflags&0x0C)<<4|
+            (vflags&0x33); break;
+        case RIGHT:vflags = (vflags&0xC0)>>4|(vflags&0x08)<<3|(vflags&0x04)<<5|
+            (vflags&0x33); break;
+        case BACK:vflags = (vflags&0x88)>>1 | (vflags&0x44)<<1 | (vflags&0x33);
+                break;
+        case FRONT:
+        default:
+            break;  //No change
+    }
+  
     //Vertex order: Lower left, lower right, top right, top left
     //A side: 0, 2, 3, 1
     if (! (vflags&0x80)) {
@@ -2188,8 +2404,8 @@ void BlockDrawer::drawTree( uint8_t blockID, uint8_t meta,
     drawCubeMeta(ID, meta, x, y, z, vflags);
 }
 
-//Draw sign on a wall
-void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
+//Draw sign on a wall.  Don't use block ID, it has another texture
+void BlockDrawer::drawWallSign( uint8_t /*blockID*/, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
 
@@ -2291,10 +2507,44 @@ void BlockDrawer::drawWallSign( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawButton( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
-    //TODO: meta affects which wall the button is on, and pressed/not pressed
-    drawScaledBlock( blockID, meta, x, y, z, 0,
-        0.5, 0.25, 0.125, true, 4, 8, 0);
 
+    //Button is offset 6 right, 5 up, and 0 off wall.  Size is 6x5x2
+    GLint dX=6, dY=5, dZ=0, lX=6, lY=5, lZ=2;
+    face_ID facing;
+    uint16_t blockOffset = blockID;
+    
+    //Determine facing and wall offset from meta.
+    //   Offset is assigned here to avoid rotation calculation.  I know, right!
+    switch (meta & 0xF) {
+        //Not pressed, with direction
+        case 0x1: facing = RIGHT; dX=0;  lX=2; dZ=5; lZ=6; break;
+        case 0x2: facing = LEFT;  dX=14; lX=2; dZ=5; lZ=6; break;
+        
+        case 0x3: facing = FRONT; dX=5; lX=6; dZ=0;  lZ=2; break;
+        case 0x4: facing = BACK;  dX=5; lX=6; dZ=14; lZ=2; break;
+        
+        //Button pressed, with direction
+        case 0x9: facing = RIGHT; dX=-1; lX=2; dZ=5; lZ=6; break;
+        case 0xA: facing = LEFT;  dX=15; lX=2; dZ=5; lZ=6; break;
+        
+        case 0xB: facing = FRONT; dX=5; lX=6;  dZ=1; lZ=2; break;
+        case 0xC: facing = BACK;  dX=5; lX=6; dZ=13; lZ=2; break;
+        default:  facing = FRONT; dX=5; lX=6; dZ=0; lZ=2; 
+    }
+
+    //Create vertices for button
+    GLint vX[8], vY[8], vZ[8];
+    makeCuboidVertex(x, y, z, lX, lY, lZ, vX, vY, vZ, facing);
+
+    //Add location offset to button
+    addVertexOffset( vX, vY, vZ, dX, dY, dZ);
+    
+    //Get block info for texture info
+    const BlockInfo& binfo = blockInfo[blockOffset];
+
+    //Draw the block using calculated vertices
+    drawVertexBlock( vX, vY, vZ, binfo.tx, binfo.tx_1, binfo.ty, binfo.ty_1,
+        0, facing);
 }
 
 
@@ -2506,7 +2756,8 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Note Block
     setBlockInfo( 25, 74, 74, 74, 74, 74, 74);
         //Bed (*)
-    setBlockInfo( 26,149,152,  4,135,151,151, &BlockDrawer::drawBed);
+    setBlockInfo( 26,Tex::BedFoot_Side,Tex::BedFoot_Side,  4, Tex::BedFoot_Top,
+        Tex::BedFoot_Face,Tex::BedFoot_Face, &BlockDrawer::drawBed);
 
     //27 - 36 = Dyed wool (drawDyed will override metadata)
     setBlockInfo( 27, 64, 64, 64, 64, 64, 64);
@@ -2605,7 +2856,8 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 65, 83, 83, 83, 83, 83, 83, &BlockDrawer::drawWallItem);
     
     //Track (*)
-    setBlockInfo( 66, 112,112,128,128,128,128,&BlockDrawer::drawTrack);
+    setBlockInfo( 66, Tex::Track, Tex::Track_Turn,
+       Tex::Track, Tex::Track, Tex::Track, Tex::Track,&BlockDrawer::drawTrack);
     
     //CobbleStairs
     setBlockInfo( 67, 16, 16, 16, 16, 16, 16,&BlockDrawer::drawStairs);
@@ -2637,7 +2889,8 @@ Normal block = 0x00: cube, dark, opaque, solid
     
     //StoneButton
     setBlockInfo( 77, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawButton);
-    
+    adjustTexture(Blk::Button , 0,  5,  0, 6, 4, 2);
+
     //SnowLayer(*)
     setBlockInfo( 78, 66, 66, 66, 66, 66, 66,&BlockDrawer::draw4thBlock);
     
@@ -2695,8 +2948,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133);
     
     //Bed 
-    setBlockInfo( 256 + 26, 149, 152, 4, 134, 150, 150);    //foot
-    setBlockInfo( 256 + 27, 152, 152, 4, 135, 151, 151);    //head
+    setBlockInfo( 256 + Blk::Bed, Tex::BedFoot_Side, Tex::BedFoot_Side, 4,
+        Tex::BedFoot_Top, Tex::BedFoot_Face, Tex::BedFoot_Face);    //foot
+    setBlockInfo( 256 + Blk::Bed + 1, Tex::BedHead_Side, Tex::BedHead_Side, 4,
+        Tex::BedHead_Top, Tex::BedHead_Face, Tex::BedHead_Face);    //Head
     
     //Dyed wool (256 + 35 + metadata)
     setBlockInfo( 256 + 35, 64, 64, 64, 64, 64, 64);
@@ -2730,6 +2985,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     //Adjust cuboid shapes of blocks.  Needed for blocks that are not cubes.
     adjustTexture(Blk::Diode  , 0,  0,  0, 16,  2, 16);
     adjustTexture(Blk::DiodeOn, 0,  0,  0, 16,  2, 16);
+    
+    adjustTexture(Blk::Bed, 0,  0,  0, 16,  9, 16);
+    adjustTexture(256 + Blk::Bed, 0,  0,  0, 16,  9, 16);
+    adjustTexture(256 + 1 + Blk::Bed, 0,  0,  0, 16,  9, 16);
 
 
     return true;
@@ -2849,4 +3108,16 @@ void BlockDrawer::makeCuboidVertex(GLint x0, GLint y0, GLint z0,
     }
 
 
+}
+
+//Add small offset to the OpenGL vertices.
+void BlockDrawer::addVertexOffset( GLint vX[8], GLint vY[8], GLint vZ[8],
+        GLint dX, GLint dY, GLint dZ) const
+{
+    size_t i;
+    for (i = 0; i < 8; i++) {
+        vX[i] += dX;
+        vY[i] += dY;
+        vZ[i] += dZ;
+    }
 }
