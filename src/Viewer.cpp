@@ -314,13 +314,13 @@ void Viewer::drawDroppedItem( uint16_t itemID )
     //Scale the size of the item picture, and offset up by 2,2,2
     GLint width, height, depth;
     
-    width  = texmap_TILE_LENGTH >> 1;   //half openGL length = 8
-    height = texmap_TILE_LENGTH >> 1;
-    depth  = texmap_TILE_LENGTH >> 1;
+    width  = texmap_TILE_LENGTH / 2;   //half openGL length = 8
+    height = texmap_TILE_LENGTH / 2;
+    depth  = texmap_TILE_LENGTH / 2;
     
     //Face coordinates (in pixels)
-    GLint A = -(texmap_TILE_LENGTH >> 2);  //offset 1/4 openGL length
-    GLint B = -(texmap_TILE_LENGTH >> 2) + width;
+    GLint A = -(texmap_TILE_LENGTH / 4);  //offset 1/4 openGL length
+    GLint B = -(texmap_TILE_LENGTH / 4) + width;
     GLint C = 0;
     GLint D = height;
     GLint G = 0;    //No offset from middle
