@@ -319,8 +319,8 @@ void Viewer::drawDroppedItem( uint16_t itemID )
     depth  = texmap_TILE_LENGTH / 2;
     
     //Face coordinates (in pixels)
-    GLint A = -(texmap_TILE_LENGTH / 4);  //offset 1/4 openGL length
-    GLint B = -(texmap_TILE_LENGTH / 4) + width;
+    GLint A = -((GLint)texmap_TILE_LENGTH >> 2);  //offset 1/4 openGL length
+    GLint B = -((GLint)texmap_TILE_LENGTH >> 2) + width;
     GLint C = 0;
     GLint D = height;
     GLint G = 0;    //No offset from middle
