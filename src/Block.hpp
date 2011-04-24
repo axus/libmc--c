@@ -40,8 +40,9 @@ namespace mc__ {
             Air=0, Stone, Grass, Dirt, Cobble, Wood, Sapling, Bedrock,
             Water, WaterFlow, Lava, LavaFlow, Sand, Gravel, GoldOre, IronOre,
             CoalOre=16, Log, Leaves, Sponge, Glass, LapisOre, LapisBlock,
-            Dispenser, Sandstone, NoteBlock, Bed, Wool, Daisy, Rose,
-            ShroomBrown, ShroomRed=40, GoldBlock, IronBlock, SlabDouble, Slab,
+            Dispenser, Sandstone, NoteBlock, Bed, RailPowered, RailDetector,
+            Web=30, Wool=35, Daisy, Rose, ShroomBrown, ShroomRed=40, GoldBlock,
+            IronBlock, SlabDouble, Slab,
             Bricks, TNT, Bookshelf, MossStone, Obsidian, Torch, Fire, Spawner,
             StairsWood, Chest, Wire, DiamondOre, DiamondBlock, Workbench,
             Crops, Soil, Furnace, FurnaceOn, Signpost, DoorWood=64, Ladder,
@@ -49,7 +50,7 @@ namespace mc__ {
             PlateWood, RedstoneOre, RedstoneOreOn, RedTorch, RedTorchOn,
             Button, Snow, Ice, SnowBlock, Cactus, ClayBlock, SugarCane,
             Jukebox, Fence, Pumpkin, Netherrack, SoulSand, Glowstone, Portal,
-            PumpkinOn, Cake, Diode, DiodeOn
+            PumpkinOn, Cake, Diode, DiodeOn, ChestGlow
         };
     }
 }
