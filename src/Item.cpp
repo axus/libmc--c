@@ -80,10 +80,10 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 24: result = "Sandstone"; break;
         case 25: result = "Note block"; break;
         case 26: result = "Bed"; break;
-        case 27: result = "Unknown 0x27"; break;
-        case 28: result = "Unknown 0x28"; break;
-        case 29: result = "Unknown 0x29"; break;
-        case 30: result = "Unknown 0x30"; break;
+        case 27: result = "Powered Rail"; break;
+        case 28: result = "Detector Rail"; break;
+        case 29: result = "Unknown"; break;
+        case 30: result = "Web"; break;
         case 31: result = "Unknown 0x31"; break;
         case 32: result = "Unknown 0x32"; break;
         case 33: result = "Unknown 0x33"; break;
@@ -148,6 +148,7 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 92: result = "Cake"; break;
         case 93: result = "Diode"; break;
         case 94: result = "Diode Lit"; break;
+        case 95: result = "Locked Chest"; break;
         case 256: result = "Iron shovel"; break;
         case 257: result = "Iron pickaxe"; break;
         case 258: result = "Iron axe"; break;
@@ -252,6 +253,7 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 354: result = "Cake"; break;
         case 355: result = "Bed"; break;
         case 356: result = "Diode"; break;
+        case 357: result = "Cookie"; break;
         case 397: result = "Record"; break; //Not really in the game ;)
         
         //Mad hax time: (("Item ID" - 256) * 16) + damage = fake ID
@@ -480,13 +482,14 @@ uint8_t Item::maxUses() const
         case 347: result = 0; break;
         case 348: result = 0; break;
         case 349: result = 0; break;
-        case 350: result = 1; break;
+        case 350: result = 1; break;    //Cooked fish
         case 351: result = 0; break;    //Dye
         case 352: result = 0; break;
         case 353: result = 0; break;
         case 354: result = 6; break;
         case 355: result = 0; break;
         case 356: result = 0; break;
+        case 357: result = 1; break;    //Cookie
         case 2256: result = 0; break;
         case 2257: result = 0; break;
 
@@ -530,27 +533,27 @@ uint8_t Item::maxUses() const
 	 23	 17	Dispenser
 	 24	 18	Sandstone
 	 25	 19	Note Block
-	 26	 1A	Aqua green Cloth
-	 27	 1B	Cyan Cloth
-	 28	 1C	Blue Cloth
-	 29	 1D	Purple Cloth
-	 30	 1E	Indigo Cloth
-	 31	 1F	Violet Cloth
+	 26	 1A	Bed
+	 27	 1B	Powered Rail
+	 28	 1C	Detector Rail
+	 29	 1D	-----
+	 30	 1E	Web
+	 31	 1F	-----
      === === ==========
      Dec Hex Block type
      === === ==========
-	 32	 20	Magenta Cloth
-	 33	 21	Pink Cloth
-	 34	 22	Black Cloth
-	 35	 23	Gray Cloth / Wool
+	 32	 20	----
+	 33	 21	----
+	 34	 22	----
+	 35	 23	Wool
 	 36	 24	White Cloth
-	 37	 25	 Yellow flower
-	 38	 26	 Red rose
-	 39	 27	 Brown Mushroom
-	 40	 28	 Red Mushroom
+	 37	 25	Yellow flower
+	 38	 26	Red rose
+	 39	 27	Brown Mushroom
+	 40	 28	Red Mushroom
 	 41	 29	Gold Block
 	 42	 2A	Iron Block
-	 43	 2B	 Double Stone Slab
+	 43	 2B	Double Stone Slab
 	 44	 2C	Stone Slab
 	 45	 2D	Brick
 	 46	 2E	TNT
@@ -603,4 +606,7 @@ uint8_t Item::maxUses() const
 	 90	 5A	Portal
 	 91	 5B	Jack-O-Lantern D
 	 92  5C Cake
+	 93  5D Diode ("off" state)
+	 94  5E Diode ("on" state)
+	 95  5F Locked Chest (Steve Co Supply Crate)
 */

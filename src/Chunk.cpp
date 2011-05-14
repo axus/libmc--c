@@ -405,8 +405,11 @@ const bool mc__::Chunk::isOpaque[] = {
     true,   //24 Sandstone
     true,   //25 Note Block
     false,  //26 Bed
-    true, true, //Cloth
-    true, true, true, true, true, true, true, true, //Cloth
+    false,  //27 Powered Rail
+    false,  //28 Detector Rail
+    true,   //29 ???
+    false,  //30 Web
+    true, true, true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
     false,  //39 BrownShroom
@@ -465,7 +468,7 @@ const bool mc__::Chunk::isOpaque[] = {
     false,  //92 Cake
     false,  //93 Repeater off
     false,  //94 Repeater on
-    true    //95
+    true    //95 Locked chest
 };
 
 //Opaque cubes have their faces blocked by non-opaque cubes
@@ -479,7 +482,7 @@ const bool mc__::Chunk::isCube[] = {
     true,   // 5 Wood
     false,  // 6 Sapling
     true,   // 7 Bedrock
-    true,  // 8 Water(*)
+    true,   // 8 Water(*)
     true,   // 9 WaterStill
     true,   //10 Lava(*)
     true,   //11 LavaStill
@@ -489,17 +492,20 @@ const bool mc__::Chunk::isCube[] = {
     true,   //15 IronOre
     true,   //16 CoalOre
     true,   //17 Log
-    true,  //18 Leaves
+    true,   //18 Leaves
     true,   //19 Sponge
-    true,  //20 Glass
+    true,   //20 Glass
     true,   //21 Lapis Ore
     true,   //22 Lapis Block
     true,   //23 Dispenser
     true,   //24 Sandstone
     true,   //25 Note Block
     false,  //26 Bed
-    true, true, //Cloth
-    true, true, true, true, true, true, true, true, //Cloth
+    false,  //27 Powered Rail
+    false,  //28 Detector Rail
+    true,   //29 ????
+    false,  //30 Web
+    true, true, true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
     false,  //39 BrownShroom
@@ -558,7 +564,7 @@ const bool mc__::Chunk::isCube[] = {
     false,  //92 Cake
     false,  //93 Repeater
     false,  //94 Repeater On
-    true    //95
+    true    //95 Locked Chest
 };
 
 //Name of placed block, mapped by ID
@@ -590,16 +596,16 @@ const char* Chunk::Name[] = {
     "Sandstone",
     "Note Block",
     "Bed",
-    "Cyan Cloth",
-    "Blue Cloth",
-    "Purple Cloth",
-    "Indigo Cloth",
-    "Violet Cloth",
-    "Magenta Cloth",
-    "Pink Cloth",
-    "Black Wool",
-    "Gray Wool",
-    "White Wool",
+    "Powered Rail",
+    "Detector Rail",
+    "Item 29",
+    "Web",
+    "Item 31",
+    "Item 32",
+    "Item 33",
+    "Item 34",
+    "Item 35",
+    "Wool",
     "Yellow flower",
     "Red rose",
     "Brown Mushroom",
@@ -658,7 +664,7 @@ const char* Chunk::Name[] = {
     "Cake",
     "Repeater",
     "Repeater Lit",
-    "Unknown",
+    "Mystery Chest",
     "Unknown",
     "Unknown",
     "Unknown",
@@ -710,8 +716,11 @@ const bool mc__::Chunk::isLogic[] = {
     false,  //24 Sandstone
     true,   //25 Note Block (different from vanilla client)
     false,  //26 Bed
-    false, false, //Cloth
-    false, false, false, false, false, false, false, false, //Cloth
+    true,   //27 Powered Rail
+    true,   //28 Detector Rail
+    false,  //29 ???
+    false,  //30 Web
+    false, false, false, false, false, false, //Cloth
     false,  //37 Flower
     false,  //38 Rose
     false,  //39 BrownShroom
@@ -770,5 +779,5 @@ const bool mc__::Chunk::isLogic[] = {
     false,  //92 Cake
     true,   //93 Repeater
     true,   //94 Repeater Off
-    false   //95
+    false   //95 Mystery Chest
 };
