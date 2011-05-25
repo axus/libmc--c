@@ -145,6 +145,8 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTrack( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawTrack2( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             //Cube with 3 sides same, and one "face"
             void drawFaceCube(uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
@@ -177,6 +179,8 @@ namespace mc__ {
             void drawBed( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawItem( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawSapling( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTorch( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;

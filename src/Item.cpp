@@ -119,7 +119,7 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 63: result = "Sign post"; break;
         case 64: result = "Wooden door"; break;
         case 65: result = "Ladder"; break;
-        case 66: result = "Rails"; break;
+        case 66: result = "Track"; break;
         case 67: result = "Cobblestone stairs"; break;
         case 68: result = "Wall sign"; break;
         case 69: result = "Lever"; break;

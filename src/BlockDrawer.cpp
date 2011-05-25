@@ -1142,9 +1142,6 @@ void BlockDrawer::drawDoubleSlab( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
-    //TODO: metadata to determine track type and orientation
-
-
     //Object boundaries... flat square 1 pixel off the ground
     GLint A = (x << 4) + 0;
     GLint B = (x << 4) + texmap_TILE_LENGTH;
@@ -1205,12 +1202,85 @@ void BlockDrawer::drawTrack( uint8_t blockID, uint8_t meta,
     glTexCoord2f(tx_0,ty_1); glVertex3i( X[3], Y[3], Z[3]);  //Top left:    ACF
 
     //Reverse side
-    glTexCoord2f(tx_0,ty_0); glVertex3i( X[3], Y[3], Z[3]);  //Lower left:  ADF
-    glTexCoord2f(tx_1,ty_0); glVertex3i( X[2], Y[2], Z[2]);  //Lower right: BDF
-    glTexCoord2f(tx_1,ty_1); glVertex3i( X[1], Y[1], Z[1]);  //Top right:   BDE
-    glTexCoord2f(tx_0,ty_1); glVertex3i( X[0], Y[0], Z[0]);  //Top left:    ADE
+    mirrorCoords(tx_0, tx_1, ty_0, ty_1);
+    glTexCoord2f(tx_0,ty_0); glVertex3i( X[1], Y[1], Z[1]);  //Lower left:  ADF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( X[0], Y[0], Z[0]);  //Lower right: BDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( X[3], Y[3], Z[3]);  //Top right:   BDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( X[2], Y[2], Z[2]);  //Top left:    ADE
 
 }
+
+
+//Draw powered minecart track (meta affects angle, direction, texture)
+void BlockDrawer::drawTrack2( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
+{
+    //Object boundaries... flat square 1 pixel off the ground
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 1;
+    GLint D = (y << 4) + 17;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+
+    //3D coords for Bottom-left, bottom-right, top-right, top-left
+    GLint X[4], Y[4], Z[4];
+    //Defaults
+    X[0] = X[3] = A; X[1] = X[2] = B;
+    Y[0] = Y[1] = Y[2] = Y[3] = C;
+    Z[0] = Z[1] = F; Z[2] = Z[3] = E;
+    
+    //Texture index: 0 is unpowered, 1 is powered
+    face_ID t_index=LEFT;
+    if (meta & 0x8) {
+        t_index = RIGHT;    //"Powered" texture
+    }
+
+    //Metadata determines track orientation, shape
+    switch (meta & 0x7) {
+        case 1: //East-West
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; break;
+        case 2: //Ascend South
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; //rotate
+            Y[2] = Y[3] = D; break;
+        case 3: //Ascend North
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; //rotate
+                Y[0] = Y[1] = D; break;
+        case 4: //Ascend East
+            Y[2] = Y[3] = D; break;  
+        case 5: //Ascend West
+            Y[0] = Y[1] = D; break;
+        case 6: //NorthEast corner
+            t_index = RIGHT; break;
+        case 7: //SouthEast corner
+            t_index = RIGHT;
+            X[1] = A; X[3] = B; Z[0] = E; Z[2] = F; break;
+        default: break; //default, flat track on ground
+    }
+
+    //Texture coordinates
+    const BlockInfo& binfo = blockInfo[blockID];
+    GLfloat tx_0 = binfo.tx[t_index];
+    GLfloat tx_1 = binfo.tx[t_index] + tmr;
+    GLfloat ty_0 = binfo.ty[t_index] + tmr;
+    GLfloat ty_1 = binfo.ty[t_index];
+    
+    //Top side?
+    glTexCoord2f(tx_0,ty_0); glVertex3i( X[0], Y[0], Z[0]);  //Lower left:  ACE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( X[1], Y[1], Z[1]);  //Lower right: BCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( X[2], Y[2], Z[2]);  //Top right:   BCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( X[3], Y[3], Z[3]);  //Top left:    ACF
+
+    //Reverse side
+    mirrorCoords(tx_0, tx_1, ty_0, ty_1);
+    glTexCoord2f(tx_0,ty_0); glVertex3i( X[1], Y[1], Z[1]);  //Lower left:  ADF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( X[0], Y[0], Z[0]);  //Lower right: BDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( X[3], Y[3], Z[3]);  //Top right:   BDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( X[2], Y[2], Z[2]);  //Top left:    ADE
+
+}
+
+
 
 //Draw item blockID which is placed flat on the wall
 void BlockDrawer::drawWallItem( uint8_t blockID, uint8_t meta,
@@ -1301,6 +1371,61 @@ void BlockDrawer::drawItem( uint8_t blockID, uint8_t /*meta*/,
     tx_1 = blockInfo[blockID].tx[RIGHT] + tmr;
     ty_0 = blockInfo[blockID].ty[RIGHT] + tmr;    //flip y
     ty_1 = blockInfo[blockID].ty[RIGHT];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left:  HCF
+    glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
+    glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
+    glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left:    HDF
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left:  HCF
+    glTexCoord2f(tx_0,ty_1); glVertex3i( H, D, F);  //Top left:    HDF
+    glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
+    glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
+
+}
+
+//Draw item blockID which is placed as a block
+void BlockDrawer::drawSapling( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
+{
+
+    //Texture map coordinates (0.0 - 1.0)
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+    
+    //Sapling type depends on metadata
+    size_t saptex = (meta & 0x3);
+
+    //Object boundaries... 2 crossed squares inside a clear cube
+    GLint A = (x << 4) + 0;
+    GLint B = (x << 4) + texmap_TILE_LENGTH;
+    GLint C = (y << 4) + 0;
+    GLint D = (y << 4) + texmap_TILE_LENGTH;
+    GLint E = (z << 4) + 0;
+    GLint F = (z << 4) + texmap_TILE_LENGTH;
+    GLint G = (z << 4) + (texmap_TILE_LENGTH/2);    //half-way through z 
+    GLint H = (x << 4) + (texmap_TILE_LENGTH/2);    //half-way through x
+
+    //Look up texture coordinates for the sapling
+    tx_0 = blockInfo[blockID].tx[saptex];
+    tx_1 = blockInfo[blockID].tx[saptex] + tmr;
+    ty_0 = blockInfo[blockID].ty[saptex] + tmr;    //flip y
+    ty_1 = blockInfo[blockID].ty[saptex];
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, G);  //Lower left:  ACG
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D, G);  //Top left:    ADG
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D, G);  //Top right:   BDG
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, G);  //Lower right: BCG
+
+    //Intersecting plane
+    tx_0 = blockInfo[blockID].tx[saptex];
+    tx_1 = blockInfo[blockID].tx[saptex] + tmr;
+    ty_0 = blockInfo[blockID].ty[saptex] + tmr;    //flip y
+    ty_1 = blockInfo[blockID].ty[saptex];
     glTexCoord2f(tx_0,ty_0); glVertex3i( H, C, F);  //Lower left:  HCF
     glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
     glTexCoord2f(tx_1,ty_1); glVertex3i( H, D, E);  //Top right:   HDE
@@ -2712,8 +2837,10 @@ Normal block = 0x00: cube, dark, opaque, solid
     
     setBlockInfo( 5, 4, 4, 4, 4, 4, 4      );     //Wood
     
-    //Sapling     
-    setBlockInfo( 6, 15, 15, 15, 15, 15, 15, &BlockDrawer::drawItem);
+    //Saplings
+    setBlockInfo( 6, Tex::Sapling, Tex::Sapling_Pine, Tex::Sapling_Birch,
+                    Tex::Sapling, Tex::Sapling_Pine, Tex::Sapling_Birch,
+                    &BlockDrawer::drawItem);
     
     setBlockInfo( 7, 17, 17, 17, 17, 17, 17);     //Bedrock
          //Water(*)
@@ -2754,19 +2881,28 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Sandstone
     setBlockInfo( 24,192,192,208,176,192,192);
         //Note Block
-    setBlockInfo( 25, 74, 74, 74, 74, 74, 74);
+    setBlockInfo( Blk::NoteBlock, 74, 74, 74, 74, 74, 74);
         //Bed (*)
-    setBlockInfo( 26,Tex::BedFoot_Side,Tex::BedFoot_Side,  4, Tex::BedFoot_Top,
-        Tex::BedFoot_Face,Tex::BedFoot_Face, &BlockDrawer::drawBed);
+    setBlockInfo( Blk::Bed, Tex::BedFoot_Side,Tex::BedFoot_Side, 4,
+        Tex::BedFoot_Top, Tex::BedFoot_Face,Tex::BedFoot_Face,
+        &BlockDrawer::drawBed);
 
-    //27 - 36 = Dyed wool (drawDyed will override metadata)
-    setBlockInfo( 27, 64, 64, 64, 64, 64, 64);
+        //Powered Rail
+    setBlockInfo( Blk::RailPowered, Tex::Track_Off, Tex::Track_On,
+        Tex::Track_Off, Tex::Track_On, Tex::Track_Off, Tex::Track_On,
+        &BlockDrawer::drawTrack2);
     
-    setBlockInfo( 28, 64, 64, 64, 64, 64, 64);
+        //Detector Rail
+    setBlockInfo( Blk::RailDetector, Tex::Track_Sensor, Tex::Track_Sensor,
+        Tex::Track_Sensor, Tex::Track_Sensor, Tex::Track_Sensor,
+        Tex::Track_Sensor, &BlockDrawer::drawTrack2);
+
+        //Web    
+    setBlockInfo( Blk::Web, Tex::Web, Tex::Web, Tex::Web, Tex::Web, Tex::Web,
+        Tex::Web, &BlockDrawer::drawItem);
     
+    //29, 31 - 36 = Dyed wool (drawDyed will override metadata)
     setBlockInfo( 29, 64, 64, 64, 64, 64, 64);
-    
-    setBlockInfo( 30, 64, 64, 64, 64, 64, 64);
     
     setBlockInfo( 31, 64, 64, 64, 64, 64, 64);
     

@@ -263,13 +263,34 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);    
     delete chunk1;
 
+    //
+    // Track test
+    //
+    chunk1 = new mc__::Chunk( 3, 0, 3, -31, 64, 20);   //4x4 area for tracks
+    mc__::Block glassBlock = { 20, 0, 0, 0};
+    mc__::Block trackBlock = { mc__::Blk::Track, 0, 0, 0};
+    
+    trackBlock.metadata = 3; chunk1->block_array[0] = trackBlock;   //up N
+    trackBlock.metadata = 6; chunk1->block_array[2] = trackBlock;   //turn NE
+    trackBlock.metadata = 9; chunk1->block_array[3] = trackBlock;   //turn NW
+    trackBlock.metadata = 1; chunk1->block_array[4] = trackBlock;   //N/S
+    trackBlock.metadata = 7; chunk1->block_array[6] = trackBlock;   //turn SE
+    trackBlock.metadata = 8; chunk1->block_array[7] = trackBlock;   //turn SW
+    trackBlock.metadata = 2; chunk1->block_array[8] = trackBlock;   //up S
+                             chunk1->block_array[12] = glassBlock;
+    trackBlock.metadata = 4; chunk1->block_array[13] = trackBlock;  //up E
+    trackBlock.metadata = 0; chunk1->block_array[14] = trackBlock;   //E/W
+    trackBlock.metadata = 5; chunk1->block_array[15] = trackBlock;   //up W
+                    
+    //Add the chunk
+    world.addMapChunk(chunk1);    
+    delete chunk1;
 
 
     //
     //  Raised redstone, floorplate, and ladder test
     //
     chunk1 = new mc__::Chunk(3, 1, 3, -8, 65, 9);   //4x2x4 chunk
-    mc__::Block glassBlock = { 20, 0, 0, 0};
     mc__::Block woodPlate = { 72, 0, 0, 0};
     mc__::Block stonePlate = { 70, 0, 0, 0};
     mc__::Block ladderBlock = { 65, 2, 0, 0};

@@ -96,7 +96,7 @@ UserInterface::UserInterface(
 
     //Get texture
     texture_files[TEX_TERRAIN] = string("terrain.png");  //block textures
-    texture_files[TEX_ITEM] = string("items.png");       //item icons
+    texture_files[TEX_ITEM] = string("gui/items.png");       //item icons
     texture_files[TEX_SIGN] = string("item/sign.png");   //signpost texture
 
     //Load textures   //TODO: configurable

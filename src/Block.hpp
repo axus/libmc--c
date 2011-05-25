@@ -46,7 +46,7 @@ namespace mc__ {
             Bricks, TNT, Bookshelf, MossStone, Obsidian, Torch, Fire, Spawner,
             StairsWood, Chest, Wire, DiamondOre, DiamondBlock, Workbench,
             Crops, Soil, Furnace, FurnaceOn, Signpost, DoorWood=64, Ladder,
-            Rails, StairsCobble, Wallsign, Lever, PlateStone, DoorIron,
+            Track, StairsCobble, Wallsign, Lever, PlateStone, DoorIron,
             PlateWood, RedstoneOre, RedstoneOreOn, RedTorch, RedTorchOn,
             Button, Snow, Ice, SnowBlock, Cactus, ClayBlock, SugarCane,
             Jukebox, Fence, Pumpkin, Netherrack, SoulSand, Glowstone, Portal,
