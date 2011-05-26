@@ -2900,13 +2900,18 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Web    
     setBlockInfo( Blk::Web, Tex::Web, Tex::Web, Tex::Web, Tex::Web, Tex::Web,
         Tex::Web, &BlockDrawer::drawItem);
+
+        //Tall Grass    
+    setBlockInfo( Blk::TallGrass, Tex::TallGrass, Tex::TallGrass,
+                  Tex::TallGrass, Tex::TallGrass, Tex::TallGrass,
+                  Tex::TallGrass, &BlockDrawer::drawItem);
+        //Dead Bush
+    setBlockInfo( Blk::DeadBush, Tex::DeadBush, Tex::DeadBush,
+                  Tex::DeadBush, Tex::DeadBush, Tex::DeadBush,
+                  Tex::DeadBush, &BlockDrawer::drawItem);
     
-    //29, 31 - 36 = Dyed wool (drawDyed will override metadata)
+    //29, 33 - 36 = Dyed wool (drawDyed will override metadata)
     setBlockInfo( 29, 64, 64, 64, 64, 64, 64);
-    
-    setBlockInfo( 31, 64, 64, 64, 64, 64, 64);
-    
-    setBlockInfo( 32, 64, 64, 64, 64, 64, 64);
     
     setBlockInfo( 33, 64, 64, 64, 64, 64, 64);
     
@@ -3072,8 +3077,16 @@ Normal block = 0x00: cube, dark, opaque, solid
     
     //Diode on (Repeater)
     setBlockInfo( Blk::DiodeOn, Tex::Diode_On, Tex::Diode_On, Tex::Step_Top,
-    Tex::Diode_On, Tex::Diode_On, Tex::Diode_On, &BlockDrawer::drawDiode);
-    
+    Tex::Diode_On, Tex::Diode_On, Tex::Diode_On, &BlockDrawer::drawDiode);    
+
+    //Glow Chest
+    setBlockInfo( Blk::ChestGlow, 26, 26, 25, 25, 26, 27,
+        &BlockDrawer::drawChest);
+
+    //Trap Door (*) TODO: drawTrapDoor
+    setBlockInfo( Blk::TrapDoor, Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor,
+        Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor, &BlockDrawer::drawDoor);
+
     //extra info for metadata blocks
     
     //Redwood tree
@@ -3116,6 +3129,18 @@ Normal block = 0x00: cube, dark, opaque, solid
     //Iron door
     setBlockInfo( 256 + 71, 98, 98, 98, 98, 98, 98); //bottom
     setBlockInfo( 256 + 72, 82, 82, 82, 82, 82, 82); //top
+
+    //Trap door
+    setBlockInfo( 256 + Blk::TrapDoor, Tex::TrapDoor, Tex::TrapDoor,
+        Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor);
+    setBlockInfo( 256 + Blk::TrapDoor + 1, Tex::TrapDoor, Tex::TrapDoor,
+        Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor);
+
+    //Glow chest
+    setBlockInfo( 256 + Blk::ChestGlow + 0, 26, 26, 25, 25, 58, 41);
+    setBlockInfo( 256 + Blk::ChestGlow + 1, 26, 26, 25, 25, 57, 42);
+    setBlockInfo( 256 + Blk::ChestGlow + 2, 58, 41, 25, 25, 26, 26);
+    setBlockInfo( 256 + Blk::ChestGlow + 3, 57, 42, 25, 25, 26, 26);
 
 
     //Adjust cuboid shapes of blocks.  Needed for blocks that are not cubes.

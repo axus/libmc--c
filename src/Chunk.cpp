@@ -409,7 +409,9 @@ const bool mc__::Chunk::isOpaque[] = {
     false,  //28 Detector Rail
     true,   //29 ???
     false,  //30 Web
-    true, true, true, true, true, true, //Cloth
+    false,  //31 Tall Grass
+    false,  //32 Dead Bush
+    true, true, true, true, //Reserved
     false,  //37 Flower
     false,  //38 Rose
     false,  //39 BrownShroom
@@ -468,7 +470,8 @@ const bool mc__::Chunk::isOpaque[] = {
     false,  //92 Cake
     false,  //93 Repeater off
     false,  //94 Repeater on
-    true    //95 Locked chest
+    true,   //95 Locked chest
+    false    //96 trapdoor
 };
 
 //Opaque cubes have their faces blocked by non-opaque cubes
@@ -505,7 +508,9 @@ const bool mc__::Chunk::isCube[] = {
     false,  //28 Detector Rail
     true,   //29 ????
     false,  //30 Web
-    true, true, true, true, true, true, //Cloth
+    false,   //31 Tall Grass
+    false,   //32 Dead Bush
+    true, true, true, true, //Cloth
     false,  //37 Flower
     false,  //38 Rose
     false,  //39 BrownShroom
@@ -564,7 +569,8 @@ const bool mc__::Chunk::isCube[] = {
     false,  //92 Cake
     false,  //93 Repeater
     false,  //94 Repeater On
-    true    //95 Locked Chest
+    true,    //95 Locked Chest
+    false   //96 Trap Door
 };
 
 //Name of placed block, mapped by ID
@@ -600,8 +606,8 @@ const char* Chunk::Name[] = {
     "Detector Rail",
     "Item 29",
     "Web",
-    "Item 31",
-    "Item 32",
+    "Tall Grass",
+    "Dead Bush",
     "Item 33",
     "Item 34",
     "Item 35",
@@ -665,7 +671,7 @@ const char* Chunk::Name[] = {
     "Repeater",
     "Repeater Lit",
     "Mystery Chest",
-    "Unknown",
+    "Trap Door",
     "Unknown",
     "Unknown",
     "Unknown",
@@ -720,7 +726,9 @@ const bool mc__::Chunk::isLogic[] = {
     true,   //28 Detector Rail
     false,  //29 ???
     false,  //30 Web
-    false, false, false, false, false, false, //Cloth
+    false,  //31 Tall Grass
+    false,  //32 Dead Bush
+    false, false, false, false, //Cloth
     false,  //37 Flower
     false,  //38 Rose
     false,  //39 BrownShroom
@@ -779,5 +787,6 @@ const bool mc__::Chunk::isLogic[] = {
     false,  //92 Cake
     true,   //93 Repeater
     true,   //94 Repeater Off
-    false   //95 Mystery Chest
+    false,   //95 Mystery Chest
+    false   //96 Trap Door (maybe not?)
 };
