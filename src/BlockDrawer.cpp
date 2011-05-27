@@ -152,7 +152,8 @@ void BlockDrawer::setBlockColor(uint16_t blockID, face_ID face) const
             }
             glColor3ub( red, green, blue);
             break;
-        case 18:    //Leaves
+        case 18:    //Leaves, tall grass
+        case Blk::TallGrass:
         case (256+18):
         case (512+18):
             red=leaf_color[0]; green=leaf_color[1]; blue=leaf_color[2];
@@ -1331,12 +1332,24 @@ void BlockDrawer::drawWallItem( uint8_t blockID, uint8_t meta,
 
 }
 
+void BlockDrawer::drawBiomeItem( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    setBlockColor(blockID, (face_ID)0);
+    
+    //Draw the item
+    drawItem( blockID, meta, x, y, z, vflags);
+    
+    //Return to normal
+    setBlockColor( 0, (face_ID)0);
+
+}
+
+
 //Draw item blockID which is placed as a block
 void BlockDrawer::drawItem( uint8_t blockID, uint8_t /*meta*/,
     GLint x, GLint y, GLint z, uint8_t /*vflags*/) const
 {
-
-
     //Texture map coordinates (0.0 - 1.0)
     GLfloat tx_0, tx_1, ty_0, ty_1;
 
@@ -2904,7 +2917,7 @@ Normal block = 0x00: cube, dark, opaque, solid
         //Tall Grass    
     setBlockInfo( Blk::TallGrass, Tex::TallGrass, Tex::TallGrass,
                   Tex::TallGrass, Tex::TallGrass, Tex::TallGrass,
-                  Tex::TallGrass, &BlockDrawer::drawItem);
+                  Tex::TallGrass, &BlockDrawer::drawBiomeItem);
         //Dead Bush
     setBlockInfo( Blk::DeadBush, Tex::DeadBush, Tex::DeadBush,
                   Tex::DeadBush, Tex::DeadBush, Tex::DeadBush,
