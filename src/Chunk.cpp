@@ -790,3 +790,101 @@ const bool mc__::Chunk::isLogic[] = {
     false,   //95 Mystery Chest
     false   //96 Trap Door (maybe not?)
 };
+
+//Check if block is flammable
+const bool mc__::Chunk::doesBurn[] = {
+    false,  // 0 Air
+    false,  // 1 Stone
+    true,  // 2 Grass
+    false,  // 3 Dirt
+    false,  // 4 Cobble
+    true,  // 5 Wood
+    true,  // 6 Sapling
+    false,  // 7 Bedrock
+    false,  // 8 Water(*)
+    false,  // 9 WaterStill
+    false,  //10 Lava(*)
+    false,  //11 LavaStill
+    false,  //12 Sand
+    false,  //13 Gravel
+    false,  //14 GoldOre
+    false,  //15 IronOre
+    false,  //16 CoalOre
+    true,  //17 Log
+    true,  //18 Leaves
+    true,  //19 Sponge
+    false,  //20 Glass
+    false,  //21 Lapis Ore
+    false,  //22 Lapis Block
+    false,   //23 Dispenser  (different from vanilla client)
+    false,  //24 Sandstone
+    true,   //25 Note Block (different from vanilla client)
+    true,  //26 Bed
+    false,   //27 Powered Rail
+    false,   //28 Detector Rail
+    false,  //29 ???
+    true,  //30 Web
+    true,  //31 Tall Grass
+    true,  //32 Dead Bush
+    true, true, true, true, //Cloth
+    true,  //37 Flower
+    true,  //38 Rose
+    false,  //39 BrownShroom
+    false,  //40 RedShroom
+    false,  //41 GoldBlock
+    false,  //42 IronBlock
+    false,  //43 DoubleStep
+    false,  //44 Step
+    false,  //45 Brick
+    true,  //46 TNT
+    false,  //47 Bookshelf
+    false,  //48 Mossy
+    false,  //49 Obsidian
+    false,  //50 Torch
+    false,  //51 Fire
+    false,  //52 Spawner
+    true,  //53 WoodStairs
+    true,  //54 Chest (*)
+    false,   //55 Wire (*)
+    false,  //56 DiamondOre
+    false,  //57 DiamondBlock
+    true,  //58 Workbench
+    true,  //59 Crops (*)
+    false,  //60 Soil
+    false,  //61 Furnace
+    false,  //62 LitFurnace
+    true,  //63 SignPost (*)
+    true,  //64 WoodDoor (*)
+    true,  //65 Ladder (*)
+    false,  //66 Track (*)
+    false,  //67 CobbleStairs
+    true,  //68 WallSign (*)
+    false,   //69 Lever
+    false,   //70 StonePlate
+    false,  //71 IronDoor (*)
+    true,   //72 WoodPlate
+    false,   //73 RedstoneOre
+    false,   //74 RedstoneOreLit(*)
+    false,   //75 RedstoneTorch
+    false,   //76 RedstoneTorchLit
+    false,   //77 StoneButton
+    false,  //78 SnowCover
+    false,  //79 Ice
+    false,  //80 Snow
+    true,  //81 Cactus
+    false,  //82 Clay
+    true,  //83 Sugarcane (*)
+    true,  //84 Jukebox
+    false,  //85 Fence (*)
+    true,  //86 Pumpkin
+    true,  //87 Netherstone
+    false,  //88 91 SlowSand
+    false,  //89 Lightstone
+    false,  //90 Portal (??)
+    true,  //91 PumpkinLit
+    true,  //92 Cake
+    false,   //93 Repeater
+    false,   //94 Repeater Off
+    true,   //95 Mystery Chest
+    true   //96 Trap Door
+};

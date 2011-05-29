@@ -1563,8 +1563,10 @@ void BlockDrawer::drawTorch( uint8_t blockID, uint8_t meta,
 void BlockDrawer::drawFire( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
+    //Metadata indicates age of fire
+    
+    //Draw fire on each flammable face
     drawCube(blockID, meta, x, y, z, vflags);
-    //TODO: draw on wall(s) depending on meta
 }
 
 //Draw dyed block (use item texture, determined by meta)

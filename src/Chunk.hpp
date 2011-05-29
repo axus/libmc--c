@@ -124,6 +124,8 @@ namespace mc__ {
             static const bool isCube[]; //item = !cube
             static const char *Name[];  //block name
             static const bool isLogic[];//Used in redstone circuit
+            static const bool doesBurn[];   //Can fire burn it.
+            //Use isCube && doesBurn for attaching adjacent fire
     };
 }
 

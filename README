@@ -36,7 +36,7 @@ Prerequisites for Linux (tested on RedHat variants):
 
 Graphics files (not included, copy to binary directory)
     terrain.png
-    items.png
+    gui/items.png
     item/sign.png
 
 Build and test instructions
