@@ -2916,6 +2916,11 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( Blk::Web, Tex::Web, Tex::Web, Tex::Web, Tex::Web, Tex::Web,
         Tex::Web, &BlockDrawer::drawItem);
 
+        //Sticky Piston
+    setBlockInfo( Blk::StickyPiston, Tex::Piston_Side, Tex::Piston_Side,
+        Tex::Piston_Side, Tex::Piston_Side, Tex::Piston_Back,
+        Tex::PistonSticky_Front, &BlockDrawer::drawFaceCube);
+
         //Tall Grass    
     setBlockInfo( Blk::TallGrass, Tex::TallGrass, Tex::TallGrass,
                   Tex::TallGrass, Tex::TallGrass, Tex::TallGrass,
@@ -2924,12 +2929,19 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( Blk::DeadBush, Tex::DeadBush, Tex::DeadBush,
                   Tex::DeadBush, Tex::DeadBush, Tex::DeadBush,
                   Tex::DeadBush, &BlockDrawer::drawItem);
+
+        //Piston
+    setBlockInfo( Blk::Piston, Tex::Piston_Side, Tex::Piston_Side,
+        Tex::Piston_Side, Tex::Piston_Side, Tex::Piston_Back,
+        Tex::Piston_Front, &BlockDrawer::drawFaceCube);
+
+        //PistonHead: TODO: drawPistonHead
+    setBlockInfo( Blk::Piston, Tex::Piston_Side, Tex::Piston_Side,
+        Tex::Piston_Side, Tex::Piston_Side, Tex::Piston_Back,
+        Tex::Piston_Front, &BlockDrawer::drawFaceCube);
+
     
-    //29, 33 - 36 = Dyed wool (drawDyed will override metadata)
-    setBlockInfo( 29, 64, 64, 64, 64, 64, 64);
-    
-    setBlockInfo( 33, 64, 64, 64, 64, 64, 64);
-    
+    //35 - 36 = Dyed wool (drawDyed will override metadata)
     setBlockInfo( 34, 64, 64, 64, 64, 64, 64);
     
     setBlockInfo( 35, 64, 64, 64, 64, 64, 64,&BlockDrawer::drawDyed);

@@ -41,16 +41,17 @@ namespace mc__ {
             Water, WaterFlow, Lava, LavaFlow, Sand, Gravel, GoldOre, IronOre,
             CoalOre=16, Log, Leaves, Sponge, Glass, LapisOre, LapisBlock,
             Dispenser, Sandstone, NoteBlock, Bed, RailPowered, RailDetector,
-            Web=30, TallGrass, DeadBush, Wool=35, Daisy, Rose, ShroomBrown,
-            ShroomRed=40, GoldBlock, IronBlock, SlabDouble, Slab,
-            Bricks, TNT, Bookshelf, MossStone, Obsidian, Torch, Fire, Spawner,
-            StairsWood, Chest, Wire, DiamondOre, DiamondBlock, Workbench,
-            Crops, Soil, Furnace, FurnaceOn, Signpost, DoorWood=64, Ladder,
-            Track, StairsCobble, Wallsign, Lever, PlateStone, DoorIron,
-            PlateWood, RedstoneOre, RedstoneOreOn, RedTorch, RedTorchOn,
-            Button, Snow, Ice, SnowBlock, Cactus, ClayBlock, SugarCane,
-            Jukebox, Fence, Pumpkin, Netherrack, SoulSand, Glowstone, Portal,
-            PumpkinOn, Cake, Diode, DiodeOn, ChestGlow, TrapDoor
+            StickyPiston, Web, TallGrass, DeadBush=32, Piston, PistonHead,
+            Wool=35, Daisy, Rose, ShroomBrown, ShroomRed=40, GoldBlock,
+            IronBlock, SlabDouble, Slab, Bricks, TNT, Bookshelf, MossStone,
+            Obsidian, Torch, Fire, Spawner, StairsWood, Chest, Wire,
+            DiamondOre, DiamondBlock, Workbench, Crops, Soil, Furnace,
+            FurnaceOn, Signpost, DoorWood=64, Ladder, Track, StairsCobble,
+            Wallsign, Lever, PlateStone, DoorIron, PlateWood, RedstoneOre,
+            RedstoneOreOn, RedTorch, RedTorchOn, Button, Snow, Ice, SnowBlock,
+            Cactus, ClayBlock, SugarCane, Jukebox, Fence, Pumpkin, Netherrack,
+            SoulSand, Glowstone, Portal, PumpkinOn, Cake, Diode, DiodeOn,
+            ChestGlow, TrapDoor
         };
     }
 }
@@ -102,6 +103,9 @@ namespace mc__ {
     24          0x18        Sandstone            
     25          0x19        Note Block           
     26          0x1A        Bed                 Piece|Orien 0-3,8-11
+    29          0x1D        Sticky Piston       Orien|extended 1-5, +8
+    33          0x21        Piston              Orien|extended 1-5, +8
+    34          0x22        Piston Head         Orien|extended 1-5, +8
     35          0x23        Wool                Color       0-15
     37          0x25        Daisy                
     38          0x26        Rose                 

@@ -76,7 +76,8 @@ namespace mc__ {
             IronDoor_High, Ladder, TrapDoor, Soil_Wet=86, Soil_Dry, Crops_1,
             Crops_2, Crops_3, Crops_4, Crops_5, Crops_6, Crops_7, Crops_8,
             Handle=96, Door_Low, IronDoor_Low, RedTorch_On, Pumpkin_Top=102,
-            NetherRack, SoulSand, LightStone, Track_Turn=112, Wool_Black,
+            NetherRack, SoulSand, LightStone, PistonSticky_Front, Piston_Front,
+            Piston_Side, Piston_Back, Piston_On, Track_Turn=112, Wool_Black,
             Wool_DarkGray, RedTorch_Off, Log2_Side, Log3_Side, Pumpkin_Side,
             Pumpkin_Front, PumpkinLit_Front, Cake_Top, Cake_Side, Cake_Cut,
             Cake_Bottom, Track=128, Wool_Red, Wool_Pink, Diode_Off,
@@ -108,15 +109,16 @@ namespace mc__ {
             I_BowlSoup, I_LightDust, I_EmptyBucket, I_WaterBucket, I_LavaBucket,
             I_MilkBucket, I_InkSack, I_DarkGrayDye, I_WoodShovel, I_StoneShovel,
             I_IronShovel, I_DiamondShovel, I_GoldShovel, I_Pork=87,
-            I_PorkCooked, I_Fish, I_FishCooked, I_Cookie=92, I_RoseDye=94,
-            I_PinkDye, I_WoodPick, I_StonePick, I_IronPick, I_DiamondPick,
-            I_GoldPick, I_Leather=103, I_Saddle, I_CactusDye=110, I_LimeDye,
-            I_WoodAxe, I_StoneAxe, I_IronAxe, I_DiamondAxe, I_GoldAxe,
-            I_CocoaDye=126, I_YellowDye, I_WoodHoe, I_StoneHoe, I_IronHoe,
-            I_DiamondHoe, I_GoldHoe, I_Minecart=135, I_Boat, I_LapisDye=142,
-            I_LightBlueDye, I_ChestCart=151, I_PurpleDye=158, I_MagentaDye,
-            I_PowerCart=167, I_CyanDye=174, I_OrangeDye, I_LightGrayDye=190,
-            I_BoneMeal=191, I_GoldRecord=240, I_GreenRecord
+            I_PorkCooked, I_Fish, I_FishCooked, I_Cookie=92, I_Shears,
+            I_RoseDye, I_PinkDye, I_WoodPick, I_StonePick, I_IronPick,
+            I_DiamondPick, I_GoldPick, I_Leather=103, I_Saddle,
+            I_CactusDye=110, I_LimeDye, I_WoodAxe, I_StoneAxe, I_IronAxe,
+            I_DiamondAxe, I_GoldAxe, I_CocoaDye=126, I_YellowDye, I_WoodHoe,
+            I_StoneHoe, I_IronHoe, I_DiamondHoe, I_GoldHoe, I_Minecart=135,
+            I_Boat, I_LapisDye=142, I_LightBlueDye, I_ChestCart=151,
+            I_PurpleDye=158, I_MagentaDye, I_PowerCart=167, I_CyanDye=174,
+            I_OrangeDye, I_LightGrayDye=190, I_BoneMeal=191, I_GoldRecord=240,
+            I_GreenRecord
         };
 
 

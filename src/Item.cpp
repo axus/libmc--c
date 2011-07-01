@@ -82,14 +82,14 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 26: result = "Bed"; break;
         case 27: result = "Powered Rail"; break;
         case 28: result = "Detector Rail"; break;
-        case 29: result = "Unknown 0x1D"; break;
+        case 29: result = "Sticky Piston"; break;
         case 30: result = "Web"; break;
         case 31: result = "Tall Grass"; break;
         case 32: result = "Dead Bush"; break;
-        case 33: result = "Unknown 0x21"; break;
-        case 34: result = "Unknown 0x22"; break;
+        case 33: result = "Piston"; break;
+        case 34: result = "Piston Head"; break;
         case 35: result = "Wool"; break;
-        case 36: result = "Unknown 0x24"; break;
+        case 36: result = "Web"; break;
         case 37: result = "Yellow flower"; break;
         case 38: result = "Red rose"; break;
         case 39: result = "Brown mushroom"; break;
@@ -255,7 +255,8 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 355: result = "Bed"; break;
         case 356: result = "Diode"; break;
         case 357: result = "Cookie"; break;
-        case 358: result = "Map?"; break;
+        case 358: result = "Map"; break;
+        case 359: result = "Shears"; break;
         case 397: result = "Record"; break; //Not really in the game ;)
         
         //Mad hax time: (("Item ID" - 256) * 16) + damage = fake ID
@@ -494,6 +495,8 @@ uint8_t Item::maxUses() const
         case 355: result = 0; break;
         case 356: result = 0; break;
         case 357: result = 1; break;    //Cookie
+        case 358: result = 0; break;    //Map
+        case 359: result = 64; break;   //Shears
         case 2256: result = 0; break;
         case 2257: result = 0; break;
 
@@ -540,17 +543,17 @@ uint8_t Item::maxUses() const
 	 26	 1A	Bed
 	 27	 1B	Powered Rail
 	 28	 1C	Detector Rail
-	 29	 1D	-----
+	 29	 1D	PistonSticky
 	 30	 1E	Web
 	 31	 1F	-----
      === === ==========
      Dec Hex Block type
      === === ==========
 	 32	 20	----
-	 33	 21	----
-	 34	 22	----
+	 33	 21	Piston
+	 34	 22	Piston Head
 	 35	 23	Wool
-	 36	 24	White Cloth
+	 36	 24	Web
 	 37	 25	Yellow flower
 	 38	 26	Red rose
 	 39	 27	Brown Mushroom
