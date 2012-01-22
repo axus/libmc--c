@@ -42,7 +42,7 @@ namespace mc__ {
             CoalOre=16, Log, Leaves, Sponge, Glass, LapisOre, LapisBlock,
             Dispenser, Sandstone, NoteBlock, Bed, RailPowered, RailDetector,
             StickyPiston, Web, TallGrass, DeadBush=32, Piston, PistonHead,
-            Wool=35, Daisy, Rose, ShroomBrown, ShroomRed=40, GoldBlock,
+            Wool=35, PistonMoved, Daisy, Rose, ShroomBrown, ShroomRed=40, GoldBlock,
             IronBlock, SlabDouble, Slab, Bricks, TNT, Bookshelf, MossStone,
             Obsidian, Torch, Fire, Spawner, StairsWood, Chest, Wire,
             DiamondOre, DiamondBlock, Workbench, Crops, Soil, Furnace,
@@ -51,27 +51,14 @@ namespace mc__ {
             RedstoneOreOn, RedTorch, RedTorchOn, Button, Snow, Ice, SnowBlock,
             Cactus, ClayBlock, SugarCane, Jukebox, Fence, Pumpkin, Netherrack,
             SoulSand, Glowstone, Portal, PumpkinOn, Cake, Diode, DiodeOn,
-            ChestGlow, TrapDoor
+            ChestGlow, TrapDoor=96, Silverfish, StoneBrick, ShroomBrown, ShroomRed,
+            IronBars, GlassPane, Melon, PumpkinStem, MelonStem, Vines, FenceGate,
+            StairsBrick, StairsStone, Mycelium, LilyPad, BrickNether, StairsNether,
+            NetherWart, Enchanting, Brewing, Cauldron, EndPortal, EndPortalFrame,
+            EndStone, DragonEgg
         };
     }
 }
-
-/*
-
-    82          0x52        Clay Block           
-    83          0x53        Sugarcane           Growth      0-15
-    84          0x54        Jukebox              
-    85          0x55        Fence                
-    86          0x56        Pumpkin             Orientation 0-3
-    87          0x57        Netherrack           
-    88          0x58        Soul Sand            
-    89          0x59        Glowstone Block     
-    90          0x5A        Portal               
-    91          0x5B        Jack-O-Lantern      Orientation 0-3
-    92          0x5C        Cake                Eaten       0-6
-    93          0x5D        Diode (off)         Ori.,Delay  0-15? 
-    94          0x5E        Diode (on)          Ori.,Delay  0-15? 
-*/
 
 /*
     //Block IDs and associated metadata
@@ -81,7 +68,7 @@ namespace mc__ {
     2           0x02        Grass             
     3           0x03        Dirt                
     4           0x04        Cobble            
-    5           0x05        Wood                Type        0-2
+    5           0x05        Wood                Type        0-3
     6           0x06        Sapling             Growth      0-15
     7           0x07        Bedrock           
     8           0x08        Water (moving)      Spread      0-7
@@ -103,25 +90,31 @@ namespace mc__ {
     24          0x18        Sandstone            
     25          0x19        Note Block           
     26          0x1A        Bed                 Piece|Orien 0-3,8-11
+    27          0x1B        Powered Rail        Orien|Power 0-9
+    28          0x1C        Detector Rail       Orientation 0-9
     29          0x1D        Sticky Piston       Orien|extended 1-5, +8
+    30          0x1E        Cobweb              
+    31          0x1F        TallGrass           shrub, fern 0-2
+    32          0x20        Dead Bush           Spawn only
     33          0x21        Piston              Orien|extended 1-5, +8
     34          0x22        Piston Head         Orien|extended 1-5, +8
     35          0x23        Wool                Color       0-15
+    36          0x24        MovedBlock
     37          0x25        Daisy                
     38          0x26        Rose                 
     39          0x27        Brown Shroom        
     40          0x28        Red Shroom           
     41          0x29        Gold Block        
     42          0x2A        Iron Block           
-    43          0x2B        DoubleSlab          Texture     0-3
-    44          0x2C        Slab                Texture     0-3
+    43          0x2B        DoubleSlab          Texture     0-6
+    44          0x2C        Slab                Texture     0-6
     45          0x2D        Bricks               
     46          0x2E        TNT                 
     47          0x2F        Bookshelf            
     48          0x30        Moss Stone           
     49          0x31        Obsidian             
     50          0x32        Torch               Orientation 1-5
-    51          0x33        Fire                Burning
+    51          0x33        Fire                Age 0-15
     52          0x34        Spawner              
     53          0x35        Wood Stairs         Orientation 0-9
     54          0x36        Chest                
@@ -148,7 +141,7 @@ namespace mc__ {
     75          0x4B        Redstone Torch
     76          0x4C        Redstone Torch, lit
     77          0x4D        Stone Button        Push|Ori.   0-7
-    78          0x4E        Snow                
+    78          0x4E        Snow                Height      0-7 
     79          0x4F        Ice                 
     80          0x50        Snow Block  
     81          0x51        Cactus              Growth      0-15
@@ -165,5 +158,33 @@ namespace mc__ {
     92          0x5C        Cake                Eaten       0-6
     93          0x5D        Diode (off)         Ori.,Delay  0-15? 
     94          0x5E        Diode (on)          Ori.,Delay  0-15? 
+    95          0x5F        Locked Chest
+    96          0x60        Trapdoor            Wall,Open   0-7
+	97          0x61        Hidden Silverfish   Texture     0-2
+	98          0x62        Stone Bricks        Texture     0-2
+	99          0x63        Huge Brown Mushroom Texture     0-10      
+	100         0x64        Huge Red Mushroom   Texture     0-10
+	101         0x65        Iron Bars
+	102         0x66        Glass Pane
+	103         0x67        Melon
+	104         0x68        Pumpkin Stem          
+	105         0x69        Melon Stem          
+	106         0x6A        Vines               Attached To 0-15
+	107         0x6B        Fence Gate          Open? Dir.  0-7
+	108         0x6C        Brick Stairs          
+	109         0x6D        Stone Brick Stairs          
+	110         0x6E        Mycelium
+	111         0x6F        Lily Pad
+	112         0x70        Nether Brick
+	113         0x71        Nether Brick Fence
+	114         0x72        Nether Brick Stairs          
+	115         0x73        Nether Wart           I
+	116         0x74        Enchantment Table                  (entity)
+	117         0x75        Brewing Stand      Slots used  0-7 (entity)
+	118         0x76        Cauldron           Water amt.  0-3
+	119         0x77        End Portal T
+	120         0x78        End Portal Frame     Broken?   0-1     
+	121         0x79        End Stone
+	122         0x7A        Dragon Egg
 */
 
