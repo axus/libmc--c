@@ -971,7 +971,7 @@ bool Viewer::loadItemInfo()
     setItemInfo(316, mc__::Tex::I_GoldLegs  ,0x02);//    Gold Leggings
     setItemInfo(317, mc__::Tex::I_GoldBoots ,0x02);//    Gold Boots
     setItemInfo(318, mc__::Tex::I_Flint     ,0x02);//    Flint
-    setItemInfo(319, mc__::Tex::I_Pork      ,0x02);//    Raw Porkchop
+    setItemInfo(319, mc__::Tex::I_PorkRaw   ,0x02);//    Raw Porkchop
     setItemInfo(320, mc__::Tex::I_PorkCooked,0x02);//    Cooked Porkchop
     setItemInfo(321, mc__::Tex::I_Painting  ,0x02);//    Paintings
     setItemInfo(322, mc__::Tex::I_GoldApple ,0x02);//    Golden apple
@@ -1001,7 +1001,7 @@ bool Viewer::loadItemInfo()
     setItemInfo(346, mc__::Tex::I_FishingRod,0x02);//    Fishing Rod
     setItemInfo(347, mc__::Tex::I_Watch     ,0x03);//    Clock
     setItemInfo(348, mc__::Tex::I_LightDust ,0x02);//    Glowstone Dust
-    setItemInfo(349, mc__::Tex::I_Fish      ,0x02);//    Raw Fish
+    setItemInfo(349, mc__::Tex::I_FishRaw   ,0x02);//    Raw Fish
     setItemInfo(350, mc__::Tex::I_FishCooked,0x02);//    Cooked Fish
         //Dyes -> Refer to 1520 - 1535
     setItemInfo(351, mc__::Tex::I_InkSack,0x06, 1520);

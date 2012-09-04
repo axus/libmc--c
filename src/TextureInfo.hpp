@@ -57,18 +57,20 @@ namespace mc__ {
     
     //Texture enumerator
     namespace Tex {
+        //See http://www.minecraftwiki.net/wiki/File:TerrainGuide.png
+    
         //Enumerator for terrain textures
         enum Terrain_t {
             Grass=0, Stone, Dirt, Grass_Side, Wood, Step_Side, Step_Top, Brick,
             TNT_Side, TNT_Top, TNT_Bottom, Web, Rose, Daisy, Sapling=15,
             Cobble=16, Admin, Sand, Gravel, Log_Side, Log_Top, IronBlock,
-            GoldBlock, DiamondBlock=24, Chest_Top, Chest_Back, Chest_Front,
-            RedShroom, BrownShroom, FireTex=31, GoldOre=32, IronOre, Coal,
-            Books, CobbleMoss, Obsidian, Biome_Side1, TallGrass, Biome_Top,
-            Chest_LFront, Chest_RFront, Bench_Top, Furnace_Front, Furnace_Back,
-            Dispenser,FireTex2,
+            GoldBlock, DiamondBlock, EmeraldBlock, 
+            RedShroom=28, BrownShroom, Sapling_Jungle, FireTex, GoldOre=32,
+            IronOre, Coal, Books, CobbleMoss, Obsidian, Biome_Side1, TallGrass,
+            Biome_Top, Bench_Top=43, Furnace_Front, Furnace_Back, Dispenser,
+            FireTex2,
             Sponge=48, Glass, DiamondOre, RedOre, Leaf, Leaf1, BrickStone,
-            DeadBush, DeadShrub, Fern Chest_RBack, Chest_LBack, Bench_Front,
+            DeadBush, DeadShrub, Fern, Chest_RBack, Chest_LBack, Bench_Front,
             Bench_Side, FurnaceLit_Front, Furnace_Top, Sapling_Pine,
             Wool=64, Spawner, Snow, Ice, Snowy_Side, Cactus_Top, Cactus_Side,
             Cactus_Bottom, Clay, SugarCane, Jukebox_Side, Jukebox_Top, LilyPad,
@@ -84,18 +86,22 @@ namespace mc__ {
             MelonStem_Bent,  Track=128, Wool_Red, Wool_Pink, Diode_Off,
             Leaf2=132, Leaf3, BedFoot_Top, BedHead_Top, MelonSide, MelonTop,
             Cauldron_Top, Cauldron_Bot, Cake=140, Myc_Side, Myc_Bot, Vines,
-            LapisBlock=144, Wool_DarkGreen, Wool_Green, Diode_On, Icicle,
+            LapisBlock=144, Wool_DarkGreen, Wool_Green, Diode_On, Glass_Side,
             BedFoot_Side=149, BedFoot_Face, BedHead_Face, BedHead_Side,
-            Cauldron_Side=154, Cauldron_Feet, Brewing_Base, Brewing_Side,
+            LogJungle, Cauldron_Side, Cauldron_Feet, Brew_Base, Brew_Side,
             EndFrame_Top, EndFrame_Side,
             LapisOre=160, Wool_Brown, Wool_Yellow, Track_Off, WireX, Wire,
-            Enchant_Top, End_Portal, EndFrame_Eye=174, EndFrame_Bot,
+            Enchant_Top, End_Egg, Cocoa_3, Cocoa_2, Cocoa_1, EmeraldOre,
+            Tripwire_Hook, Tripwire, EndEye=174, EndStone,
             SandStone_Top=176, Wool_Blue, Wool_LightBlue, Track_On,
-            None1, None2, Enchant_Side, Enchant_Bot, 
+            RedOver1, RedOver2, Enchant_Side, Enchant_Bot, 
             Sandstone_Side=192, Wool_Purple, Wool_Magenta, Track_Sensor,
+            LeafJungle1, LeafJungle2, WoodPine, WoodJungle,
             Water=205, Water_2, Water_3, Sandstone_Bottom=208, Wool_Aqua,
-            Wool_Orange, Water_4=222, Water_5, BrickNether, Wool_Gray,
-            NetherWart1, NetherWart2, NetherWart3, Lava=237, Lava_2, Lava_3,
+            Wool_Orange, RedLamp_Off, RedLamp_On, StoneCircle, WoodBirch,
+            Water_4=222, Water_5, BrickNether, Wool_Gray,
+            NetherWart1, NetherWart2, NetherWart3, Sandstone_Deco,
+            Sandstone_Smooth, Lava=237, Lava_2, Lava_3,
             Crack_1, Crack_2, Crack_3, Crack_4, Crack_5, Crack_6, Crack_7,
             Crack_8, Mask1, Mask2, Mask3, Mask4, Lava_4=254, Lava_5
         };

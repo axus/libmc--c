@@ -2740,7 +2740,7 @@ void BlockDrawer::setBlockInfo( uint16_t index,
 
 }
 
-//Fill texture ID -> textureInfo map
+//Fill texture ID -> textureInfo map with default values
 bool BlockDrawer::loadTexInfo()
 {
     uint16_t ID;
@@ -2794,7 +2794,7 @@ bool BlockDrawer::loadTexInfo()
     //Fill the rest of IDs with sponge texture
     for (; ID < texture_id_MAX; ID++) {
       
-        //Map ID to sponge texture information
+        //Associate unknown ID to the "sponge" texture information
         texInfo[ID++] = new TextureInfo(TEX_TERRAIN, 16, 16, 0, 3, 1, 1);
     }
     
@@ -2802,7 +2802,7 @@ bool BlockDrawer::loadTexInfo()
     return true;
 }
 
-//Map block ID to block type information
+//Associate the block ID to block type information
 bool BlockDrawer::loadBlockInfo()
 {
     uint8_t ID;

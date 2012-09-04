@@ -42,20 +42,24 @@ namespace mc__ {
             CoalOre=16, Log, Leaves, Sponge, Glass, LapisOre, LapisBlock,
             Dispenser, Sandstone, NoteBlock, Bed, RailPowered, RailDetector,
             StickyPiston, Web, TallGrass, DeadBush=32, Piston, PistonHead,
-            Wool=35, PistonMoved, Daisy, Rose, ShroomBrown, ShroomRed=40, GoldBlock,
-            IronBlock, SlabDouble, Slab, Bricks, TNT, Bookshelf, MossStone,
-            Obsidian, Torch, Fire, Spawner, StairsWood, Chest, Wire,
+            Wool=35, PistonMoved, Daisy, Rose, ShroomBrown, ShroomRed=40,
+            GoldBlock, IronBlock, SlabDouble, Slab, Bricks, TNT, Bookshelf,
+            MossStone, Obsidian, Torch, Fire, Spawner, StairsWood, Chest, Wire,
             DiamondOre, DiamondBlock, Workbench, Crops, Soil, Furnace,
             FurnaceOn, Signpost, DoorWood=64, Ladder, Track, StairsCobble,
             Wallsign, Lever, PlateStone, DoorIron, PlateWood, RedstoneOre,
             RedstoneOreOn, RedTorch, RedTorchOn, Button, Snow, Ice, SnowBlock,
             Cactus, ClayBlock, SugarCane, Jukebox, Fence, Pumpkin, Netherrack,
             SoulSand, Glowstone, Portal, PumpkinOn, Cake, Diode, DiodeOn,
-            ChestGlow, TrapDoor=96, Silverfish, StoneBrick, ShroomBrown, ShroomRed,
-            IronBars, GlassPane, Melon, PumpkinStem, MelonStem, Vines, FenceGate,
-            StairsBrick, StairsStone, Mycelium, LilyPad, BrickNether, StairsNether,
-            NetherWart, Enchanting, Brewing, Cauldron, EndPortal, EndPortalFrame,
-            EndStone, DragonEgg
+            ChestGlow, TrapDoor=96, Silverfish, StoneBrick, HugeShroomBrown,
+            HugeShroomRed, IronBars, GlassPane, Melon, PumpkinStem, MelonStem,
+            Vines, FenceGate, StairsBrick, StairsStone, Mycelium, LilyPad,
+            BrickNether, StairsNether, NetherWart, Enchanting, Brewing,
+            Cauldron, EndPortal, EndPortalFrame, EndStone, DragonEgg, RedLamp,
+            RedLampOn, DoubleSlabWood, SlabWood, CocoaPlant, StairsSand=128,
+            EmeraldOre, EndChest, TripwireHook, Tripwire, EmeraldBlock,
+            StairsSpruce, StairsBirch, StairsJungle, Command, Beacon,
+            CobbleWall, Flowerpot, Carrots, Potatoes, ButtonWood
         };
     }
 }

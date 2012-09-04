@@ -150,6 +150,54 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 94: result = "Diode Lit"; break;
         case 95: result = "Locked Chest"; break;
         case 96: result = "Trap Door"; break;
+        case 97: result = "Monster Egg"; break;
+        case 98: result = "Stone Bricks"; break;
+        case 99: result = "Huge Brown Mushroom"; break;
+        case 100: result = "Huge Red Mushroom"; break;
+        case 101: result = "Iron Bars"; break;
+        case 102: result = "Glass Pane"; break;
+        case 103: result = "Melon"; break;
+        case 104: result = "Pumpkin Stem"; break;
+        case 105: result = "Melon Stem"; break;
+        case 106: result = "Vines"; break;
+        case 107: result = "Fence Gate"; break;
+        case 108: result = "Brick Stairs"; break;
+        case 109: result = "Stone Brick Stairs"; break;
+        case 110: result = "Mycelium"; break;
+        case 111: result = "Lily Pad"; break;
+        case 112: result = "Nether Brick"; break;
+        case 113: result = "Nether Brick Fence"; break;
+        case 114: result = "Nether Brick Stairs"; break;
+        case 115: result = "Nether Wart"; break;
+        case 116: result = "Enchantment Table"; break;
+        case 117: result = "Brewing Stand"; break;
+        case 118: result = "Cauldron"; break;
+        case 119: result = "End Portal"; break;
+        case 120: result = "End Portal Frame"; break;
+        case 121: result = "End Stone"; break;
+        case 122: result = "Dragon Egg"; break;
+        case 123: result = "Redstone Lamp Off"; break;
+        case 124: result = "Redstone Lamp On"; break;
+        case 125: result = "Wooden Double Slab"; break;
+        case 126: result = "Wooden Slab"; break;
+        case 127: result = "Cocoa Plant"; break;
+        case 128: result = "Sandstone Stairs"; break;
+        case 129: result = "Emerald Ore"; break;
+        case 130: result = "Ender Chest"; break;
+        case 131: result = "Tripwire Hook"; break;
+        case 132: result = "Tripwire"; break;
+        case 133: result = "Block of Emerald"; break;
+        case 134: result = "Spruce Wood Stairs"; break;
+        case 135: result = "Birch Wood Stairs"; break;
+        case 136: result = "Jungle Wood Stairs"; break;
+        case 137: result = "Command Block"; break;
+        case 138: result = "Beacon Block"; break;
+        case 139: result = "Cobblestone Wall"; break;
+        case 140: result = "Flower Pot"; break;
+        case 141: result = "Carrots"; break;
+        case 142: result = "Potatoes"; break;
+        case 143: result = "Wooden Button "; break;
+        
         case 256: result = "Iron shovel"; break;
         case 257: result = "Iron pickaxe"; break;
         case 258: result = "Iron axe"; break;
@@ -257,6 +305,43 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 357: result = "Cookie"; break;
         case 358: result = "Map"; break;
         case 359: result = "Shears"; break;
+        case 360: result = "Melon Slice"; break;
+	    case 361: result = "Pumpkin Seeds"; break;
+	    case 362: result = "Melon Seeds"; break;
+	    case 363: result = "Raw Beef"; break;
+	    case 364: result = "Steak"; break;
+	    case 365: result = "Raw Chicken"; break;
+	    case 366: result = "Cooked Chicken"; break;
+	    case 367: result = "Rotten Flesh"; break;
+	    case 368: result = "Ender Pearl"; break;
+	    case 369: result = "Blaze Rod"; break;
+	    case 370: result = "Ghast Tear"; break;
+	    case 371: result = "Gold Nugget"; break;
+	    case 372: result = "Nether Wart"; break;
+	    case 373: result = "Potions D"; break;
+	    case 374: result = "Glass Bottle"; break;
+	    case 375: result = "Spider Eye"; break;
+	    case 376: result = "Fermented Spider Eye"; break;
+	    case 377: result = "Blaze Powder"; break;
+	    case 378: result = "Magma Cream"; break;
+	    case 379: result = "Brewing Stand"; break;
+	    case 380: result = "Cauldron"; break;
+	    case 381: result = "Eye of Ender"; break;
+	    case 382: result = "Glistering Melon"; break;
+	    case 383: result = "Spawn Egg D"; break;
+	    case 384: result = "Bottle o' Enchanting"; break;
+	    case 385: result = "Fire Charge"; break;
+	    case 386: result = "Book and Quill"; break;
+	    case 387: result = "Written Book"; break;
+	    case 388: result = "Emerald"; break;
+	    case 389: result = "Item Frame"; break;
+	    case 390: result = "Flower Pot"; break;
+	    case 391: result = "Carrots"; break;
+	    case 392: result = "Potato"; break;
+	    case 393: result = "Baked Potato"; break;
+	    case 394: result = "Poisonous Potato"; break;
+	    case 395: result = "Map"; break;
+	    case 396: result = "Golden Carrot"; break;
         case 397: result = "Record"; break; //Not really in the game ;)
         
         //Mad hax time: (("Item ID" - 256) * 16) + damage = fake ID
@@ -277,9 +362,17 @@ string Item::getString( uint16_t iid, uint8_t offset)
         case 1534: result = "Orange dye"; break;
         case 1535: result = "Bone meal"; break;
         
-        case 2256: result = "Gold record"; break;
-        case 2257: result = "Green record"; break;
-
+        case 2256: result = "13 Disc"; break;
+        case 2257: result = "Cat Disc"; break;
+        case 2258: result = "blocks Disc"; break;
+	    case 2259: result = "chirp Disc"; break;
+	    case 2260: result = "far Disc"; break;
+	    case 2261: result = "mall Disc"; break;
+	    case 2262: result = "mellohi Disc"; break;
+	    case 2263: result = "stal Disc"; break;
+	    case 2264: result = "strad Disc"; break;
+	    case 2265: result = "ward Disc"; break;
+	    case 2266: result = "11 Disc"; break;
         default:
             result="Unknown";
             break;
@@ -616,4 +709,52 @@ uint8_t Item::maxUses() const
 	 93  5D Diode ("off" state)
 	 94  5E Diode ("on" state)
 	 95  5F Locked Chest (Steve Co Supply Crate)
+    96	60	Trapdoor D
+	97	61	Monster Egg D
+	98	62	Stone Bricks D B
+	99	63	Huge Brown Mushroom D
+	100	64	Huge Red Mushroom D
+	101	65	Iron Bars
+	102	66	Glass Pane
+	103	67	Melon
+	104	68	Pumpkin Stem D
+	105	69	Melon Stem D
+	106	6A	Vines D
+	107	6B	Fence Gate D
+	108	6C	Brick Stairs D
+	109	6D	Stone Brick Stairs D
+	110	6E	Mycelium
+	111	6F	Lily Pad
+	112	70	Nether Brick
+	113	71	Nether Brick Fence
+	114	72	Nether Brick Stairs D
+	115	73	Nether Wart D I
+	116	74	Enchantment Table T
+	117	75	Brewing Stand D T I
+	118	76	Cauldron D I
+	119	77	End Portal T
+	120	78	End Portal Frame D
+	121	79	End Stone
+	122	7A	Dragon Egg
+	123	7B	Redstone Lamp (inactive)
+	124	7C	Redstone Lamp (active)
+	125	7D	Wooden Double Slab D B
+	126	7E	Wooden Slab D B
+	127	7F	Cocoa Plant
+	128	80	Sandstone Stairs D
+	129	81	Emerald Ore
+	130	82	Ender Chest D T
+	131	83	Tripwire Hook D
+	132	84	Tripwire D I
+	133	85	Block of Emerald
+	134	86	Spruce Wood Stairs D
+	135	87	Birch Wood Stairs D
+	136	88	Jungle Wood Stairs D
+	137	89	Command Block T
+	138	8A	Beacon Block T
+    139	8B	Cobblestone Wall B D
+	140	8C	Flower Pot D I
+	141	8D	Carrots D
+	142	8E	Potatoes D
+	143	8F	Wooden Button 
 */
