@@ -128,22 +128,20 @@ namespace mc__ {
             I_DiamondPick, I_GoldPick, I_Bow2, I_Leather=103,I_Saddle,I_BeefRaw,
             I_BeefCooked, I_EnderPearl, I_BlazeRod, I_MelonSlice, I_CactusDye,
             I_LimeDye, I_WoodAxe, I_StoneAxe, I_IronAxe, I_DiamondAxe,I_GoldAxe,
-            I_Bow3, I_ChickenRaw, I_ChickenCooked, I_GhastTear, I_GoldNugget,
+            I_Bow3, I_ChickenRaw=137, I_ChickenCooked, I_GhastTear, I_GoldNugget,
             I_NetherWart, I_CocoaDye, I_YellowDye, I_WoodHoe, I_StoneHoe,
             I_IronHoe, I_DiamondHoe, I_GoldHoe, I_Bow4, I_Minecart=135, I_Boat,
             I_MelonGlistering, I_FermentedSpiderEye, I_SpiderEye, I_Bottle,
             I_BottleLiquid, I_LapisDye, I_LightBlueDye, I_ChestCart=151,
             I_EggGeneric, I_Bottle2, I_EnderEye, I_Cauldron, I_BlazePowerder,
-            I_PurpleDye, I_MagentaDye, I_PowerCart=167, I_EggSpots=169,
-            I_BrewingStand=172, I_MagmaCream, I_CyanDye, I_OrangeDye,
-            I_LightGrayDye=190, I_BoneMeal=191, I_Disc_13=240,
+            I_PurpleDye, I_MagentaDye, I_PowerCart=167, I_EggSpots, I_Ruby,
+            I_BottleEnchant, I_BrewingStand, I_MagmaCream, I_CyanDye,
+            I_OrangeDye, I_Emerald=186, I_BookQuill, I_BookWritten,
+            I_LightGrayDye=190, I_BoneMeal, I_Disc_13=240,
             I_Disc_Cat, I_Disc_Blocks, I_Disc_Chirp, I_Disc_Far, I_Disc_Mall,
             I_Disc_Mellohi, I_Disc_Stal, I_Disc_Strad, I_Disc_Ward, I_Disc_11,
             I_Disc_Ex1, I_Disc_Ex2, I_Disc_Ex3, I_Disc_Ex4, I_Disc_Ex5
         };
-
-
-
     }
 }
 

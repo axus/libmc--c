@@ -574,8 +574,9 @@ int main(int argc, char** argv)
         world, mobiles, player, events);
         
     //Run until user exits
+    ui.setFramerateLimit(100);
     while (ui.run()) {
-        sf::Sleep(0.010);   //100FPS - draw time
+        //sf::Sleep(0.010);   //100FPS - draw time
     }
     
     //Send disconnect message
@@ -583,7 +584,7 @@ int main(int argc, char** argv)
     
     //Sleep 5 seconds if run to max frames
     if (run_limit) {
-        sf::Sleep(5);
+        sf::sleep( sf::seconds(5));
     }
     
     //Exit with no error code
