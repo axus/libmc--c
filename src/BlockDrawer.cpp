@@ -475,6 +475,23 @@ void BlockDrawer::drawFaceCube2( uint8_t blockID, uint8_t meta,
 
 }
 
+//Draw silverfish hidden block, depending on metadata
+void BlockDrawer::drawEggBlock( uint8_t /*blockID*/, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    //Block looks like Stone, Cobble, or BrickStone
+    switch(meta) {
+      case 0:
+        drawCube(Blk::Stone, 0, x, y, z, vflags); break;
+      case 1:
+        drawCube(Blk::Cobble, 0, x, y, z, vflags); break;
+      case 2:
+        drawCube(Blk::StoneBrick, 0, x, y, z, vflags); break;
+      default:
+        drawCube(Blk::Stone, 0, x, y, z, vflags); break;
+    }
+}
+
 
 //Draw "treasure" chest (large chest if adjacent block is chest)
 void BlockDrawer::drawChest( uint8_t blockID, uint8_t meta,
@@ -2544,6 +2561,26 @@ void BlockDrawer::drawTree( uint8_t blockID, uint8_t meta,
     drawCubeMeta(ID, meta, x, y, z, vflags);
 }
 
+//Draw piece of giant mushroom (meta affects texture)
+void BlockDrawer::drawShroom( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+    //Use meta to change texture of cube
+    uint16_t ID = blockID;
+    switch( blockID ) {
+        case Blk::HugeShroomBrown:
+            ID = Blk::HugeShroomBrown + 256 + meta;
+            break;
+        case Blk::HugeShroomRed:
+            ID = Blk::HugeShroomBrown + 256 + 16 + meta;
+            break;
+        default:
+            ID = blockID;
+            break;
+    }
+    drawCubeMeta(ID, meta, x, y, z, vflags);
+}
+
 //Draw sign on a wall.  Don't use block ID, it has another texture
 void BlockDrawer::drawWallSign( uint8_t /*blockID*/, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
@@ -3114,6 +3151,22 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( Blk::TrapDoor, Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor,
         Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor, &BlockDrawer::drawDoor);
 
+    //Monster hiding in block
+    setBlockInfo( Blk::Silverfish, Tex::Stone, Tex::Stone, Tex::Cobble,
+        Tex::Cobble, Tex::BrickStone, Tex::BrickStone, &BlockDrawer::drawEggBlock);
+
+    //Bricks of stone
+    setBlockInfo( Blk::StoneBrick, Tex::BrickStone, Tex::BrickStone,
+        Tex::BrickStone, Tex::BrickStone, Tex::BrickStone, Tex::BrickStone);
+
+    //Big Mushroom
+    setBlockInfo( Blk::HugeShroomBrown, Tex::Myc_Stem, Tex::Myc_Stem,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Myc_Stem, Tex::Myc_Stem,
+        &BlockDrawer::drawShroom);
+    setBlockInfo( Blk::HugeShroomRed, Tex::Myc_Stem, Tex::Myc_Stem,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Myc_Stem, Tex::Myc_Stem,
+        &BlockDrawer::drawShroom);
+
     //extra info for metadata blocks
     
     //Redwood tree
@@ -3144,23 +3197,23 @@ Normal block = 0x00: cube, dark, opaque, solid
     }
     
     //Chest (256 + 54=left, 55=right, 56=left X, 57=right X)
-    setBlockInfo( 256 + 54 + 0, 26, 26, 25, 25, 58, 41);
-    setBlockInfo( 256 + 54 + 1, 26, 26, 25, 25, 57, 42);
-    setBlockInfo( 256 + 54 + 2, 58, 41, 25, 25, 26, 26);
-    setBlockInfo( 256 + 54 + 3, 57, 42, 25, 25, 26, 26);
+    setBlockInfo( 310, 26, 26, 25, 25, 58, 41);
+    setBlockInfo( 311, 26, 26, 25, 25, 57, 42);
+    setBlockInfo( 312, 58, 41, 25, 25, 26, 26);
+    setBlockInfo( 313, 57, 42, 25, 25, 26, 26);
 
-    //Wood door
-    setBlockInfo( 256 + 64, 97, 97, 97, 97, 97, 97);  //bottom
-    setBlockInfo( 256 + 65, 81, 81, 81, 81, 81, 81);  //top
+    //Wood door = 256 + Blk::WoodDoor
+    setBlockInfo( 320, 97, 97, 97, 97, 97, 97);  //bottom
+    setBlockInfo( 321, 81, 81, 81, 81, 81, 81);  //top
     
-    //Iron door
-    setBlockInfo( 256 + 71, 98, 98, 98, 98, 98, 98); //bottom
-    setBlockInfo( 256 + 72, 82, 82, 82, 82, 82, 82); //top
+    //Iron door = 256 + Blk::IronDoor
+    setBlockInfo( 327, 98, 98, 98, 98, 98, 98); //bottom
+    setBlockInfo( 328, 82, 82, 82, 82, 82, 82); //top
 
-    //Trap door
-    setBlockInfo( 256 + Blk::TrapDoor, Tex::TrapDoor, Tex::TrapDoor,
+    //Trap door = 256  + Blk::TrapDoor 
+    setBlockInfo( 352, Tex::TrapDoor, Tex::TrapDoor,
         Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor);
-    setBlockInfo( 256 + Blk::TrapDoor + 1, Tex::TrapDoor, Tex::TrapDoor,
+    setBlockInfo( 353, Tex::TrapDoor, Tex::TrapDoor,
         Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor, Tex::TrapDoor);
 
     //Glow chest
@@ -3169,6 +3222,66 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 256 + Blk::ChestGlow + 2, 58, 41, 25, 25, 26, 26);
     setBlockInfo( 256 + Blk::ChestGlow + 3, 57, 42, 25, 25, 26, 26);
 
+    //http://www.minecraftwiki.net/wiki/Data_Values#Huge_brown_and_red_mushroom
+    //Huge Brown Shroom: 355 = 256 + Blk::HugeBrownShroom + 0
+    setBlockInfo(355, Tex::Myc_Pore, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Myc_Pore, Tex::Myc_Pore, Tex::Myc_Pore);
+    setBlockInfo(356, Tex::Cap_Brown, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Cap_Brown, Tex::Myc_Pore);
+    setBlockInfo(357, Tex::Myc_Pore, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Cap_Brown, Tex::Myc_Pore);
+    setBlockInfo(358, Tex::Myc_Pore, Tex::Cap_Brown,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Cap_Brown, Tex::Myc_Pore);
+    setBlockInfo(359, Tex::Cap_Brown, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Myc_Pore, Tex::Myc_Pore);
+    setBlockInfo(360, Tex::Myc_Pore, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Myc_Pore, Tex::Myc_Pore);
+    setBlockInfo(361, Tex::Myc_Pore, Tex::Cap_Brown,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Myc_Pore, Tex::Myc_Pore);
+    setBlockInfo(362, Tex::Cap_Brown, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Myc_Pore, Tex::Cap_Brown);
+    setBlockInfo(363, Tex::Myc_Pore, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Myc_Pore, Tex::Cap_Brown);
+    setBlockInfo(364, Tex::Myc_Pore, Tex::Cap_Brown,
+        Tex::Myc_Pore, Tex::Cap_Brown, Tex::Myc_Pore, Tex::Cap_Brown);
+    setBlockInfo(365, Tex::Myc_Stem, Tex::Myc_Stem,
+        Tex::Myc_Pore, Tex::Myc_Pore, Tex::Myc_Stem, Tex::Myc_Stem);
+    setBlockInfo(369, Tex::Myc_Stem, Tex::Myc_Stem,
+        Tex::Myc_Stem, Tex::Myc_Stem, Tex::Myc_Stem, Tex::Myc_Stem);
+    setBlockInfo(370, Tex::Cap_Brown, Tex::Cap_Brown,
+        Tex::Cap_Brown, Tex::Cap_Brown, Tex::Cap_Brown, Tex::Cap_Brown);
+
+    //Huge Red shroom: 370 = 265 + Blk::HugeBrownShroom + 16
+    setBlockInfo(371, Tex::Myc_Pore, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Myc_Pore, Tex::Myc_Pore, Tex::Myc_Pore);
+    setBlockInfo(372, Tex::Cap_Red, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Cap_Red, Tex::Myc_Pore);
+    setBlockInfo(373, Tex::Myc_Pore, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Cap_Red, Tex::Myc_Pore);
+    setBlockInfo(374, Tex::Myc_Pore, Tex::Cap_Red,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Cap_Red, Tex::Myc_Pore);
+    setBlockInfo(375, Tex::Cap_Red, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Myc_Pore, Tex::Myc_Pore);
+    setBlockInfo(376, Tex::Myc_Pore, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Myc_Pore, Tex::Myc_Pore);
+    setBlockInfo(377, Tex::Myc_Pore, Tex::Cap_Red,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Myc_Pore, Tex::Myc_Pore);
+    setBlockInfo(378, Tex::Cap_Red, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Myc_Pore, Tex::Cap_Red);
+    setBlockInfo(379, Tex::Myc_Pore, Tex::Myc_Pore,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Myc_Pore, Tex::Cap_Red);
+    setBlockInfo(380, Tex::Myc_Pore, Tex::Cap_Red,
+        Tex::Myc_Pore, Tex::Cap_Red, Tex::Myc_Pore, Tex::Cap_Red);
+    setBlockInfo(381, Tex::Myc_Stem, Tex::Myc_Stem,
+        Tex::Myc_Pore, Tex::Myc_Pore, Tex::Myc_Stem, Tex::Myc_Stem);
+    setBlockInfo(387, Tex::Myc_Stem, Tex::Myc_Stem,
+        Tex::Myc_Stem, Tex::Myc_Stem, Tex::Myc_Stem, Tex::Myc_Stem);
+    setBlockInfo(388, Tex::Cap_Red, Tex::Cap_Red,
+        Tex::Cap_Red, Tex::Cap_Red, Tex::Cap_Red, Tex::Cap_Red);
+
+    //On the x axis: A = left,    B = right
+    //On the y axis: C = down,    D = up
+    //On the z axis: E = farther, F = closer
 
     //Adjust cuboid shapes of blocks.  Needed for blocks that are not cubes.
     adjustTexture(Blk::Diode  , 0,  0,  0, 16,  2, 16);

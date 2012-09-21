@@ -59,7 +59,7 @@ namespace mc__ {
             RedLampOn, DoubleSlabWood, SlabWood, CocoaPlant, StairsSand=128,
             EmeraldOre, EndChest, TripwireHook, Tripwire, EmeraldBlock,
             StairsSpruce, StairsBirch, StairsJungle, Command, Beacon,
-            CobbleWall, Flowerpot, Carrots, Potatoes, ButtonWood
+            CobbleWall, Flowerpot, Carrots, Potatoes, ButtonWood, Max
         };
     }
 }

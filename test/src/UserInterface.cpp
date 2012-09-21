@@ -136,7 +136,7 @@ void UserInterface::setFramerateLimit(int max_frames)
 {
     App.setFramerateLimit(max_frames);
 }
- 
+
 //Handle game and SFML events, draw game
 bool UserInterface::run()
 {
@@ -172,25 +172,25 @@ bool UserInterface::run()
     
     //Handle keyboard state (they might be pressed down)
     if (!handleKeys()) { Running = false; }
-
+    
     //Handle mouse position changes (if there were inputs)
     if (inputs && handleMouse()) {;}
-
+    
     //Increment item spin
     viewer.item_rotation += 0.5;
     if (viewer.item_rotation >= 360) {
         viewer.item_rotation = 0.0;
     }
-
+    
     //Clear the view
     viewer.clear();
-
+    
     //Redraw the entities, items, etc.
     viewer.drawMobiles(mobiles);
     
     //Redraw the world (terrain)
     viewer.drawWorld(world);    
-
+    
     //2D overlay
     //Update status display
     if (showStatus) {
@@ -215,9 +215,7 @@ bool UserInterface::run()
         
         //Reload attribute bits
         glPopAttrib( );
-        
     }
-
     
     //Update the window
     App.display();
@@ -491,7 +489,7 @@ bool UserInterface::handleMouse()
     
     //Trap real mouse pointer in center of window if mouselooking
     if (mouselooking) {
-        sf::Mouse::setPosition( sf::Vector2<int>(center_X, center_Y));
+        sf::Mouse::setPosition( sf::Vector2<int>(center_X, center_Y), App);
         
         //Remember last mouse position for mouselooking
         last_X = mouse_X;

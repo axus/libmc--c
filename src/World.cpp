@@ -437,7 +437,7 @@ bool World::updateMapChunks(bool cleanup)
 //Generate chunk representing block ID 0 - 95
 bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
     
-    const uint8_t size_X=16, size_Y=11, size_Z=1;
+    const uint8_t size_X=16, size_Y=(mc__::Blk::Max/8), size_Z=1;
 
     //Align to MapChunk grid
     int32_t chunkX = X & 0xFFFFFFF0;
@@ -467,11 +467,12 @@ bool World::genChunkTest(int32_t X, int8_t Y, int32_t Z) {
         }
     }
     
-    //Add top to doors
-    firstBlockArray[3].blockID = 64;
-    firstBlockArray[3].metadata |= 0x8;
-    firstBlockArray[3 + size_Y*7].blockID = 71;
-    firstBlockArray[3 + size_Y*7].metadata |= 0x8;
+    //Add top to wood door
+    firstBlockArray[size_Y - 7].blockID = 64;
+    firstBlockArray[size_Y - 7].metadata |= 0x8;
+    //Add topt o metal door
+    firstBlockArray[size_Y - 7 + size_Y*7].blockID = 71;
+    firstBlockArray[size_Y - 7 + size_Y*7].metadata |= 0x8;
     
     //Set cactus metadata
     firstBlockArray[size_Y].metadata = 15;
