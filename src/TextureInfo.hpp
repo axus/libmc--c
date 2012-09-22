@@ -28,7 +28,9 @@
 
 namespace mc__ {
 
-    enum tex_t { TEX_TERRAIN, TEX_ITEM, TEX_SIGN, TEX_MAX};
+    //Identifier for different texture files that have been loaded.
+    enum tex_t { TEX_TERRAIN, TEX_ITEM, TEX_SIGN, TEX_CHEST, TEX_LARGE_CHEST,
+        TEX_ENDER_CHEST, TEX_BOAT, TEX_CART, TEX_BOOK, TEX_MAX};
   
     class TextureInfo {
       public:

@@ -35,6 +35,7 @@ namespace mc__ {
     } Block;
     
     //Named values for block IDs
+    const uint8_t maxBlockID=144;
     namespace Blk {
         enum Block_t {
             Air=0, Stone, Grass, Dirt, Cobble, Wood, Sapling, Bedrock,
@@ -54,13 +55,23 @@ namespace mc__ {
             ChestGlow, TrapDoor=96, Silverfish, StoneBrick, HugeShroomBrown,
             HugeShroomRed, IronBars, GlassPane, Melon, PumpkinStem, MelonStem,
             Vines, FenceGate, StairsBrick, StairsStone, Mycelium, LilyPad,
-            BrickNether, StairsNether, NetherWart, Enchanting, Brewing,
-            Cauldron, EndPortal, EndPortalFrame, EndStone, DragonEgg, RedLamp,
-            RedLampOn, DoubleSlabWood, SlabWood, CocoaPlant, StairsSand=128,
-            EmeraldOre, EndChest, TripwireHook, Tripwire, EmeraldBlock,
-            StairsSpruce, StairsBirch, StairsJungle, Command, Beacon,
-            CobbleWall, Flowerpot, Carrots, Potatoes, ButtonWood, Max
+            BrickNether, FenceNether, StairsNether, NetherWart, Enchanting,
+            Brewing, Cauldron, EndPortal, EndPortalFrame, EndStone, DragonEgg,
+            RedLamp, RedLampOn, DoubleSlabWood, SlabWood, CocoaPlant,
+            StairsSand=128, EmeraldOre, EndChest, TripwireHook, Tripwire,
+            EmeraldBlock, StairsSpruce, StairsBirch, StairsJungle, Command,
+            Beacon, CobbleWall, Flowerpot, Carrots, Potatoes, ButtonWood, Head,
+            Max
         };
+        
+        //Useful block info
+        extern const bool isOpaque[];
+        extern const bool isCube[]; //item = !cube
+        extern const char *Name[];  //block name
+        extern const bool isLogic[];//Used in redstone circuit
+        extern const bool doesBurn[];   //Can fire burn it.
+            //Use isCube && doesBurn for attaching adjacent fire
+
     }
 }
 

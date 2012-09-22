@@ -1607,22 +1607,22 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     if (world != NULL) {
         //A neighbor
         Block block = world->getBlock(x - 1, y, z);
-        if (Chunk::isLogic[block.blockID]) {
+        if (Blk::isLogic[block.blockID]) {
             mask |= 1;
         }
         //B neighbor
         block = world->getBlock(x + 1, y, z);
-        if (Chunk::isLogic[block.blockID]) {
+        if (Blk::isLogic[block.blockID]) {
             mask |= 2;
         }
         //E neighbor
         block = world->getBlock(x, y, z - 1);
-        if (Chunk::isLogic[block.blockID]) {
+        if (Blk::isLogic[block.blockID]) {
             mask |= 4;
         }
         //F neighbor
         block = world->getBlock(x, y, z + 1);
-        if (Chunk::isLogic[block.blockID]) {
+        if (Blk::isLogic[block.blockID]) {
             mask |= 8;
         }
     }
@@ -1632,25 +1632,25 @@ void BlockDrawer::drawWire( uint8_t blockID, uint8_t meta,
     if (world != NULL) {
         //A neighbor
         Block block = world->getBlock(x - 1, y + 1, z);
-        if (Chunk::isLogic[block.blockID]) {
+        if (Blk::isLogic[block.blockID]) {
             up_mask |= 1;
             mask |= 1;
         }
         //B neighbor
         block = world->getBlock(x + 1, y + 1, z);
-        if (Chunk::isLogic[block.blockID]) {
+        if (Blk::isLogic[block.blockID]) {
             up_mask |= 2;
             mask |= 2;
         }
         //E neighbor
         block = world->getBlock(x, y + 1, z - 1);
-        if (Chunk::isLogic[block.blockID]) {
+        if (Blk::isLogic[block.blockID]) {
             up_mask |= 4;
             mask |= 4;
         }
         //F neighbor
         block = world->getBlock(x, y + 1, z + 1);
-        if (Chunk::isLogic[block.blockID]) {
+        if (Blk::isLogic[block.blockID]) {
             up_mask |= 8;
             mask |= 8;
         }
@@ -2451,7 +2451,7 @@ void BlockDrawer::drawFluid( uint8_t blockID, uint8_t meta,
 }
 
 
-//Draw fence
+//Draw fence.  It changes depending on adjacent neighbors
 void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -2517,6 +2517,75 @@ void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
 
 
 }
+
+
+//Draw pane (fence or glass).  It changes depending on adjacent neighbors
+void BlockDrawer::drawPane( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t vflags) const
+{
+
+    //Center post
+    drawScaledBlock( blockID, meta, x, y, z, (vflags&0x30),
+        0.25, 1.0, 0.25, true, 6, 0, 6);
+
+
+    //Quit if unable to check neighbors
+    if (world == NULL) {
+        return;
+    }
+
+    //Check adjacent blocks for connected fences
+    //A neighbor
+    Block block = world->getBlock(x - 1, y, z);
+    if (block.blockID == blockID) {
+        //Top connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40)|0x80,
+            6/16.0, 3/16.0, 2/16.0, true, 0, 12, 7);        
+
+        //Bottom connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40)|0x80,
+            6/16.0, 3/16.0, 2/16.0, true, 0, 6, 7);        
+    }
+
+    //B neighbor
+    block = world->getBlock(x + 1, y, z);
+    if (block.blockID == blockID) {
+        //Top connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80)|0x40,
+            6/16.0, 3/16.0, 2/16.0, true, 10, 12, 7);
+
+        //Bottom connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80)|0x40,
+            6/16.0, 3/16.0, 2/16.0, true, 10, 6, 7);
+    }
+
+    //E neighbor
+    block = world->getBlock(x, y, z - 1);
+    if (block.blockID == blockID) {
+        //Top connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04)|0x08,
+            2/16.0, 3/16.0, 6/16.0, true, 7, 12, 0);
+
+        //Bottom connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04)|0x08,
+            2/16.0, 3/16.0, 6/16.0, true, 7, 6, 0);
+    }
+
+    //F neighbor
+    block = world->getBlock(x, y, z + 1);
+    if (block.blockID == blockID) {
+        //Top connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08)|0x04,
+            2/16.0, 3/16.0, 6/16.0, true, 7, 12, 10);
+
+        //Bottom connecting boards
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08)|0x04,
+            2/16.0, 3/16.0, 6/16.0, true, 7, 6, 10);
+    }
+
+
+}
+
 
 //Draw floor plate (meta affects pressed, depressed)
 void BlockDrawer::drawFloorplate( uint8_t blockID, uint8_t meta,
@@ -3159,7 +3228,7 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( Blk::StoneBrick, Tex::BrickStone, Tex::BrickStone,
         Tex::BrickStone, Tex::BrickStone, Tex::BrickStone, Tex::BrickStone);
 
-    //Big Mushroom
+    //Big Mushrooms
     setBlockInfo( Blk::HugeShroomBrown, Tex::Myc_Stem, Tex::Myc_Stem,
         Tex::Myc_Pore, Tex::Cap_Brown, Tex::Myc_Stem, Tex::Myc_Stem,
         &BlockDrawer::drawShroom);
@@ -3167,7 +3236,10 @@ Normal block = 0x00: cube, dark, opaque, solid
         Tex::Myc_Pore, Tex::Cap_Red, Tex::Myc_Stem, Tex::Myc_Stem,
         &BlockDrawer::drawShroom);
 
-    //extra info for metadata blocks
+    //Iron Bars
+    setBlockInfo( Blk::IronBars, Tex::IronBars, Tex::IronBars, Tex::IronBars,
+        Tex::IronBars, Tex::IronBars, Tex::IronBars, &BlockDrawer::drawPane);
+    
     
     //Redwood tree
     setBlockInfo( 256 + 17, 116, 116, 21, 21, 116, 116);

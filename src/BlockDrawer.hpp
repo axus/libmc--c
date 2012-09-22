@@ -164,6 +164,8 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFence( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawPane( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFloorplate( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void draw4thBlock( uint8_t blockID, uint8_t meta,
