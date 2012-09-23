@@ -567,6 +567,14 @@ bool UserInterface::handleKeys()
             case sf::Keyboard::Key::F3:
                 showStatus = !showStatus;
                 break;
+            //Debug current location
+            case sf::Keyboard::Key::Num2:
+                cout << "Cam @ " << ((int)viewer.cam_X >> 4)
+                    << ", " << ((int)viewer.cam_Y >> 4)
+                    << ", " << ((int)viewer.cam_Z >> 4)
+                    << " Player @ " << player.abs_X
+                    << ", " << player.abs_Y << ", " << player.abs_Z << endl;
+                break;
             //Write block information near camera
             case sf::Keyboard::Key::F4:
                 viewer.saveLocalBlocks(world);

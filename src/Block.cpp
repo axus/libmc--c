@@ -169,6 +169,9 @@ const bool mc__::Blk::isOpaque[] = {
 
 //Opaque cubes have their faces blocked by non-opaque cubes
 //Non-opaque cubes have their faces blocked by any cube
+
+// Some blocks will only attach to cubes, like fence, pane, bars, torch
+// (or their own type!)
 const bool mc__::Blk::isCube[] = {
     false,  // 0 Air
     true,   // 1 Stone
@@ -227,7 +230,7 @@ const bool mc__::Blk::isCube[] = {
     true,   //57 DiamondBlock
     true,   //58 Workbench
     false,  //59 Crops (*)
-    true,   //60 Soil
+    false,  //60 Soil   //its height is -1 pixel
     true,   //61 Furnace
     true,   //62 LitFurnace
     false,  //63 SignPost (*)

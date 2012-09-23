@@ -34,8 +34,9 @@
     the location moves farther "right".
 
     Block faces are always aligned with major axes. So, we can say that each
-    face is on an axis, and is "high" or "low" compared to the opposing face.
-     
+    face is on an axis, and is "greater" or "less" compared to the opposing face.
+    
+    Face direction:
     On the x axis: A = left,    B = right
     On the y axis: C = down,    D = up
     On the z axis: E = farther, F = closer
@@ -56,6 +57,16 @@
 
     A face will have four points containing its letter.
     
+    
+    vflags option is a bitmask, indicating which faces to hide (for performance).
+    0x80 = +X
+    0x40 = -X
+    0x20 = +Y
+    0x10 = -Y
+    0x08 = +Z
+    0x04 = -Z
+    
+    vflags for each block were calculated when its chunk changes.
 */
 
 //libmc--c
@@ -88,6 +99,9 @@ using std::flush;
 
 using std::string;
 using std::stringstream;
+
+//Macros for multiple flag testing
+#define HAS_FLAGS(VAL,FLAGS) ((VAL&FLAGS)==FLAGS)
 
 BlockDrawer::BlockDrawer( mc__::World* w, GLuint tex_array[mc__::TEX_MAX] ):
     world(w)
@@ -949,6 +963,9 @@ void BlockDrawer::adjustTexture(uint16_t blockID,
 }
 
 //Use OpenGL to draw partial solid cube, with offsets, scale, mirroring
+//
+//  For example, to draw 
+//
 void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     GLint x, GLint y, GLint z, uint8_t vflags,
     GLfloat scale_x, GLfloat scale_y, GLfloat scale_z,
@@ -961,7 +978,7 @@ void BlockDrawer::drawScaledBlock( uint16_t blockID, uint8_t /*meta*/,
     height = texmap_TILE_LENGTH * scale_y;
     depth  = texmap_TILE_LENGTH * scale_z;
     
-    //Face coordinates (in pixels)
+    //Face coordinates (GL coordinates are 16*block coords)
     GLint A = (x << 4) + off_x;
     GLint B = (x << 4) + off_x + width;
     GLint C = (y << 4) + off_y;
@@ -2466,10 +2483,10 @@ void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
         return;
     }
 
-    //Check adjacent blocks for connected fences
+    //Check adjacent blocks for connected fences (or cubes)
     //A neighbor
     Block block = world->getBlock(x - 1, y, z);
-    if (block.blockID == blockID) {
+    if (block.blockID == blockID || Blk::isCube[block.blockID]) {
         //Top connecting boards
         drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40)|0x80,
             6/16.0, 3/16.0, 2/16.0, true, 0, 12, 7);        
@@ -2481,7 +2498,7 @@ void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
 
     //B neighbor
     block = world->getBlock(x + 1, y, z);
-    if (block.blockID == blockID) {
+    if (block.blockID == blockID || Blk::isCube[block.blockID]) {
         //Top connecting boards
         drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80)|0x40,
             6/16.0, 3/16.0, 2/16.0, true, 10, 12, 7);
@@ -2493,7 +2510,7 @@ void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
 
     //E neighbor
     block = world->getBlock(x, y, z - 1);
-    if (block.blockID == blockID) {
+    if (block.blockID == blockID || Blk::isCube[block.blockID]) {
         //Top connecting boards
         drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04)|0x08,
             2/16.0, 3/16.0, 6/16.0, true, 7, 12, 0);
@@ -2505,7 +2522,7 @@ void BlockDrawer::drawFence( uint8_t blockID, uint8_t meta,
 
     //F neighbor
     block = world->getBlock(x, y, z + 1);
-    if (block.blockID == blockID) {
+    if (block.blockID == blockID || Blk::isCube[block.blockID]) {
         //Top connecting boards
         drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08)|0x04,
             2/16.0, 3/16.0, 6/16.0, true, 7, 12, 10);
@@ -2524,66 +2541,75 @@ void BlockDrawer::drawPane( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
 
-    //Center post
-    drawScaledBlock( blockID, meta, x, y, z, (vflags&0x30),
-        0.25, 1.0, 0.25, true, 6, 0, 6);
-
-
-    //Quit if unable to check neighbors
+    uint8_t neighbors=0, nID=0;
+    
+    //Draw a single post if unable to read world
     if (world == NULL) {
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x30),
+            0.25, 1.0, 0.25, false, 0, 0, 0);
         return;
     }
 
-    //Check adjacent blocks for connected fences
     //A neighbor
-    Block block = world->getBlock(x - 1, y, z);
-    if (block.blockID == blockID) {
-        //Top connecting boards
-        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40)|0x80,
-            6/16.0, 3/16.0, 2/16.0, true, 0, 12, 7);        
-
-        //Bottom connecting boards
-        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x40)|0x80,
-            6/16.0, 3/16.0, 2/16.0, true, 0, 6, 7);        
+    nID = world->getBlock(x - 1, y, z).blockID;
+    if ( nID == blockID || Blk::isCube[nID]) {
+        neighbors |= 0x80;
     }
 
     //B neighbor
-    block = world->getBlock(x + 1, y, z);
-    if (block.blockID == blockID) {
-        //Top connecting boards
-        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80)|0x40,
-            6/16.0, 3/16.0, 2/16.0, true, 10, 12, 7);
-
-        //Bottom connecting boards
-        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x80)|0x40,
-            6/16.0, 3/16.0, 2/16.0, true, 10, 6, 7);
+    nID = world->getBlock(x + 1, y, z).blockID;
+    if (nID == blockID || Blk::isCube[nID]) {
+        neighbors |= 0x40;
     }
 
     //E neighbor
-    block = world->getBlock(x, y, z - 1);
-    if (block.blockID == blockID) {
-        //Top connecting boards
-        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04)|0x08,
-            2/16.0, 3/16.0, 6/16.0, true, 7, 12, 0);
-
-        //Bottom connecting boards
-        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x04)|0x08,
-            2/16.0, 3/16.0, 6/16.0, true, 7, 6, 0);
+    nID = world->getBlock(x, y, z - 1).blockID;
+    if ( nID == blockID || Blk::isCube[nID]) {
+        neighbors |= 0x08;
     }
 
     //F neighbor
-    block = world->getBlock(x, y, z + 1);
-    if (block.blockID == blockID) {
-        //Top connecting boards
-        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08)|0x04,
-            2/16.0, 3/16.0, 6/16.0, true, 7, 12, 10);
-
-        //Bottom connecting boards
-        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x08)|0x04,
-            2/16.0, 3/16.0, 6/16.0, true, 7, 6, 10);
+    nID = world->getBlock(x, y, z + 1).blockID;
+    if ( nID == blockID || Blk::isCube[nID]) {
+        neighbors |= 0x04;
     }
 
-
+    //draw pane based on X-axis neighbors
+    if ( HAS_FLAGS(neighbors,0xC0) ) {
+        //Thin pane on X-axis
+        drawScaledBlock( blockID, meta, x, y, z, 0xC0|(vflags&0xF3),
+            1.0, 1.0, 2/16.0, true, 0, 0, 7);
+    } else if ( HAS_FLAGS(neighbors,0x80) ) {
+        //Half pane to left.  Force vflag 'A', ignore vflags 'E','F'
+        drawScaledBlock( blockID, meta, x, y, z, 0x80|(vflags&0xF3),
+            0.5, 1.0, 2/16.0, true, 0, 0, 7);
+    } else if ( HAS_FLAGS(neighbors,0x40) ) {
+        //Half pane to right.  Force vflag 'B', ignore vflags 'E','F'
+        drawScaledBlock( blockID, meta, x, y, z, 0x40|(vflags&0xF3),
+            0.5, 1.0, 2/16.0, true, 8, 0, 7);
+    }
+    
+    //draw pane based on Z-axis neighbors
+    if ( HAS_FLAGS(neighbors,0x0C) ) {
+        //Thin pane on Z-axis
+        drawScaledBlock( blockID, meta, x, y, z, 0x0C|(vflags&0x3F),
+            2/16.0, 1.0, 1.0, true, 7, 0, 0);
+    } else if ( HAS_FLAGS(neighbors,0x08) ) {
+        //Half pane to back.  Force vflag 'E', ignore vflags 'A','B'
+        drawScaledBlock( blockID, meta, x, y, z, 0x08|(vflags&0x3F),
+            2/16.0, 1.0, 0.5, true, 7, 0, 0);
+    } else if ( HAS_FLAGS(neighbors,0x04) ) {
+        //Half pane to front.  Force vflag 'F', ignore vflags 'A','B'
+        drawScaledBlock( blockID, meta, x, y, z, 0x04|(vflags&0x3F),
+            2/16.0, 1.0, 0.5, true, 7, 0, 8);
+    } else if ( !(neighbors & 0xCC) ) {
+        //No neighbors, draw panes on X and Z
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0xF3),
+            1.0, 16.0/16.0, 2/16.0, true, 0, 0, 7);
+        drawScaledBlock( blockID, meta, x, y, z, (vflags&0x3F),
+            2/16.0, 16.0/16.0, 1.0, true, 7, 0, 0);
+    }
+    
 }
 
 
@@ -3240,6 +3266,9 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( Blk::IronBars, Tex::IronBars, Tex::IronBars, Tex::IronBars,
         Tex::IronBars, Tex::IronBars, Tex::IronBars, &BlockDrawer::drawPane);
     
+    //Glass Pane
+    setBlockInfo( Blk::GlassPane, Tex::Glass, Tex::Glass, Tex::Glass,
+        Tex::Glass, Tex::Glass, Tex::Glass, &BlockDrawer::drawPane);
     
     //Redwood tree
     setBlockInfo( 256 + 17, 116, 116, 21, 21, 116, 116);
