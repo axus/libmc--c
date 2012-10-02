@@ -44,6 +44,7 @@ namespace mc__ {
     // Types for mc__ namespace
     //
     
+    //TODO: enums in namespace
     // Index for face of cube or cuboid
     enum face_ID { LEFT=0, RIGHT=1, BOTTOM=2, TOP=3, BACK=4, FRONT=5, FACE_MAX};
 
@@ -74,7 +75,7 @@ namespace mc__ {
     const uint16_t texture_id_MAX = 1024;
     
     //Offsets in texInfo array for texture IDs
-    const uint16_t texture_INDEX[mc__::TEX_MAX] = { 0, 256, 512};
+    const uint16_t texture_INDEX[mc__::TEX_MAX] = { 0, 256, 512, 528, 544, 560, 578, 594, 610};
 
     //Texture map ratio:  tile:texmap length
     const float tmr = 1.0f/((float)texmap_TILES);
@@ -202,6 +203,9 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawCrops( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawMelonStem( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            
             //Draw using IDs higher than 256
             void drawCubeMeta( uint16_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;                
@@ -248,7 +252,10 @@ namespace mc__ {
             
             //Look up texture coordinates for block/other
             bool getTexInfo(uint16_t texID, GLfloat tx_0[6], GLfloat tx_1[6],
-                GLfloat ty_0[6], GLfloat ty_1[6]);
+                GLfloat ty_0[6], GLfloat ty_1[6]) const;
+            //Translate texture ID to texture coordinates
+            bool getTexCoords(uint8_t blockID, face_ID faceID, GLfloat& tx_0, GLfloat& tx_1,
+                GLfloat& ty_0, GLfloat& ty_1) const;
             
             //Adjust cuboid shape of block
             void adjustTexture(uint16_t blockID,

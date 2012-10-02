@@ -154,6 +154,74 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
     
+    //Melon stem test with metadata 0-7
+    chunk1 = new mc__::Chunk(9, 0, 0, 4, 64, 17);   //Row of melon stems, melon
+    crops.blockID = mc__::Blk::MelonStem;
+    for (gen_X = 0; gen_X < 8; gen_X++) {
+        //Increase metadata for each crop
+        crops.metadata = gen_X;
+        chunk1->block_array[ gen_X ] = crops;
+    }
+    //stem next to pumpkin
+    chunk1->block_array[ gen_X ] = crops;
+    crops.blockID = mc__::Blk::Melon;
+    chunk1->block_array[ gen_X + 1] = crops;
+    
+    //Add the chunk with crops
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
+    //Pumpkin stem test with metadata 0-7
+    chunk1 = new mc__::Chunk(9, 0, 0, 4, 64, 16);   //Row of melon stems, melon
+    crops.blockID = mc__::Blk::PumpkinStem;
+    for (gen_X = 0; gen_X < 8; gen_X++) {
+        //Increase metadata for each crop
+        crops.metadata = gen_X;
+        chunk1->block_array[ gen_X ] = crops;
+    }
+    //stem next to pumpkin
+    chunk1->block_array[ gen_X ] = crops;
+    crops.blockID = mc__::Blk::Pumpkin;
+    chunk1->block_array[ gen_X + 1] = crops;
+    
+    //Add the chunk with crops
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
+
+    //Stems and melons
+    Block pumpkin =     {mc__::Blk::Pumpkin, 0, 0, 0};
+    Block stemPumpkin = {mc__::Blk::PumpkinStem, 0x7, 0, 0};
+    Block melon =       {mc__::Blk::Melon, 0, 0, 0};
+    Block stemMelon =   {mc__::Blk::MelonStem, 0x7, 0, 0};
+    chunk1 = new mc__::Chunk(3, 0, 3, 0, 64, 16);   //Row of melon stems, melon
+    
+    //set stems next to melons
+    chunk1->block_array[ 0] = pumpkin;
+    chunk1->block_array[ 1] = stemPumpkin;
+    chunk1->block_array[ 2] = stemPumpkin;
+    chunk1->block_array[ 3] = melon;
+    
+    chunk1->block_array[ 4] = melon;
+    chunk1->block_array[ 5] = stemMelon;
+    chunk1->block_array[ 6] = pumpkin;
+    chunk1->block_array[ 7] = stemMelon;
+    
+    chunk1->block_array[ 8] = stemPumpkin;
+    chunk1->block_array[ 9] = pumpkin;
+    chunk1->block_array[10] = stemMelon;
+    chunk1->block_array[11] = pumpkin;
+    
+    chunk1->block_array[12] = stemMelon;
+    chunk1->block_array[13] = melon;
+    chunk1->block_array[14] = melon;
+    chunk1->block_array[15] = stemPumpkin;
+    
+    //Add the chunk with stems and melons
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
+    
     //
     //Facecube test: dispenser, furnace, litfurnace, pumpkin, jack-o-lantern
     //
@@ -188,7 +256,7 @@ void genWorld(World& world)
     faceCube.metadata = 1; chunk1->block_array[21] = faceCube;
     
     //Jack-o-Lantern
-    faceCube.blockID = 91;
+    faceCube.blockID = mc__::Blk::PumpkinOn;
     faceCube.metadata = 3; chunk1->block_array[24] = faceCube;
     faceCube.metadata = 2; chunk1->block_array[25] = faceCube;
     faceCube.metadata = 0; chunk1->block_array[26] = faceCube;

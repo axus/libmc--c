@@ -1910,6 +1910,133 @@ void BlockDrawer::drawCrops( uint8_t blockID, uint8_t meta,
     glTexCoord2f(tx_1,ty_0); glVertex3i( H, C, E);  //Lower right: HCE
 }
 
+//Draw melon/pumpkin stem, height and color depends on metadata
+void BlockDrawer::drawMelonStem( uint8_t blockID, uint8_t meta,
+    GLint x, GLint y, GLint z, uint8_t /* vflags */) const
+{
+
+    //Drawing properties which depend on meta
+    uint8_t height;
+    uint8_t red, green, blue;
+    uint8_t melonType;
+    face_ID melonFace = FACE_MAX;   //No adjacent melon
+    
+    green=255;
+    blue=63;
+    red=63 + (meta*24);
+    height = (1+meta)*2;
+
+    //Get terrain.png texture coords for drawing stem texture
+    GLfloat tx_0, tx_1, ty_0, ty_1;
+
+    //Object boundaries... 2 crossed squares inside a clear cube
+    const GLint A = (x << 4) + 0;
+    const GLint B = (x << 4) + texmap_TILE_LENGTH;
+    const GLint C = (y << 4) + 0;
+    const GLint D = (y << 4) + height;
+    const GLint E = (z << 4) + 0;
+    const GLint F = (z << 4) + texmap_TILE_LENGTH;
+    const GLint G = (z << 4) + (texmap_TILE_LENGTH/2);    //half-way through z 
+    const GLint H = (x << 4) + (texmap_TILE_LENGTH/2);    //half-way through x
+    GLint I = D;
+
+    //Use modified color for stem
+    glColor3ub( red, green, blue);
+
+    //Look for adjacent melon type, to curve if needed
+    if (meta == 0x7 && world != NULL) {
+        switch ( blockID ) {
+            case Blk::PumpkinStem:
+                melonType = Blk::Pumpkin; break;
+            case Blk::MelonStem:
+                melonType = Blk::Melon; break;
+            default:
+                melonType = Blk::Melon; break;
+        }
+        
+        //Set melonFace to point to adjacent melon
+        GLint left, right, back, front;
+        if (world->getBlock(x - 1, y, z).blockID == melonType) {
+            melonFace = LEFT;   //A
+            left = A;
+            right = B;
+            back = front = G;
+        } else if (world->getBlock(x + 1, y, z).blockID == melonType) {
+            melonFace = RIGHT;  //B
+            left = B;
+            right = A;
+            back = front = G;
+        } else if (world->getBlock(x, y, z - 1).blockID == melonType) {
+            melonFace = BACK;   //C
+            left = right = H;
+            back = F;
+            front = E;
+        } else if (world->getBlock(x, y, z + 1).blockID == melonType) {
+            melonFace = FRONT;  //D
+            left = right = H;
+            back = E;
+            front = F;
+        } else {
+            melonFace = FACE_MAX;
+        }
+        
+        //Draw a bent stem towards the adjacent melon
+        if (melonFace != FACE_MAX) {
+            //Use bent stem texture
+            getTexCoords( blockID, FRONT, tx_0, tx_1, ty_0, ty_1);
+            
+            //Front face
+            glTexCoord2f(tx_0,ty_0); glVertex3i( left, C, front);  //Lower left:  HCF
+            glTexCoord2f(tx_1,ty_0); glVertex3i( right, C, back);  //Lower right: HCE
+            glTexCoord2f(tx_1,ty_1); glVertex3i( right, D, back);  //Top right:   HDE
+            glTexCoord2f(tx_0,ty_1); glVertex3i( left, D, front);  //Top left:    HDF
+        
+            //Back face
+            glTexCoord2f(tx_0,ty_0); glVertex3i( left, C, front);  //Lower left:  HCF
+            glTexCoord2f(tx_0,ty_1); glVertex3i( left, D, front);  //Top left:    HDF
+            glTexCoord2f(tx_1,ty_1); glVertex3i( right, D, back);  //Top right:   HDE
+            glTexCoord2f(tx_1,ty_0); glVertex3i( right, C, back);  //Lower right: HCE
+            
+            //Set height to half, for the straight stems drawn after
+            height = texmap_TILE_LENGTH/2;
+            I = (y << 4) + height;  //Instead of D
+        }
+    }
+
+    //Draw straight stems
+    getTexCoords( blockID, BACK, tx_0, tx_1, ty_0, ty_1);
+    //Adjust bottom texture coord to (TOP - height)
+    ty_0 = ty_1 + tmr*( height/TILE_LENGTH);
+
+    //Apply texture to planted item face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: 
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, I, E);  //Top right:   
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, I, F);  //Top left:    
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C, F);  //Lower left:  
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, I, F);  //Top left:    
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, I, E);  //Top right:   
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C, E);  //Lower right: 
+
+    //Intersecting plane
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: 
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A, I, E);  //Top right:   
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B, I, F);  //Top left:    
+
+    //Back face
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C, F);  //Lower left:  
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B, I, F);  //Top left:    
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A, I, E);  //Top right:   
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C, E);  //Lower right: 
+
+    //Resume normal color drawing
+    glColor3ub( 255, 255, 255);
+
+}
+
 //Draw part of door (meta affects top/bottom, side of block)
 void BlockDrawer::drawDoor( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
@@ -3269,7 +3396,31 @@ Normal block = 0x00: cube, dark, opaque, solid
     //Glass Pane
     setBlockInfo( Blk::GlassPane, Tex::Glass, Tex::Glass, Tex::Glass,
         Tex::Glass, Tex::Glass, Tex::Glass, &BlockDrawer::drawPane);
+
+    //Melon, no special drawing required
+    setBlockInfo( Blk::Melon, Tex::MelonSide, Tex::MelonSide, Tex::MelonTop,
+        Tex::MelonTop, Tex::MelonSide, Tex::MelonSide);
+
+    //Melon stem, height based on metadata
+    setBlockInfo( Blk::PumpkinStem, Tex::MelonStem, Tex::MelonStem,
+        Tex::MelonStem, Tex::MelonStem, Tex::MelonStem, Tex::MelonStem_Bent,
+        &BlockDrawer::drawMelonStem);
+
+    setBlockInfo( Blk::MelonStem, Tex::MelonStem, Tex::MelonStem,
+        Tex::MelonStem, Tex::MelonStem, Tex::MelonStem, Tex::MelonStem_Bent,
+        &BlockDrawer::drawMelonStem);
+
+    /*      //Blocks left to implement
+            Vines, FenceGate, StairsBrick, StairsStone, Mycelium, LilyPad,
+            BrickNether, FenceNether, StairsNether, NetherWart, Enchanting,
+            Brewing, Cauldron, EndPortal, EndPortalFrame, EndStone, DragonEgg,
+            RedLamp, RedLampOn, DoubleSlabWood, SlabWood, CocoaPlant,
+            StairsSand=128, EmeraldOre, EndChest, TripwireHook, Tripwire,
+            EmeraldBlock, StairsSpruce, StairsBirch, StairsJungle, Command,
+            Beacon, CobbleWall, Flowerpot, Carrots, Potatoes, ButtonWood, Head,
+    */
     
+    //"Metadata" blocks, variants of blocks based on metadata
     //Redwood tree
     setBlockInfo( 256 + 17, 116, 116, 21, 21, 116, 116);
     setBlockInfo( 256 + 18, 132, 132, 132, 132, 132, 132);
@@ -3407,9 +3558,9 @@ void BlockDrawer::mirrorCoords( GLfloat& tx_0, GLfloat& tx_1,
     
 }
 
-//Look up texture coordinates for block/other
+//Look up texture coordinates for every face of block/other
 bool BlockDrawer::getTexInfo(uint16_t blockID, GLfloat tx_0[6], GLfloat tx_1[6],
-    GLfloat ty_0[6], GLfloat ty_1[6])
+    GLfloat ty_0[6], GLfloat ty_1[6]) const
 {
 
     uint16_t index;
@@ -3421,6 +3572,36 @@ bool BlockDrawer::getTexInfo(uint16_t blockID, GLfloat tx_0[6], GLfloat tx_1[6],
         pti->getCoords( tx_0[index], tx_1[index], ty_0[index], ty_1[index]);
     }
 
+    return true;
+}
+
+//Shortcut for getting one set of texture coordinates from texture ID
+bool BlockDrawer::getTexCoords(uint8_t blockID, face_ID faceID, GLfloat& tx_0, GLfloat& tx_1,
+                GLfloat& ty_0, GLfloat& ty_1) const
+{
+    //Return sponge texture if missing texture info
+    TextureInfo *tinfo = texInfo[blockInfo[blockID].textureID[faceID]];
+    if ( tinfo == NULL) {
+        //Return sponge texture coordinates
+        uint16_t tex = Tex::Sponge;
+        
+        //Texture map coordinates in terrain.png (0.0 - 1.0)
+        tx_0 = float(tex & (texmap_TILES-1))/((float)texmap_TILES);
+        tx_1 = tx_0 + tmr;
+        ty_0 = float(tex/texmap_TILES)/((float)texmap_TILES);
+        ty_1 = ty_0 + tmr;
+
+        //You may need to flip Y coords ty_0 and ty_1
+
+        return false;
+    }
+    
+    //Texture map coordinates in terrain.png (0.0 - 1.0)
+    tx_0 = tinfo->tx_0;
+    tx_1 = tinfo->tx_1;
+    ty_1 = tinfo->ty_0; //flip Y
+    ty_0 = tinfo->ty_1; //flip Y
+    
     return true;
 }
 
