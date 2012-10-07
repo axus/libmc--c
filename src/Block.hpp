@@ -39,11 +39,11 @@ namespace mc__ {
     namespace Blk {
         enum Block_t {
             Air=0, Stone, Grass, Dirt, Cobble, Wood, Sapling, Bedrock,
-            Water, WaterFlow, Lava, LavaFlow, Sand, Gravel, GoldOre, IronOre,
+            WaterFlow, Water, LavaFlow, Lava, Sand, Gravel, GoldOre, IronOre,
             CoalOre=16, Log, Leaves, Sponge, Glass, LapisOre, LapisBlock,
             Dispenser, Sandstone, NoteBlock, Bed, RailPowered, RailDetector,
             StickyPiston, Web, TallGrass, DeadBush=32, Piston, PistonHead,
-            Wool=35, PistonMoved, Daisy, Rose, ShroomBrown, ShroomRed=40,
+            Wool, PistonMoved, Daisy, Rose, ShroomBrown, ShroomRed=40,
             GoldBlock, IronBlock, SlabDouble, Slab, Bricks, TNT, Bookshelf,
             MossStone, Obsidian, Torch, Fire, Spawner, StairsWood, Chest, Wire,
             DiamondOre, DiamondBlock, Workbench, Crops, Soil, Furnace,

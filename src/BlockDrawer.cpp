@@ -155,32 +155,78 @@ void BlockDrawer::setBlockColor(uint16_t blockID, face_ID face) const
     
     GLubyte red, green, blue;
     switch (blockID) {
-        case 0:
-            glColor3ub( 255, 255, 255);
+        case Blk::Air:
+            red=0xFF; green=0xFF; blue=0xFF;
             break;
-        case 2:     //Grass
+        case Blk::Grass:     //Grass
             if (face == mc__::TOP) {
                 red=grass_color[0]; green=grass_color[1]; blue=grass_color[2];
             } else {
-                red=255; green=255; blue=255;
+                red=0xFF; green=0xFF; blue=0xFF;
             }
-            glColor3ub( red, green, blue);
             break;
-        case 18:    //Leaves, tall grass
+        case Blk::Leaves:    //Leaves, tall grass
         case Blk::TallGrass:
-        case (256+18):
-        case (512+18):
+        case (256+Blk::Leaves):
+        case (512+Blk::Leaves):
             red=leaf_color[0]; green=leaf_color[1]; blue=leaf_color[2];
-            glColor3ub( red, green, blue);
             break;
-        case 55:    //Redstone wire
+        case (256 + Blk::Wool + 0): //White wool
+            red=0xFF; green=0xFF; blue=0xFF;
+            break;
+        case (256 + Blk::Wool + 1): //Orange wool
+            red=0xFF; green=0x7F; blue=0x3F;
+            break;
+        case (256 + Blk::Wool + 2): //Magenta wool
+            red=0xFF; green=0; blue=0xFF;
+            break;
+        case (256 + Blk::Wool + 3): //Light Blue wool
+            red=0x5F; green=0x7F; blue=0xFF;
+            break;
+        case (256 + Blk::Wool + 4): //Yellow wool
+            red=0xFF; green=0xFF; blue=0;
+            break;
+        case (256 + Blk::Wool + 5): //Lime wool
+            red=0;  green=0xFF; blue=0;
+            break;
+        case (256 + Blk::Wool + 6): //Pink wool
+            red=0xFF; green=0xCF; blue=0xCF;
+            break;
+        case (256 + Blk::Wool + 7): //Gray wool
+            red=0x5F; green=0x5F; blue=0x5F;
+            break;
+        case (256 + Blk::Wool + 8): //Light Gray wool
+            red=0xCF; green=0xCF; blue=0xCF;
+            break;
+        case (256 + Blk::Wool + 9): //Cyan wool
+            red=0;  green=0xFF; blue=0xFF;
+            break;
+        case (256 + Blk::Wool + 10)://Purple wool
+            red=0x9F; green=0x2F; blue=0xFF;
+            break;
+        case (256 + Blk::Wool + 11)://Blue wool
+            red=0;  green=0;    blue=0xFF;
+            break;
+        case (256 + Blk::Wool + 12)://Brown wool
+            red=0xAF; green=0x5F; blue=0x3F;
+            break;
+        case (256 + Blk::Wool + 13)://Dark Green wool
+            red=0;  green=0x5F; blue=0;
+            break;
+        case (256 + Blk::Wool + 14)://Red wool
+            red=0xFF; green=0; blue=0;
+            break;
+        case (256 + Blk::Wool + 15)://Black wool
+            red=0x1F; green=0x1F; blue=0x1F;
+            break;
+        case Blk::Wire:    //Redstone wire
             red=255; green=127; blue=127;
-            glColor3ub( red, green, blue);
             break;
         default:
             red=255; green=255; blue=255;
             break;
     }
+    glColor3ub( red, green, blue);
 }
 
 //Draw me, using function pointer assigned for block ID
@@ -756,10 +802,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     ty_0 = blockInfo[blockID].ty[leftTex] + tmr;    //flip y
     ty_1 = blockInfo[blockID].ty[leftTex];
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A_offset, C - half, E);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( A_offset, C - half, F);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( A_offset, D - half, F);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A_offset, D - half, E);
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A_offset, C, E);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A_offset, C, F);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A_offset, D, F);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A_offset, D, E);
 
     //B
     tx_0 = blockInfo[blockID].tx[RIGHT];
@@ -767,10 +813,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     ty_0 = blockInfo[blockID].ty[RIGHT] + tmr;
     ty_1 = blockInfo[blockID].ty[RIGHT];
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( B - offset, C - half, F);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B - offset, C - half, E);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B - offset, D - half, E);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( B - offset, D - half, F);
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B - offset, C , F);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B - offset, C , E);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B - offset, D, E);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B - offset, D, F);
 
     //C (might be blocked from below)
     if (!(vflags & 0x20)) {
@@ -802,10 +848,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     ty_0 = blockInfo[blockID].ty[BACK] + tmr;
     ty_1 = blockInfo[blockID].ty[BACK];
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C - half, E + offset);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C - half, E + offset);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D - half, E + offset);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D - half, E + offset);
+    glTexCoord2f(tx_0,ty_0); glVertex3i( B, C , E + offset);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( A, C , E + offset);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( A, D, E + offset);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( B, D, E + offset);
 
     //F
     tx_0 = blockInfo[blockID].tx[FRONT] + tmr_eat;
@@ -813,10 +859,10 @@ void BlockDrawer::drawCake( uint8_t blockID, uint8_t meta,
     ty_0 = blockInfo[blockID].ty[FRONT] + tmr;
     ty_1 = blockInfo[blockID].ty[FRONT];
     
-    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C - half, F - offset);
-    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C - half, F - offset);
-    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D - half, F - offset);
-    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D - half, F - offset);
+    glTexCoord2f(tx_0,ty_0); glVertex3i( A, C , F - offset);
+    glTexCoord2f(tx_1,ty_0); glVertex3i( B, C , F - offset);
+    glTexCoord2f(tx_1,ty_1); glVertex3i( B, D , F - offset);
+    glTexCoord2f(tx_0,ty_1); glVertex3i( A, D , F - offset);
     
 }
 
@@ -1603,15 +1649,14 @@ void BlockDrawer::drawFire( uint8_t blockID, uint8_t meta,
     drawCube(blockID, meta, x, y, z, vflags);
 }
 
-//Draw dyed block (use item texture, determined by meta)
+
+//Draw dyed block (metadata block, offset by 256)
 void BlockDrawer::drawDyed( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
-
     //Change texture depending on meta
     uint16_t ID = 256 + blockID + meta;
     drawCubeMeta(ID, 0, x, y, z, vflags);
-
 }
 
 
@@ -1916,15 +1961,12 @@ void BlockDrawer::drawMelonStem( uint8_t blockID, uint8_t meta,
 {
 
     //Drawing properties which depend on meta
-    uint8_t height;
-    uint8_t red, green, blue;
-    uint8_t melonType;
-    face_ID melonFace = FACE_MAX;   //No adjacent melon
-    
-    green=255;
-    blue=63;
-    red=63 + (meta*24);
-    height = (1+meta)*2;
+    uint8_t melonFace = FACE_MAX;   //No adjacent melon
+    uint8_t melonType = Blk::Melon;
+    const uint8_t green=255;
+    const uint8_t blue=63;
+    const uint8_t red=63 + (meta*24);
+    uint8_t height = (1+meta)*2;
 
     //Get terrain.png texture coords for drawing stem texture
     GLfloat tx_0, tx_1, ty_0, ty_1;
@@ -1986,16 +2028,16 @@ void BlockDrawer::drawMelonStem( uint8_t blockID, uint8_t meta,
             getTexCoords( blockID, FRONT, tx_0, tx_1, ty_0, ty_1);
             
             //Front face
-            glTexCoord2f(tx_0,ty_0); glVertex3i( left, C, front);  //Lower left:  HCF
-            glTexCoord2f(tx_1,ty_0); glVertex3i( right, C, back);  //Lower right: HCE
-            glTexCoord2f(tx_1,ty_1); glVertex3i( right, D, back);  //Top right:   HDE
-            glTexCoord2f(tx_0,ty_1); glVertex3i( left, D, front);  //Top left:    HDF
+            glTexCoord2f(tx_0,ty_0); glVertex3i( left, C, front);//Low left: HCF
+            glTexCoord2f(tx_1,ty_0); glVertex3i( right, C, back);//Low right:HCE
+            glTexCoord2f(tx_1,ty_1); glVertex3i( right, D, back);//Top right:HDE
+            glTexCoord2f(tx_0,ty_1); glVertex3i( left, D, front);//Top left: HDF
         
             //Back face
-            glTexCoord2f(tx_0,ty_0); glVertex3i( left, C, front);  //Lower left:  HCF
-            glTexCoord2f(tx_0,ty_1); glVertex3i( left, D, front);  //Top left:    HDF
-            glTexCoord2f(tx_1,ty_1); glVertex3i( right, D, back);  //Top right:   HDE
-            glTexCoord2f(tx_1,ty_0); glVertex3i( right, C, back);  //Lower right: HCE
+            glTexCoord2f(tx_0,ty_0); glVertex3i( left, C, front);//Low left: HCF
+            glTexCoord2f(tx_0,ty_1); glVertex3i( left, D, front);//Top left: HDF
+            glTexCoord2f(tx_1,ty_1); glVertex3i( right, D, back);//Top right:HDE
+            glTexCoord2f(tx_1,ty_0); glVertex3i( right, C, back);//Low right:HCE
             
             //Set height to half, for the straight stems drawn after
             height = texmap_TILE_LENGTH/2;
@@ -2763,7 +2805,7 @@ void BlockDrawer::draw4thBlock( uint8_t blockID, uint8_t meta,
         1, 0.25, 1);
 }
 
-//Draw tree log or leaf (meta affects texture)
+//Draw tree log or leaf (meta affects texture): //TODO: more log types
 void BlockDrawer::drawTree( uint8_t blockID, uint8_t meta,
     GLint x, GLint y, GLint z, uint8_t vflags) const
 {
@@ -3095,267 +3137,322 @@ Planted item = 0xF7: planted, dark, see-through, move-through
 Normal block = 0x00: cube, dark, opaque, solid
 */
 
-// 11 is the transparent texture
-
     //Air
     setBlockInfo( Blk::Air, Tex::Web, Tex::Web, Tex::Web,
         Tex::Web, Tex::Web, Tex::Web);
-        
-    setBlockInfo( 1, 1, 1, 1, 1, 1, 1      );     //Stone
-    
-    setBlockInfo( 2, 3, 3, 2, 0, 3, 3      );     //Grass
-    
-    setBlockInfo( 3, 2, 2, 2, 2, 2, 2      );     //Dirt
-    
-    setBlockInfo( 4, 16, 16, 16, 16, 16, 16);     //Cobble
-    
-    setBlockInfo( 5, 4, 4, 4, 4, 4, 4      );     //Wood
-    
-    //Saplings
-    setBlockInfo( 6, Tex::Sapling, Tex::Sapling_Pine, Tex::Sapling_Birch,
-                    Tex::Sapling, Tex::Sapling_Pine, Tex::Sapling_Birch,
-                    &BlockDrawer::drawItem);
-    
-    setBlockInfo( 7, 17, 17, 17, 17, 17, 17);     //Bedrock
-         //Water(*)
-    setBlockInfo( 8, 0xCE, 0xDE, 0xCD, 0xCD, 0xDF, 0xCF);
-         //WaterStill
-    setBlockInfo( 9, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD, 0xCD);
-        //Lava(*)
-    setBlockInfo( 10, 0xEE, 0xFE, 0xED, 0xED, 0xFF, 0xEF);
-        //LavaStill
-    setBlockInfo( 11, 0xED, 0xED, 0xED, 0xED, 0xED, 0xED);
-        //Sand
-    setBlockInfo( 12, 18, 18, 18, 18, 18, 18);
-        //Gravel
-    setBlockInfo( 13, 19, 19, 19, 19, 19, 19);
-        //GoldOre
-    setBlockInfo( 14, 32, 32, 32, 32, 32, 32);
-        //IronOre
-    setBlockInfo( 15, 33, 33, 33, 33, 33, 33);
-        //CoalOre
-    setBlockInfo( 16, 34, 34, 34, 34, 34, 34);
-    
-        //Log
-    setBlockInfo( 17, 20, 20, 21, 21, 20, 20,&BlockDrawer::drawTree);
-    
-        //Leaves
-    setBlockInfo( 18, 52, 52, 52, 53, 52, 52,&BlockDrawer::drawTree);
-        //Sponge
-    setBlockInfo( 19, 48, 48, 48, 48, 48, 48);
-        //Glass
-    setBlockInfo( 20, 49, 49, 49, 49, 49, 49);
-        //Lapis Ore
-    setBlockInfo( 21,160,160,160,160,160,160);
-        //Lapis Block
-    setBlockInfo( 22,144,144,144,144,144,144);
-    
-        //Dispenser (*)
-    setBlockInfo( 23, 45, 45, 62, 62, 45, 46,&BlockDrawer::drawFaceCube);
-        //Sandstone
-    setBlockInfo( 24,192,192,208,176,192,192);
-        //Note Block
+    //Stone
+    setBlockInfo( Blk::Stone, Tex::Stone, Tex::Stone, Tex::Stone, Tex::Stone,
+        Tex::Stone, Tex::Stone);
+    //Grass
+    setBlockInfo( Blk::Grass,  Tex::Grass_Side,  Tex::Grass_Side, Tex::Dirt,
+        Tex::Grass, Tex::Grass_Side, Tex::Grass_Side);
+    //Dirt
+    setBlockInfo( Blk::Dirt, Tex::Dirt, Tex::Dirt, Tex::Dirt, Tex::Dirt,
+        Tex::Dirt, Tex::Dirt);
+    //Cobble
+    setBlockInfo( Blk::Cobble, Tex::Cobble, Tex::Cobble, Tex::Cobble,
+        Tex::Cobble, Tex::Cobble, Tex::Cobble);
+    //Wood //TODO: metadata
+    setBlockInfo( Blk::Wood, Tex::Wood, Tex::Wood, Tex::Wood, Tex::Wood,
+        Tex::Wood, Tex::Wood);
+    //Saplings  //TODO: Different sapling types from metadata
+    setBlockInfo( Blk::Sapling, Tex::Sapling, Tex::Sapling_Pine, Tex::Sapling,
+        Tex::Sapling, Tex::Sapling_Birch, Tex::Sapling_Jungle,
+        &BlockDrawer::drawItem);
+    //Bedrock
+    setBlockInfo( Blk::Bedrock, Tex::Admin, Tex::Admin, Tex::Admin, Tex::Admin,
+        Tex::Admin, Tex::Admin);
+    //Water (Flowing)   //TODO: drawFlow
+    setBlockInfo( Blk::WaterFlow, Tex::Water_2, Tex::Water_4, Tex::Water,
+        Tex::Water, Tex::Water_5, Tex::Water_3);
+    //Water (Stationary)
+    setBlockInfo( Blk::Water, Tex::Water_2, Tex::Water_4, Tex::Water,
+        Tex::Water, Tex::Water_5, Tex::Water_3);
+    //Lava (Flowing)   //TODO: drawFlow
+    setBlockInfo( Blk::LavaFlow, Tex::Lava_2, Tex::Lava_4, Tex::Lava,
+        Tex::Lava, Tex::Lava_5, Tex::Lava_3);
+    //Lava (Stationary)
+    setBlockInfo( Blk::Lava, Tex::Lava_2, Tex::Lava_4, Tex::Lava,
+        Tex::Lava, Tex::Lava_5, Tex::Lava_3);
+    //Sand
+    setBlockInfo( Blk::Sand, Tex::Sand, Tex::Sand, Tex::Sand, Tex::Sand,
+        Tex::Sand, Tex::Sand);
+    //Gravel
+    setBlockInfo( Blk::Gravel, Tex::Gravel, Tex::Gravel, Tex::Gravel,
+        Tex::Gravel, Tex::Gravel, Tex::Gravel);
+    //GoldOre
+    setBlockInfo( Blk::GoldOre, Tex::GoldOre, Tex::GoldOre, Tex::GoldOre,
+        Tex::GoldOre, Tex::GoldOre, Tex::GoldOre);
+    //IronOre
+    setBlockInfo( Blk::IronOre, Tex::IronOre, Tex::IronOre, Tex::IronOre,
+        Tex::IronOre, Tex::IronOre, Tex::IronOre);
+    //CoalOre
+    setBlockInfo( Blk::CoalOre, Tex::Coal, Tex::Coal, Tex::Coal, Tex::Coal,
+        Tex::Coal, Tex::Coal);
+    //Log:
+    setBlockInfo( Blk::Log, Tex::Log_Side, Tex::Log_Side, Tex::Log_Top,
+        Tex::Log_Top, Tex::Log_Side, Tex::Log_Side,&BlockDrawer::drawTree);
+    //Leaves
+    setBlockInfo( Blk::Leaves, Tex::Leaf, Tex::Leaf, Tex::Leaf, Tex::Leaf1,
+        Tex::Leaf, Tex::Leaf,&BlockDrawer::drawTree);
+    //Sponge
+    setBlockInfo( Blk::Sponge, Tex::Sponge, Tex::Sponge, Tex::Sponge,
+        Tex::Sponge, Tex::Sponge, Tex::Sponge);
+    //Glass
+    setBlockInfo( Blk::Glass, Tex::Glass, Tex::Glass, Tex::Glass, Tex::Glass,
+        Tex::Glass, Tex::Glass);
+    //Lapis Ore
+    setBlockInfo( Blk::LapisOre,160,160,160,160,160,160);
+    //Lapis Block
+    setBlockInfo( Blk::LapisBlock,144,144,144,144,144,144);
+    //Dispenser (*)
+    setBlockInfo( Blk::Dispenser, 45, 45, 62, 62, 45, 46,
+        &BlockDrawer::drawFaceCube);
+    //Sandstone
+    setBlockInfo( Blk::Sandstone,192,192,208,176,192,192);
+    //Note Block
     setBlockInfo( Blk::NoteBlock, 74, 74, 74, 74, 74, 74);
-        //Bed (*)
+    //Bed (*)
     setBlockInfo( Blk::Bed, Tex::BedFoot_Side,Tex::BedFoot_Side, 4,
         Tex::BedFoot_Top, Tex::BedFoot_Face,Tex::BedFoot_Face,
         &BlockDrawer::drawBed);
 
-        //Powered Rail
+    //Powered Rail
     setBlockInfo( Blk::RailPowered, Tex::Track_Off, Tex::Track_On,
         Tex::Track_Off, Tex::Track_On, Tex::Track_Off, Tex::Track_On,
         &BlockDrawer::drawTrack2);
     
-        //Detector Rail
+    //Detector Rail
     setBlockInfo( Blk::RailDetector, Tex::Track_Sensor, Tex::Track_Sensor,
         Tex::Track_Sensor, Tex::Track_Sensor, Tex::Track_Sensor,
         Tex::Track_Sensor, &BlockDrawer::drawTrack2);
 
-        //Web    
+    //Web    
     setBlockInfo( Blk::Web, Tex::Web, Tex::Web, Tex::Web, Tex::Web, Tex::Web,
         Tex::Web, &BlockDrawer::drawItem);
 
-        //Sticky Piston
+    //Sticky Piston
     setBlockInfo( Blk::StickyPiston, Tex::Piston_Side, Tex::Piston_Side,
         Tex::Piston_Side, Tex::Piston_Side, Tex::Piston_Back,
         Tex::PistonSticky_Front, &BlockDrawer::drawFaceCube);
 
-        //Tall Grass    
+    //Tall Grass    
     setBlockInfo( Blk::TallGrass, Tex::TallGrass, Tex::TallGrass,
                   Tex::TallGrass, Tex::TallGrass, Tex::TallGrass,
                   Tex::TallGrass, &BlockDrawer::drawBiomeItem);
-        //Dead Bush
+    //Dead Bush
     setBlockInfo( Blk::DeadBush, Tex::DeadBush, Tex::DeadBush,
                   Tex::DeadBush, Tex::DeadBush, Tex::DeadBush,
                   Tex::DeadBush, &BlockDrawer::drawItem);
 
-        //Piston
+    //Piston
     setBlockInfo( Blk::Piston, Tex::Piston_Side, Tex::Piston_Side,
         Tex::Piston_Side, Tex::Piston_Side, Tex::Piston_Back,
         Tex::Piston_Front, &BlockDrawer::drawFaceCube);
 
-        //PistonHead: TODO: drawPistonHead
-    setBlockInfo( Blk::Piston, Tex::Piston_Side, Tex::Piston_Side,
+    //PistonHead:     //TODO: drawPistonHead
+    setBlockInfo( Blk::PistonHead, Tex::Piston_Side, Tex::Piston_Side,
         Tex::Piston_Side, Tex::Piston_Side, Tex::Piston_Back,
         Tex::Piston_Front, &BlockDrawer::drawFaceCube);
-
     
-    //35 - 36 = Dyed wool (drawDyed will override metadata)
-    setBlockInfo( 34, 64, 64, 64, 64, 64, 64);
+    //35 = Dyed wool (drawDyed will override metadata)
+    setBlockInfo( Blk::Wool, Tex::Wool, Tex::Wool, Tex::Wool, Tex::Wool,
+        Tex::Wool, Tex::Wool,&BlockDrawer::drawDyed);
     
-    setBlockInfo( 35, 64, 64, 64, 64, 64, 64,&BlockDrawer::drawDyed);
-    
-    setBlockInfo( 36, 64, 64, 64, 64, 64, 64);
+    //TODO: draw moving block from entity information
+    setBlockInfo( Blk::PistonMoved, Tex::Blue, Tex::Blue, Tex::Blue, Tex::Blue,
+        Tex::Blue, Tex::Blue);
     
     //Flower
-    setBlockInfo( 37, 13, 13, 13, 13, 13, 13,&BlockDrawer::drawItem);
+    setBlockInfo( Blk::Daisy, Tex::Daisy, Tex::Daisy, Tex::Daisy, Tex::Daisy,
+        Tex::Daisy, Tex::Daisy,&BlockDrawer::drawItem);
     
     //Rose
-    setBlockInfo( 38, 12, 12, 12, 12, 12, 12,&BlockDrawer::drawItem);
+    setBlockInfo( Blk::Rose, Tex::Rose, Tex::Rose, Tex::Rose, Tex::Rose,
+        Tex::Rose, Tex::Rose,&BlockDrawer::drawItem);
     
     //BrownShroom
-    setBlockInfo( 39, 29, 29, 29, 29, 29, 29,&BlockDrawer::drawItem);
+    setBlockInfo( Blk::ShroomBrown, Tex::BrownShroom, Tex::BrownShroom,
+        Tex::BrownShroom, Tex::BrownShroom, Tex::BrownShroom, Tex::BrownShroom,
+        &BlockDrawer::drawItem);
     
     //RedShroom
-    setBlockInfo( 40, 28, 28, 28, 28, 28, 28,&BlockDrawer::drawItem);
-        //GoldBlock
-    setBlockInfo( 41, 23, 23, 23, 23, 23, 23);
-        //IronBlock
-    setBlockInfo( 42, 22, 22, 22, 22, 22, 22);
-    
+    setBlockInfo( Blk::ShroomRed, Tex::RedShroom, Tex::RedShroom,
+        Tex::RedShroom, Tex::RedShroom, Tex::RedShroom, Tex::RedShroom,
+        &BlockDrawer::drawItem);
+    //GoldBlock
+    setBlockInfo( Blk::GoldBlock, Tex::GoldBlock, Tex::GoldBlock,
+        Tex::GoldBlock, Tex::GoldBlock, Tex::GoldBlock, Tex::GoldBlock);
+    //IronBlock
+    setBlockInfo( Blk::IronBlock, Tex::IronBlock, Tex::IronBlock,
+        Tex::IronBlock, Tex::IronBlock, Tex::IronBlock, Tex::IronBlock);
     //DoubleStep
-    setBlockInfo( 43, 5,  5,  6,  6,  5,  5 ,&BlockDrawer::drawDoubleSlab);
+    setBlockInfo( Blk::SlabDouble, Tex::Step_Side,  Tex::Step_Side,
+        Tex::Step_Top, Tex::Step_Top, Tex::Step_Side, Tex::Step_Side,
+        &BlockDrawer::drawDoubleSlab);
     
     //Step
-    setBlockInfo( 44, 5,  5,  6,  6,  5,  5,&BlockDrawer::drawSlab);
-        //Brick
-    setBlockInfo( 45, 7,  7,  7,  7,  7,  7 );
-        //TNT
-    setBlockInfo( 46, 8,  8, 10,  9,  8,  8 );
-        //Bookshelf
-    setBlockInfo( 47, 35, 35, 4,  4,  35, 35);
-        //Mossy
-    setBlockInfo( 48, 36, 36, 16, 36, 36, 36);
-        //Obsidian
-    setBlockInfo( 49, 37, 37, 37, 37, 37, 37);
+    setBlockInfo( Blk::Slab, Tex::Step_Side,  Tex::Step_Side,
+        Tex::Step_Top, Tex::Step_Top, Tex::Step_Side, Tex::Step_Side,
+        &BlockDrawer::drawSlab);
+    //Brick
+    setBlockInfo( Blk::Bricks, Tex::Brick, Tex::Brick, Tex::Brick, Tex::Brick, 
+        Tex::Brick, Tex::Brick );
+    //TNT
+    setBlockInfo( Blk::TNT, Tex::TNT_Side, Tex::TNT_Side, Tex::TNT_Bottom,
+        Tex::TNT_Top, Tex::TNT_Side, Tex::TNT_Side );
+    //Bookshelf
+    setBlockInfo( Blk::Bookshelf, Tex::Books, Tex::Books, Tex::Wood, Tex::Wood,
+        Tex::Books, Tex::Books);
+    //Mossy
+    setBlockInfo( Blk::MossStone, Tex::CobbleMoss, Tex::CobbleMoss, Tex::Cobble,
+        Tex::CobbleMoss, Tex::CobbleMoss, Tex::CobbleMoss);
+    //Obsidian
+    setBlockInfo( Blk::Obsidian, Tex::Obsidian, Tex::Obsidian, Tex::Obsidian,
+        Tex::Obsidian, Tex::Obsidian, Tex::Obsidian);
     
     //Torch
-    setBlockInfo( 50, 80, 80, 80, 80, 80, 80,&BlockDrawer::drawTorch);
+    setBlockInfo( Blk::Torch, Tex::Torch, Tex::Torch, Tex::Torch, Tex::Torch,
+        Tex::Torch, Tex::Torch,&BlockDrawer::drawTorch);
     
-    //Fire
-    setBlockInfo( 51, 31, 31, 47, 47, 31, 31,&BlockDrawer::drawFire);
-        //Spawner
-    setBlockInfo( 52, 65, 65, 65, 65, 65, 65);
+    //Fire  //TODO: use actual fire texture
+    setBlockInfo( Blk::Fire, Tex::FireTex, Tex::FireTex, Tex::FireTex2,
+        Tex::FireTex2, Tex::FireTex, Tex::FireTex,&BlockDrawer::drawFire);
+        
+    //Spawner   //TODO: draw spinning monster from entity ID
+    setBlockInfo( Blk::Spawner, Tex::Spawner, Tex::Spawner, Tex::Spawner,
+        Tex::Spawner, Tex::Spawner, Tex::Spawner);
     
     //WoodStairs
-    setBlockInfo( 53, 4,  4,  4,  4,  4,  4, &BlockDrawer::drawStairs);
+    setBlockInfo( Blk::StairsWood, Tex::Wood, Tex::Wood, Tex::Wood, Tex::Wood,
+        Tex::Wood, Tex::Wood, &BlockDrawer::drawStairs);
     
-    //Chest (*)
-    setBlockInfo( 54, 26, 26, 25, 25, 26, 27,&BlockDrawer::drawChest);
+    //Chest (*) //TODO: use separate chest texture
+    setBlockInfo( Blk::Chest, Tex::Chest_Side, Tex::Chest_Side, Tex::Chest_Top,
+        Tex::Chest_Top, Tex::Chest_Side, Tex::Chest_Front,
+        &BlockDrawer::drawChest);
     
     //Wire (*)
-    setBlockInfo( 55,164,165,164,165,164,165,&BlockDrawer::drawWire);
-        //DiamondOre
-    setBlockInfo( 56, 50, 50, 50, 50, 50, 50);
-        //DiamondBlock
-    setBlockInfo( 57, 24, 24, 24, 24, 24, 24);
-        //Workbench
-    setBlockInfo( 58, 60, 60, 43, 43, 59, 59);
+    setBlockInfo( Blk::Wire, Tex::WireX, Tex::Wire, Tex::WireX, Tex::Wire,
+        Tex::WireX, Tex::Wire, &BlockDrawer::drawWire);
+    //DiamondOre
+    setBlockInfo( Blk::DiamondOre, Tex::DiamondOre, Tex::DiamondOre,
+        Tex::DiamondOre, Tex::DiamondOre, Tex::DiamondOre, Tex::DiamondOre);
+    //DiamondBlock
+    setBlockInfo( Blk::DiamondBlock, Tex::DiamondBlock, Tex::DiamondBlock,
+        Tex::DiamondBlock, Tex::DiamondBlock, Tex::DiamondBlock,
+        Tex::DiamondBlock);
+    //Workbench
+    setBlockInfo( Blk::Workbench, Tex::Bench_Side, Tex::Bench_Side,
+        Tex::Bench_Top, Tex::Bench_Top, Tex::Bench_Front, Tex::Bench_Front);
     
     //Crops (*)
-    setBlockInfo( 59, 88, 89, 90, 91, 93, 95, &BlockDrawer::drawCrops);
-    
-    setBlockInfo( 60, 2,  2,  2,  86, 2,  2 );    //Soil
+    setBlockInfo( Blk::Crops, Tex::Crops_1, Tex::Crops_2, Tex::Crops_3,
+        Tex::Crops_4, Tex::Crops_5, Tex::Crops_7, &BlockDrawer::drawCrops);
+    //Soil: //TODO: use metadata for wet/dry
+    setBlockInfo( Blk::Soil, Tex::Dirt, Tex::Dirt, Tex::Dirt, Tex::Soil_Wet,
+        Tex::Dirt, Tex::Dirt );
     
     //Furnace (+)
-    setBlockInfo( 61, 45, 45, 62, 62, 45, 44,&BlockDrawer::drawFaceCube);
+    setBlockInfo( Blk::Furnace, Tex::Furnace_Back, Tex::Furnace_Back,
+        Tex::Furnace_Top, Tex::Furnace_Top, Tex::Furnace_Back,
+        Tex::Furnace_Front, &BlockDrawer::drawFaceCube);
     
     //LitFurnace (+)
-    setBlockInfo( 62, 45, 45, 62, 62, 45, 61,&BlockDrawer::drawFaceCube);
+    setBlockInfo( Blk::FurnaceOn, Tex::Furnace_Back, Tex::Furnace_Back,
+        Tex::Furnace_Top, Tex::Furnace_Top, Tex::Furnace_Back,
+        Tex::FurnaceLit_Front,&BlockDrawer::drawFaceCube);
     
     //SignPost (*)
-    setBlockInfo( 63, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawSignpost);
+    setBlockInfo( Blk::Signpost, Tex::Wood, Tex::Wood, Tex::Wood, Tex::Wood,
+        Tex::Wood, Tex::Wood, &BlockDrawer::drawSignpost);
     
     //WoodDoor (*)
-    setBlockInfo( 64, 97, 81, 97, 81, 97, 81,&BlockDrawer::drawDoor);
+    setBlockInfo( Blk::DoorWood, Tex::Door_Low, Tex::Door_High, Tex::Door_Low,
+        Tex::Door_High, Tex::Door_Low, Tex::Door_High, &BlockDrawer::drawDoor);
     
     //Ladder (*)
-    setBlockInfo( 65, 83, 83, 83, 83, 83, 83, &BlockDrawer::drawWallItem);
+    setBlockInfo( Blk::Ladder, Tex::Ladder, Tex::Ladder, Tex::Ladder,
+        Tex::Ladder, Tex::Ladder, Tex::Ladder, &BlockDrawer::drawWallItem);
     
     //Track (*)
-    setBlockInfo( 66, Tex::Track, Tex::Track_Turn,
+    setBlockInfo( Blk::Track, Tex::Track, Tex::Track_Turn,
        Tex::Track, Tex::Track, Tex::Track, Tex::Track,&BlockDrawer::drawTrack);
     
-    //CobbleStairs
-    setBlockInfo( 67, 16, 16, 16, 16, 16, 16,&BlockDrawer::drawStairs);
+    //CobbleStairs:  //TODO: metadata for upside down stairs
+    setBlockInfo( Blk::StairsCobble, Tex::Cobble, Tex::Cobble, Tex::Cobble,
+        Tex::Cobble, Tex::Cobble, Tex::Cobble,&BlockDrawer::drawStairs);
     
     //WallSign (*)
-    setBlockInfo( 68, 4,  4,  4,  4,  4,  4, &BlockDrawer::drawWallSign);
+    setBlockInfo( Blk::Wallsign, Tex::Wood, Tex::Wood, Tex::Wood, Tex::Wood,
+        Tex::Wood, Tex::Wood, &BlockDrawer::drawWallSign);
     
     //Lever
-    setBlockInfo( 69, 96, 96, 96, 96, 96, 16,&BlockDrawer::drawLever);
+    setBlockInfo( Blk::Lever, Tex::Handle, Tex::Handle, Tex::Handle,
+        Tex::Handle, Tex::Handle, Tex::Cobble, &BlockDrawer::drawLever);
     
     //StonePlate
-    setBlockInfo( 70, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawFloorplate);
+    setBlockInfo( Blk::PlateStone, Tex::Stone, Tex::Stone, Tex::Stone,
+        Tex::Stone, Tex::Stone, Tex::Stone,&BlockDrawer::drawFloorplate);
     
     //IronDoor (*)
-    setBlockInfo( 71, 98, 82, 98, 82, 98, 82,&BlockDrawer::drawDoor);
+    setBlockInfo( Blk::DoorIron, 98, 82, 98, 82, 98, 82,&BlockDrawer::drawDoor);
     
     //WoodPlate
-    setBlockInfo( 72, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFloorplate);
+    setBlockInfo( Blk::PlateWood, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFloorplate);
     
-    setBlockInfo( 73, 51, 51, 51, 51, 51, 51);    //RedstoneOre
+    setBlockInfo( Blk::RedstoneOre, 51, 51, 51, 51, 51, 51);    //RedstoneOre
     
-    setBlockInfo( 74, 51, 51, 51, 51, 51, 51);    //RedstoneOreLit(*)
+    setBlockInfo( Blk::RedstoneOreOn, 51, 51, 51, 51, 51, 51);    //RedstoneOreLit(*)
     
-        //RedstoneTorch
-    setBlockInfo( 75, 115,115,115,115,115,115,&BlockDrawer::drawTorch);
-    
+    //RedstoneTorch
+    setBlockInfo( Blk::RedTorch, 115,115,115,115,115,115,&BlockDrawer::drawTorch);
+
     //RedstoneTorchLit
-    setBlockInfo( 76, 99, 99, 99, 99, 99, 99,&BlockDrawer::drawTorch);
+    setBlockInfo( Blk::RedTorchOn, 99, 99, 99, 99, 99, 99,&BlockDrawer::drawTorch);
     
     //StoneButton
-    setBlockInfo( 77, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawButton);
+    setBlockInfo( Blk::Button, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawButton);
     adjustTexture(Blk::Button , 0,  5,  0, 6, 4, 2);
 
     //SnowLayer(*)
-    setBlockInfo( 78, 66, 66, 66, 66, 66, 66,&BlockDrawer::draw4thBlock);
+    setBlockInfo( Blk::Snow, 66, 66, 66, 66, 66, 66,&BlockDrawer::draw4thBlock);
     
     //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
-    setBlockInfo( 79, 67, 67, 67, 67, 67, 67);    //Ice
+    setBlockInfo( Blk::Ice, 67, 67, 67, 67, 67, 67);    //Ice
     
-    setBlockInfo( 80, 66, 66, 66, 66, 66, 66);    //SnowBlock
+    setBlockInfo( Blk::SnowBlock, 66, 66, 66, 66, 66, 66);    //SnowBlock
     
     //Cactus
-    setBlockInfo( 81, 70, 70, 71, 69, 70, 70,&BlockDrawer::drawCactus);
+    setBlockInfo( Blk::Cactus, 70, 70, 71, 69, 70, 70,&BlockDrawer::drawCactus);
     
-    setBlockInfo( 82, 72, 72, 72, 72, 72, 72);    //Clay
+    setBlockInfo( Blk::ClayBlock, 72, 72, 72, 72, 72, 72);    //Clay
     
     //Sugarcane (*)
-    setBlockInfo( 83, 73, 73, 73, 73, 73, 73,&BlockDrawer::drawItem);
+    setBlockInfo( Blk::SugarCane, 73, 73, 73, 73, 73, 73,&BlockDrawer::drawItem);
     
-    setBlockInfo( 84, 74, 74, 43, 75, 74, 74);    //Jukebox
+    setBlockInfo( Blk::Jukebox, 74, 74, 43, 75, 74, 74);    //Jukebox
     
     //Fence (*)
-    setBlockInfo( 85, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFence);
+    setBlockInfo( Blk::Fence, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFence);
     
     //Pumpkin
-    setBlockInfo( 86, 118,118,118,102,118,119,&BlockDrawer::drawFaceCube2);
+    setBlockInfo( Blk::Pumpkin, 118,118,118,102,118,119,&BlockDrawer::drawFaceCube2);
     
-    setBlockInfo( 87, 103,103,103,103,103,103);    //Netherstone
+    setBlockInfo( Blk::Netherrack, 103,103,103,103,103,103);    //Netherstone
     
-    setBlockInfo( 88, 104,104,104,104,104,104);    //SlowSand
+    setBlockInfo( Blk::SoulSand, 104,104,104,104,104,104);    //SlowSand
     
-    setBlockInfo( 89, 105,105,105,105,105,105);    //Lightstone
+    setBlockInfo( Blk::Glowstone, 105,105,105,105,105,105);    //Lightstone
     
     //Portal
-    setBlockInfo( 90, 205,206,207,222,223,205,&BlockDrawer::drawPortal);
+    setBlockInfo( Blk::Portal, 205,206,207,222,223,205,&BlockDrawer::drawPortal);
     
     //PumpkinLit
-    setBlockInfo( 91, 118,118,118,102,118,120,&BlockDrawer::drawFaceCube2);
+    setBlockInfo( Blk::PumpkinOn, 118,118,118,102,118,120,&BlockDrawer::drawFaceCube2);
     
     //Cake block (*)
-    setBlockInfo( 92, 123,122,124,121,122,122,&BlockDrawer::drawCake);
+    setBlockInfo( Blk::Cake, 123,122,124,121,122,122,&BlockDrawer::drawCake);
     
     //Diode off (Repeater)
     setBlockInfo( Blk::Diode, Tex::Diode_Off, Tex::Diode_Off, Tex::Step_Top,
@@ -3375,7 +3472,8 @@ Normal block = 0x00: cube, dark, opaque, solid
 
     //Monster hiding in block
     setBlockInfo( Blk::Silverfish, Tex::Stone, Tex::Stone, Tex::Cobble,
-        Tex::Cobble, Tex::BrickStone, Tex::BrickStone, &BlockDrawer::drawEggBlock);
+        Tex::Cobble, Tex::BrickStone, Tex::BrickStone,
+        &BlockDrawer::drawEggBlock);
 
     //Bricks of stone
     setBlockInfo( Blk::StoneBrick, Tex::BrickStone, Tex::BrickStone,
@@ -3435,17 +3533,10 @@ Normal block = 0x00: cube, dark, opaque, solid
         Tex::BedHead_Top, Tex::BedHead_Face, Tex::BedHead_Face);    //Head
     
     //Dyed wool (256 + 35 + metadata)
-    setBlockInfo( 256 + 35, 64, 64, 64, 64, 64, 64);
-    uint8_t dyed_id;
-    for (ID = 1; ID < 8; ID++) {
-        dyed_id = 226 - (ID<<4);
-        setBlockInfo( 256 + 35 + ID, dyed_id, dyed_id, dyed_id,
-            dyed_id, dyed_id, dyed_id);    //draw cube
-    }
-    for (ID = 8; ID < 16; ID++) {
-        dyed_id = 225 - ((ID - 8)<<4);
-        setBlockInfo( 256 + 35 + ID, dyed_id, dyed_id, dyed_id,
-            dyed_id, dyed_id, dyed_id);    //draw cube
+    uint16_t metaID;
+    for (metaID = 291; metaID < 307; metaID++) {
+        setBlockInfo( metaID, Tex::Wool, Tex::Wool, Tex::Wool, Tex::Wool,
+            Tex::Wool, Tex::Wool);    //setBlockColor will assign color here
     }
     
     //Chest (256 + 54=left, 55=right, 56=left X, 57=right X)
@@ -3576,8 +3667,8 @@ bool BlockDrawer::getTexInfo(uint16_t blockID, GLfloat tx_0[6], GLfloat tx_1[6],
 }
 
 //Shortcut for getting one set of texture coordinates from texture ID
-bool BlockDrawer::getTexCoords(uint8_t blockID, face_ID faceID, GLfloat& tx_0, GLfloat& tx_1,
-                GLfloat& ty_0, GLfloat& ty_1) const
+bool BlockDrawer::getTexCoords(uint8_t blockID, face_ID faceID,
+    GLfloat& tx_0, GLfloat& tx_1, GLfloat& ty_0, GLfloat& ty_1) const
 {
     //Return sponge texture if missing texture info
     TextureInfo *tinfo = texInfo[blockInfo[blockID].textureID[faceID]];
