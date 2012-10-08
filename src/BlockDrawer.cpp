@@ -40,6 +40,12 @@
     On the x axis: A = left,    B = right
     On the y axis: C = down,    D = up
     On the z axis: E = farther, F = closer
+
+    Game directions (North, South, East, West) correspond to axes:
+    A = West (-X)
+    B = East (+X)
+    E = North (-Z)
+    F = South (+Z)
     
     We can refer to the corners of the cube by which faces they are part of.
     Each of those 3 faces will describe a different axis.  For example:
@@ -877,17 +883,20 @@ void BlockDrawer::drawBed( uint8_t blockID, uint8_t meta,
     //Direction of block depends on metadata.
     //  drawVertexBlock rotates the block depending on facing,
     //  and the vflags rotate with it!
+    //
+    //Due to the orientation of textures for the top of the bed,
+    //  we have to "turn" the block orientation clockwise
     face_ID facing;
     switch (meta & 0xB) {
         //Direction
-        case 0x0: facing = LEFT;  vflags |= 0x04; break;
-        case 0x1: facing = BACK;  vflags |= 0x80; break;
-        case 0x2: facing = RIGHT; vflags |= 0x08; break;
-        case 0x3: facing = FRONT; vflags |= 0x40; break;
-        case 0x8: facing = LEFT;  vflags |= 0x08; break;
-        case 0x9: facing = BACK;  vflags |= 0x40; break;
-        case 0xA: facing = RIGHT; vflags |= 0x04; break;
-        case 0xB: facing = FRONT; vflags |= 0x80; break;
+        case 0x0: facing = LEFT;  vflags |= 0x04; break;    //South foot
+        case 0x1: facing = BACK;  vflags |= 0x80; break;    //West foot
+        case 0x2: facing = RIGHT; vflags |= 0x08; break;    //North foot
+        case 0x3: facing = FRONT; vflags |= 0x40; break;    //East foot
+        case 0x8: facing = LEFT;  vflags |= 0x08; break;    //South head
+        case 0x9: facing = BACK;  vflags |= 0x40; break;    //West head
+        case 0xA: facing = RIGHT; vflags |= 0x04; break;    //East head
+        case 0xB: facing = FRONT; vflags |= 0x80; break;    //South head
         default:  facing = FRONT;
     }
     // facing points to right side of pillow
@@ -897,17 +906,19 @@ void BlockDrawer::drawBed( uint8_t blockID, uint8_t meta,
     if ( top_half ) {
         blockOffset++;
     }
+    //This block info has properly adjusted texture coordinates
     const BlockInfo& binfo = blockInfo[blockOffset];
 
     //Create vertices for bed half
     GLint vX[8], vY[8], vZ[8];
+    //Bed block is 16x9x16 pixels
     makeCuboidVertex(x, y, z, 16, 9, 16, vX, vY, vZ, facing);
     
-    //Draw bed half.  Always remove bottom.
+    //Draw bed half.  Always remove bottom, it will be drawn next.
     drawVertexBlock( vX, vY, vZ, binfo.tx, binfo.tx_1, binfo.ty, binfo.ty_1,
         vflags |= 0x20, facing);
-
-    //Draw the bottom, raised by 3/16
+        
+    //Draw the wood bottom, raised by 3/16
     glTexCoord2f(binfo.tx[2],binfo.ty_1[2]);
     glVertex3i( vX[0], vY[0]+3, vZ[0]);
     
@@ -971,16 +982,16 @@ void BlockDrawer::adjustTexture(uint16_t blockID,
     GLfloat (&ty_0)[6] = blockInfo[blockID].ty;
     GLfloat (&tx_1)[6] = blockInfo[blockID].tx_1;
     GLfloat (&ty_1)[6] = blockInfo[blockID].ty_1;
+
+    //  Remember, texture coordinates tx and ty have nothing
+    //  to do with vertex offsets off_x, off_y, off_z
     
     //Careful, adjust tx_1 and ty_1 before tx_0 and ty_0
-    
-    //LEFT
     tx_1[LEFT] = tx_0[LEFT] + tmr_off_z + tmr_z;
     tx_0[LEFT] = tx_0[LEFT] + tmr_off_z;
     ty_1[LEFT] = ty_0[LEFT] + tmr_off_y + tmr_y;
     ty_0[LEFT] = ty_0[LEFT] + tmr_off_y;    //Set ty_0 after ty_1
     
-    //RIGHT...
     tx_1[RIGHT] = tx_0[RIGHT] + tmr_off_z;
     tx_0[RIGHT] = tx_0[RIGHT] + tmr_off_z + tmr_z;
     ty_1[RIGHT] = ty_0[RIGHT] + tmr_off_y + tmr_y;
@@ -3212,10 +3223,14 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( Blk::Sandstone,192,192,208,176,192,192);
     //Note Block
     setBlockInfo( Blk::NoteBlock, 74, 74, 74, 74, 74, 74);
+    
     //Bed (*)
-    setBlockInfo( Blk::Bed, Tex::BedFoot_Side,Tex::BedFoot_Side, 4,
-        Tex::BedFoot_Top, Tex::BedFoot_Face,Tex::BedFoot_Face,
+    const GLint bedHeight=9;
+    setBlockInfo( Blk::Bed, Tex::BedFoot_Face,Tex::BedHead_Face, Tex::Wood,
+        Tex::BedHead_Top, Tex::BedHead_Side,Tex::BedHead_Side,
         &BlockDrawer::drawBed);
+    adjustTexture(Blk::Bed, 0, 16-bedHeight,  0, 16, bedHeight, 16);
+    //Will have "meta" blocks for bed, for head and foot
 
     //Powered Rail
     setBlockInfo( Blk::RailPowered, Tex::Track_Off, Tex::Track_On,
@@ -3396,74 +3411,112 @@ Normal block = 0x00: cube, dark, opaque, solid
         Tex::Stone, Tex::Stone, Tex::Stone,&BlockDrawer::drawFloorplate);
     
     //IronDoor (*)
-    setBlockInfo( Blk::DoorIron, 98, 82, 98, 82, 98, 82,&BlockDrawer::drawDoor);
+    setBlockInfo( Blk::DoorIron, Tex::IronDoor_Low, Tex::IronDoor_High,
+        Tex::IronDoor_Low, Tex::IronDoor_High, Tex::IronDoor_Low,
+        Tex::IronDoor_High,&BlockDrawer::drawDoor);
     
     //WoodPlate
-    setBlockInfo( Blk::PlateWood, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFloorplate);
-    
-    setBlockInfo( Blk::RedstoneOre, 51, 51, 51, 51, 51, 51);    //RedstoneOre
-    
-    setBlockInfo( Blk::RedstoneOreOn, 51, 51, 51, 51, 51, 51);    //RedstoneOreLit(*)
+    setBlockInfo( Blk::PlateWood, Tex::Wood, Tex::Wood, Tex::Wood, Tex::Wood,
+        Tex::Wood, Tex::Wood, &BlockDrawer::drawFloorplate);
+    //RedstoneOre
+    setBlockInfo( Blk::RedstoneOre, Tex::RedOre, Tex::RedOre, Tex::RedOre,
+        Tex::RedOre, Tex::RedOre, Tex::RedOre);
+    //RedstoneOreLit(*)
+    setBlockInfo( Blk::RedstoneOreOn, Tex::RedOre, Tex::RedOre, Tex::RedOre,
+        Tex::RedOre, Tex::RedOre, Tex::RedOre);
     
     //RedstoneTorch
-    setBlockInfo( Blk::RedTorch, 115,115,115,115,115,115,&BlockDrawer::drawTorch);
+    setBlockInfo( Blk::RedTorch, Tex::RedTorch_Off, Tex::RedTorch_Off,
+        Tex::RedTorch_Off, Tex::RedTorch_Off, Tex::RedTorch_Off,
+        Tex::RedTorch_Off, &BlockDrawer::drawTorch);
 
     //RedstoneTorchLit
-    setBlockInfo( Blk::RedTorchOn, 99, 99, 99, 99, 99, 99,&BlockDrawer::drawTorch);
+    setBlockInfo( Blk::RedTorchOn, Tex::RedTorch_On, Tex::RedTorch_On,
+        Tex::RedTorch_On, Tex::RedTorch_On, Tex::RedTorch_On, Tex::RedTorch_On,
+        &BlockDrawer::drawTorch);
     
     //StoneButton
-    setBlockInfo( Blk::Button, 1,  1,  1,  1,  1,  1,&BlockDrawer::drawButton);
+    setBlockInfo( Blk::Button, Tex::Stone, Tex::Stone, Tex::Stone, Tex::Stone,
+        Tex::Stone, Tex::Stone,&BlockDrawer::drawButton);
+    //Move texture offsets for 6 faces
     adjustTexture(Blk::Button , 0,  5,  0, 6, 4, 2);
 
     //SnowLayer(*)
-    setBlockInfo( Blk::Snow, 66, 66, 66, 66, 66, 66,&BlockDrawer::draw4thBlock);
-    
     //BlockID 2 (Grass) below a a SnowLayer uses texture 68 on the sides
-    setBlockInfo( Blk::Ice, 67, 67, 67, 67, 67, 67);    //Ice
+    setBlockInfo( Blk::Snow, Tex::Snow, Tex::Snow, Tex::Snow, Tex::Snow,
+        Tex::Snow, Tex::Snow, &BlockDrawer::draw4thBlock);
     
-    setBlockInfo( Blk::SnowBlock, 66, 66, 66, 66, 66, 66);    //SnowBlock
+    //Ice
+    setBlockInfo( Blk::Ice, Tex::Ice, Tex::Ice, Tex::Ice, Tex::Ice, Tex::Ice,
+        Tex::Ice);
+    //SnowBlock
+    setBlockInfo( Blk::SnowBlock, Tex::Snow, Tex::Snow, Tex::Snow, Tex::Snow,
+        Tex::Snow, Tex::Snow);
     
     //Cactus
-    setBlockInfo( Blk::Cactus, 70, 70, 71, 69, 70, 70,&BlockDrawer::drawCactus);
-    
-    setBlockInfo( Blk::ClayBlock, 72, 72, 72, 72, 72, 72);    //Clay
+    setBlockInfo( Blk::Cactus, Tex::Cactus_Side, Tex::Cactus_Side,
+        Tex::Cactus_Bottom, Tex::Cactus_Top, Tex::Cactus_Side,
+        Tex::Cactus_Side, &BlockDrawer::drawCactus);
+    //Clay
+    setBlockInfo( Blk::ClayBlock, Tex::Clay, Tex::Clay, Tex::Clay, Tex::Clay,
+        Tex::Clay, Tex::Clay);
     
     //Sugarcane (*)
-    setBlockInfo( Blk::SugarCane, 73, 73, 73, 73, 73, 73,&BlockDrawer::drawItem);
+    setBlockInfo( Blk::SugarCane, Tex::SugarCane, Tex::SugarCane,
+        Tex::SugarCane, Tex::SugarCane, Tex::SugarCane, Tex::SugarCane,
+        &BlockDrawer::drawItem);
     
-    setBlockInfo( Blk::Jukebox, 74, 74, 43, 75, 74, 74);    //Jukebox
+    //Jukebox
+    setBlockInfo( Blk::Jukebox, Tex::Jukebox_Side, Tex::Jukebox_Side,
+        Tex::Bench_Top, Tex::Jukebox_Top, Tex::Jukebox_Side, Tex::Jukebox_Side);
     
     //Fence (*)
-    setBlockInfo( Blk::Fence, 4,  4,  4,  4,  4,  4,&BlockDrawer::drawFence);
+    setBlockInfo( Blk::Fence, Tex::Wood, Tex::Wood, Tex::Wood, Tex::Wood,
+        Tex::Wood, Tex::Wood, &BlockDrawer::drawFence);
     
     //Pumpkin
-    setBlockInfo( Blk::Pumpkin, 118,118,118,102,118,119,&BlockDrawer::drawFaceCube2);
+    setBlockInfo( Blk::Pumpkin, Tex::Pumpkin_Side, Tex::Pumpkin_Side,
+        Tex::Pumpkin_Side, Tex::Pumpkin_Top, Tex::Pumpkin_Side,
+        Tex::Pumpkin_Front, &BlockDrawer::drawFaceCube2);
     
-    setBlockInfo( Blk::Netherrack, 103,103,103,103,103,103);    //Netherstone
+    //Netherstone
+    setBlockInfo( Blk::Netherrack, Tex::NetherRack, Tex::NetherRack,
+        Tex::NetherRack, Tex::NetherRack, Tex::NetherRack, Tex::NetherRack);
     
-    setBlockInfo( Blk::SoulSand, 104,104,104,104,104,104);    //SlowSand
+    //SlowSand
+    setBlockInfo( Blk::SoulSand, Tex::SoulSand, Tex::SoulSand, Tex::SoulSand,
+        Tex::SoulSand, Tex::SoulSand, Tex::SoulSand);
     
-    setBlockInfo( Blk::Glowstone, 105,105,105,105,105,105);    //Lightstone
+    //Lightstone
+    setBlockInfo( Blk::Glowstone, Tex::LightStone, Tex::LightStone,
+        Tex::LightStone, Tex::LightStone, Tex::LightStone, Tex::LightStone);
     
     //Portal
-    setBlockInfo( Blk::Portal, 205,206,207,222,223,205,&BlockDrawer::drawPortal);
+    setBlockInfo( Blk::Portal, Tex::Water, Tex::Water_2, Tex::Water_3,
+        Tex::Water_4, Tex::Water_5, Tex::Water, &BlockDrawer::drawPortal);
     
     //PumpkinLit
-    setBlockInfo( Blk::PumpkinOn, 118,118,118,102,118,120,&BlockDrawer::drawFaceCube2);
+    setBlockInfo( Blk::PumpkinOn, Tex::Pumpkin_Side, Tex::Pumpkin_Side,
+        Tex::Pumpkin_Side, Tex::Pumpkin_Top, Tex::Pumpkin_Side,
+        Tex::PumpkinLit_Front, &BlockDrawer::drawFaceCube2);
     
     //Cake block (*)
-    setBlockInfo( Blk::Cake, 123,122,124,121,122,122,&BlockDrawer::drawCake);
+    setBlockInfo( Blk::Cake, Tex::Cake_Cut, Tex::Cake_Side, Tex::Cake_Bottom,
+        Tex::Cake_Top, Tex::Cake_Side, Tex::Cake_Side, &BlockDrawer::drawCake);
     
     //Diode off (Repeater)
     setBlockInfo( Blk::Diode, Tex::Diode_Off, Tex::Diode_Off, Tex::Step_Top,
     Tex::Diode_Off, Tex::Diode_Off, Tex::Diode_Off, &BlockDrawer::drawDiode);
+    adjustTexture(Blk::Diode  , 0,  0,  0, 16,  2, 16);
     
     //Diode on (Repeater)
     setBlockInfo( Blk::DiodeOn, Tex::Diode_On, Tex::Diode_On, Tex::Step_Top,
     Tex::Diode_On, Tex::Diode_On, Tex::Diode_On, &BlockDrawer::drawDiode);    
+    adjustTexture(Blk::DiodeOn, 0,  0,  0, 16,  2, 16);
 
     //Glow Chest
-    setBlockInfo( Blk::ChestGlow, 26, 26, 25, 25, 26, 27,
+    setBlockInfo( Blk::ChestGlow, Tex::Chest_Side, Tex::Chest_Side,
+        Tex::Chest_Top, Tex::Chest_Top, Tex::Chest_Side, Tex::Chest_Front,
         &BlockDrawer::drawChest);
 
     //Trap Door (*) TODO: drawTrapDoor
@@ -3526,11 +3579,17 @@ Normal block = 0x00: cube, dark, opaque, solid
     setBlockInfo( 512 + 17, 117, 117, 21, 21, 117, 117);
     setBlockInfo( 512 + 18, 133, 133, 133, 133, 133, 133);
     
-    //Bed 
-    setBlockInfo( 256 + Blk::Bed, Tex::BedFoot_Side, Tex::BedFoot_Side, 4,
-        Tex::BedFoot_Top, Tex::BedFoot_Face, Tex::BedFoot_Face);    //foot
-    setBlockInfo( 256 + Blk::Bed + 1, Tex::BedHead_Side, Tex::BedHead_Side, 4,
-        Tex::BedHead_Top, Tex::BedHead_Face, Tex::BedHead_Face);    //Head
+    //Bed: Foot (256 + Blk::Bed), adjust texture also
+    //  Face texture slots adjusted clockwise, due to orientation of top
+    setBlockInfo( 282, Tex::BedFoot_Face, Tex::BedFoot_Face,
+        Tex::Wood, Tex::BedFoot_Top, Tex::BedFoot_Side, Tex::BedFoot_Side);
+    adjustTexture(282, 0, 16-bedHeight, 0, 16, bedHeight, 16);
+    
+    //Bed: Head ( 256 + Blk::Bed + 1 ), adjust texture also
+    //  Face texture slots adjusted clockwise, due to orientation of top
+    setBlockInfo( 283, Tex::BedHead_Face, Tex::BedHead_Face,
+        Tex::Wood, Tex::BedHead_Top, Tex::BedHead_Side, Tex::BedHead_Side);
+    adjustTexture(283, 0, 16-bedHeight, 0, 16, bedHeight, 16);
     
     //Dyed wool (256 + 35 + metadata)
     uint16_t metaID;
@@ -3627,13 +3686,6 @@ Normal block = 0x00: cube, dark, opaque, solid
     //On the z axis: E = farther, F = closer
 
     //Adjust cuboid shapes of blocks.  Needed for blocks that are not cubes.
-    adjustTexture(Blk::Diode  , 0,  0,  0, 16,  2, 16);
-    adjustTexture(Blk::DiodeOn, 0,  0,  0, 16,  2, 16);
-    
-    adjustTexture(Blk::Bed, 0,  0,  0, 16,  9, 16);
-    adjustTexture(256 + Blk::Bed, 0,  0,  0, 16,  9, 16);
-    adjustTexture(256 + 1 + Blk::Bed, 0,  0,  0, 16,  9, 16);
-
 
     return true;
 }

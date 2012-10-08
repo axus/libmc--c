@@ -123,8 +123,8 @@ void genWorld(World& world)
 
     
     //Table with cakes
-    Block workbench1 = {58, 0, 0, 0};//workbench, no metadata
-    Block cake1 = { 92, 0, 0, 0};
+    Block workbench1 = {mc__::Blk::Workbench, 0, 0, 0};//workbench, no metadata
+    Block cake1 = { mc__::Blk::Cake, 0, 0, 0};
     chunk1 = new mc__::Chunk(10, 1, 2, 17, 64, 17);    //1x1x1, location
     for (gen_X = 0; gen_X <= 10; gen_X++) {
         for (gen_Z = 0; gen_Z <= 2; gen_Z++) {
@@ -142,6 +142,36 @@ void genWorld(World& world)
     world.addMapChunk(chunk1);
     delete chunk1;
     
+    //Beds
+    chunk1 = new mc__::Chunk(3, 0, 3, 16, 64, 2);    //4x1x4
+    //Point south
+    Block bed1 = {mc__::Blk::Bed, 0x0, 0, 0};   //foot
+    Block bed2 = {mc__::Blk::Bed, 0x8, 0, 0};   //head
+    chunk1->block_array[1] = bed1;
+    chunk1->block_array[2] = bed2;
+
+    //Point west
+    bed1.metadata = 0x8|0x1;
+    bed2.metadata = 0x0|0x1;
+    chunk1->block_array[4] = bed1;
+    chunk1->block_array[8] = bed2;
+
+    //Point east
+    bed1.metadata = 0x8|0x3;
+    bed2.metadata = 0x0|0x3;
+    chunk1->block_array[7] = bed2;
+    chunk1->block_array[11] = bed1;
+
+    //Point north
+    bed1.metadata = 0x8|0x2;   
+    bed2.metadata = 0x0|0x2;
+    chunk1->block_array[13] = bed1;
+    chunk1->block_array[14] = bed2;
+
+    //Add the chunk with beds
+    world.addMapChunk(chunk1);
+    delete chunk1;
+
     //Add crops with metadata 0-7
     chunk1 = new mc__::Chunk(7, 0, 0, 4, 64, 18);   //Row of 8 crops
     Block crops = {59, 0, 0, 0};

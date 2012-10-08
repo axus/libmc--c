@@ -257,11 +257,11 @@ namespace mc__ {
             bool getTexCoords(uint8_t blockID, face_ID faceID, GLfloat& tx_0, GLfloat& tx_1,
                 GLfloat& ty_0, GLfloat& ty_1) const;
             
-            //Adjust cuboid shape of block
+            //Add offsets to textures for block ID
             void adjustTexture(uint16_t blockID,
                 GLint off_x, GLint off_y, GLint off_z,
                 GLsizei width, GLsizei height, GLsizei depth);
-            
+                
             //Assign vertices for cuboid
             void makeCuboidVertex(GLint x0, GLint y0, GLint z0,
                 GLsizei width, GLsizei height, GLsizei depth,

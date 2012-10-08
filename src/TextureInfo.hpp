@@ -89,7 +89,7 @@ namespace mc__ {
             Leaf2=132, Leaf3, BedFoot_Top, BedHead_Top, MelonSide, MelonTop,
             Cauldron_Top, Cauldron_Bot, Cake=140, Myc_Stem, Myc_Pore, Vines,
             LapisBlock=144, Wool_DarkGreen, Wool_Green, Diode_On, Glass_Side,
-            BedFoot_Side=149, BedFoot_Face, BedHead_Face, BedHead_Side,
+            BedFoot_Face, BedFoot_Side, BedHead_Side, BedHead_Face,
             LogJungle, Cauldron_Side, Cauldron_Feet, Brew_Base, Brew_Side,
             EndFrame_Top, EndFrame_Side,
             LapisOre=160, Wool_Brown, Wool_Yellow, Track_Off, WireX, Wire,
