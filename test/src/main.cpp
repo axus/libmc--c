@@ -740,6 +740,7 @@ int main(int argc, char** argv)
     
     //Sleep 5 seconds if run to max frames
     if (run_limit) {
+        cout << "Ignored frame limit: " << max_frames << endl;
         sf::sleep( sf::seconds(5));
     }
     

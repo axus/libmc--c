@@ -36,11 +36,11 @@ namespace mc__ {
         public:
         
             //Default player height
-            static const double humanHeight=1.62;
+            const double humanHeight;
         
             //Constructor with lots of defaults
             Entity(uint32_t eid, double x=0, double y=0, double z=0,
-                float YAW=0, float PITCH=0):
+                float YAW=0, float PITCH=0): humanHeight(1.62),
                 EID(eid), abs_X(x), abs_Y(y), abs_Z(z), yaw(YAW), pitch(PITCH),
                 on_ground(0), dX(0), dY(0), dZ(0), eyes_Y(y + humanHeight),
                 hitpoints(0), animation(0)

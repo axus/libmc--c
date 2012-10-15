@@ -23,9 +23,9 @@
 #define MC__GAME_HPP
 
 //libmc--
-#include <mc--/World.hpp>
-#include <mc--/Player.hpp>
-#include <mc--/Events.hpp>
+#include "World.hpp"
+#include "Player.hpp"
+#include "Events.hpp"
 
 //STL
 #include <string>

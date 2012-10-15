@@ -255,7 +255,7 @@ bool UserInterface::actions()
 {
     bool running=true;
     
-    bool chunk_received=false;
+    //bool chunk_received=false;
     
     //Process all events
     Events::Event_t event;
@@ -269,7 +269,7 @@ bool UserInterface::actions()
                 resetCamera();
                 break;
             case Events::GAME_MAPCHUNK:
-                chunk_received=true;
+                //chunk_received=true;
                 break;
             default:
                 break;

@@ -312,11 +312,11 @@ void Viewer::drawDroppedItem( uint16_t itemID )
     //To always face player, translate then rotate at camera(?)
 
     //Scale the size of the item picture, and offset up by 2,2,2
-    GLint width, height, depth;
+    GLint width, height;//, depth;
     
     width  = texmap_TILE_LENGTH / 2;   //half openGL length = 8
     height = texmap_TILE_LENGTH / 2;
-    depth  = texmap_TILE_LENGTH / 2;
+    //depth  = texmap_TILE_LENGTH / 2;
     
     //Face coordinates (in pixels)
     GLint A = -((GLint)texmap_TILE_LENGTH >> 2);  //offset 1/4 openGL length

@@ -114,7 +114,7 @@ bool MapChunk::updateVisRange(const Chunk *chunk,
 
     //Track adjacency to neighbor MapChunk
     bool adj_N[6] = { false, false, false, false, false, false};
-    bool update_N[6] = { false, false, false, false, false, false};
+    //bool update_N[6] = { false, false, false, false, false, false};
 
     //external chunk index
     uint16_t c_index=0;
@@ -163,10 +163,12 @@ bool MapChunk::updateVisRange(const Chunk *chunk,
 
         //Update visflags, get list of updated block indices
         if (updateVisFlags(index, adj_N, changes)) {
+/*
             if (adj_N[0]) { update_N[0] = true; }
             if (adj_N[1]) { update_N[1] = true; }
             if (adj_N[4]) { update_N[4] = true; }
             if (adj_N[5]) { update_N[5] = true; }
+*/
         }
     }}}
 
