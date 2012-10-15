@@ -44,6 +44,7 @@ namespace mc__ {
     // Types for mc__ namespace
     //
     
+    //TODO: enums in namespace
     // Index for face of cube or cuboid
     enum face_ID { LEFT=0, RIGHT=1, BOTTOM=2, TOP=3, BACK=4, FRONT=5, FACE_MAX};
 
@@ -74,7 +75,7 @@ namespace mc__ {
     const uint16_t texture_id_MAX = 1024;
     
     //Offsets in texInfo array for texture IDs
-    const uint16_t texture_INDEX[mc__::TEX_MAX] = { 0, 256, 512};
+    const uint16_t texture_INDEX[mc__::TEX_MAX] = { 0, 256, 512, 528, 544, 560, 578, 594, 610};
 
     //Texture map ratio:  tile:texmap length
     const float tmr = 1.0f/((float)texmap_TILES);
@@ -145,6 +146,8 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTrack( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawTrack2( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             //Cube with 3 sides same, and one "face"
             void drawFaceCube(uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
@@ -153,6 +156,8 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawChest(uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawEggBlock(uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             
             void drawFluid( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
@@ -160,11 +165,15 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFence( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawPane( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawFloorplate( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void draw4thBlock( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTree( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawShroom( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawWallSign( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
@@ -178,6 +187,10 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawItem( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawBiomeItem( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            void drawSapling( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTorch( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawTorchOffset( uint8_t blockID, GLint x, GLint y, GLint z,
@@ -190,7 +203,9 @@ namespace mc__ {
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
             void drawCrops( uint8_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;
-
+            void drawMelonStem( uint8_t blockID, uint8_t meta,
+                GLint x, GLint y, GLint z, uint8_t visflags=0) const;
+            
             //Draw using IDs higher than 256
             void drawCubeMeta( uint16_t blockID, uint8_t meta,
                 GLint x, GLint y, GLint z, uint8_t visflags=0) const;                
@@ -237,13 +252,16 @@ namespace mc__ {
             
             //Look up texture coordinates for block/other
             bool getTexInfo(uint16_t texID, GLfloat tx_0[6], GLfloat tx_1[6],
-                GLfloat ty_0[6], GLfloat ty_1[6]);
+                GLfloat ty_0[6], GLfloat ty_1[6]) const;
+            //Translate texture ID to texture coordinates
+            bool getTexCoords(uint8_t blockID, face_ID faceID, GLfloat& tx_0, GLfloat& tx_1,
+                GLfloat& ty_0, GLfloat& ty_1) const;
             
-            //Adjust cuboid shape of block
+            //Add offsets to textures for block ID
             void adjustTexture(uint16_t blockID,
                 GLint off_x, GLint off_y, GLint off_z,
                 GLsizei width, GLsizei height, GLsizei depth);
-            
+                
             //Assign vertices for cuboid
             void makeCuboidVertex(GLint x0, GLint y0, GLint z0,
                 GLsizei width, GLsizei height, GLsizei depth,

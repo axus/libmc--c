@@ -32,6 +32,7 @@
 //SFML
 #include <SFML/Graphics.hpp>
 #include <SFML/System.hpp>
+#include <SFML/Window/Keyboard.hpp>
 
 //STL
 #include <iostream>
@@ -59,7 +60,8 @@ namespace mc__ {
                 mc__::Events& ev, bool dbg=false);
             ~UserInterface();
             
-            bool init();
+            //bool init();
+            void setFramerateLimit(int max_frames);
             
             //Get input events and draw the game to App window
             bool run();
@@ -72,6 +74,9 @@ namespace mc__ {
             
             //Mouse sensitivity
             float mouseSensitivity;
+            
+            //Elapsed time
+            sf::Clock gameClock;
 
         protected:
         
@@ -80,7 +85,7 @@ namespace mc__ {
             
             //Process keys typed
             bool handleKeys();
-            virtual void customHandleKey(sf::Key::Code);
+            virtual void customHandleKey(sf::Keyboard::Key);
             
             //Process mouse movement
             bool handleMouse();
@@ -89,7 +94,7 @@ namespace mc__ {
             void setDebug();
 
             //SFML
-            sf::WindowSettings Settings;
+            sf::ContextSettings Settings;
             sf::RenderWindow App;
 
             //mc--
@@ -123,17 +128,17 @@ namespace mc__ {
             int mouse_press_Y[sf::Mouse::ButtonCount];
             
             //Remember keyboard key state
-            bool key_held[sf::Key::Count];
+            bool key_held[sf::Keyboard::Key::KeyCount];
             
             //Remember order keys were typed in
-            sf::Key::Code key_buffer[1024];
+            sf::Keyboard::Key key_buffer[1024];
             size_t keys_typed;
             
             //Frame counter and status message
             bool showStatus;
             size_t frames_elapsed;
-            float totalFrameTime;
-            sf::String status_string;
+            //float totalFrameTime;
+            sf::Text status_string;
 
     };
 }

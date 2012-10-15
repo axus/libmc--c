@@ -118,12 +118,6 @@ namespace mc__ {
             uint32_t zipped_length;
             uint8_t *zipped;
             
-            //Useful block info
-            static const uint8_t maxBlockID=96;
-            static const bool isOpaque[];
-            static const bool isCube[]; //item = !cube
-            static const char *Name[];  //block name
-            static const bool isLogic[];//Used in redstone circuit
     };
 }
 

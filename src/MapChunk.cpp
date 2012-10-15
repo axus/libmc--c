@@ -2,7 +2,7 @@
   mc__::MapChunk
   16x128x16 complete Chunk, with visibility data
   
-  Copyright 2010 - 2011 axus
+  Copyright 2010 - 2012 axus
 
     libmc--c is free software: you can redistribute it and/or modify
     it under the terms of the GNU Lesser General Public License as
@@ -204,8 +204,8 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
     uint8_t my_flags = visflags[index];
     
     //Determine opacity and cubicity from blockID
-    bool opaque = Chunk::isOpaque[blockID];
-    bool cube = Chunk::isCube[blockID];
+    bool opaque = Blk::isOpaque[blockID];
+    bool cube = Blk::isCube[blockID];
 
     //Air is invisible
     if (blockID == 0) {
@@ -295,8 +295,8 @@ bool MapChunk::updateVisFlags( uint16_t index, bool adj_N[6],
         thisMask = (0x80 >> i);
         
         //Get neigbhor opacity/cubity        
-        bool n_opaque = Chunk::isOpaque[blockid_n];
-        bool n_cube = Chunk::isCube[blockid_n];
+        bool n_opaque = Blk::isOpaque[blockid_n];
+        bool n_cube = Blk::isCube[blockid_n];
 
         //My default flags depend on if neighbor is opaque        
         if (n_opaque) {

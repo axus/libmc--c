@@ -2,10 +2,12 @@
 
 BIN         = libmc--c.a
 SRCFILES    = Events.cpp Chunk.cpp MapChunk.cpp World.cpp Viewer.cpp \
-BlockDrawer.cpp Mobiles.cpp Player.cpp Item.cpp TextureInfo.cpp
+    BlockDrawer.cpp Mobiles.cpp Player.cpp Item.cpp TextureInfo.cpp Block.cpp \
+    Game.cpp
+    
 HEADERS     = Events.hpp Chunk.hpp MapChunk.hpp World.hpp Viewer.hpp \
-BlockDrawer.hpp Mobiles.hpp Player.hpp Item.hpp TextureInfo.hpp \
-Entity.hpp Block.hpp
+    BlockDrawer.hpp Mobiles.hpp Player.hpp Item.hpp TextureInfo.hpp \
+    Entity.hpp Block.hpp Game.hpp
 
 LIBS        = -L/usr/local/lib -lGL -lGLU -lIL -lz
 INCLUDES    = -I/usr/local/include

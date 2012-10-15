@@ -68,13 +68,13 @@ UserInterface::UserInterface(
     mouselooking(false), toggle_mouselook(false), //Start with mouselook off
     center_X(UI_width/2), center_Y(UI_height/2),  //Center in middle of window
     keys_typed(0),                                //Empty keypress buffer
-    showStatus(true), frames_elapsed(0), totalFrameTime(0) //FPS
+    showStatus(true), frames_elapsed(0)/*, totalFrameTime(0)*/ //FPS
 {
 
     //TODO: Init window settings from configuration file
 
     //Enable vsync
-    //App.UseVerticalSync(true);
+    //App.useVerticalSync(true);
 
     //Start with no mouse buttons pressed and click position centered
     int i;
@@ -85,18 +85,18 @@ UserInterface::UserInterface(
     }
     
     //Start with no keys held
-    for (i = 0; i < sf::Key::Count; i++) {
+    for (i = 0; i < sf::Keyboard::KeyCount; i++) {
         key_held[i]=false;
     }
 
     //Set initial status message
-    status_string.SetText("libmc--c test program");
-    status_string.SetSize(20);
-    status_string.Move(10.f, 10.f);
+    status_string.setString("libmc--c test program");
+    status_string.setCharacterSize(20);
+    status_string.move(10.f, 10.f);
 
     //Get texture
     texture_files[TEX_TERRAIN] = string("terrain.png");  //block textures
-    texture_files[TEX_ITEM] = string("items.png");       //item icons
+    texture_files[TEX_ITEM] = string("gui/items.png");       //item icons
     texture_files[TEX_SIGN] = string("item/sign.png");   //signpost texture
 
     //Load textures   //TODO: configurable
@@ -106,29 +106,35 @@ UserInterface::UserInterface(
     resetCamera();
 
     //Reset cursor to center
-    App.SetCursorPosition( center_X, center_Y);
+    sf::Mouse::setPosition( sf::Vector2<int>(center_X, center_Y), App );
     last_X = center_X;
     last_Y = center_Y;
     toggle_mouselook=true;
     
     //Turn off key repeat
-    App.EnableKeyRepeat(false);
+    App.setKeyRepeatEnabled(false);
 
     // Do you want to live forever?
-    //App.PreserveOpenGLStates(true);
+    //App.preserveOpenGLStates(true);
 
-    App.SetActive();
+    App.setActive();
 
     //Clear the window
     viewer.clear();
 
-    App.Display();
+    App.display();
 }
 
 //Close UI
 UserInterface::~UserInterface()
 {
-    App.ShowMouseCursor(true);
+    App.setMouseCursorVisible(true);
+}
+
+//Prevent running too fast
+void UserInterface::setFramerateLimit(int max_frames)
+{
+    App.setFramerateLimit(max_frames);
 }
 
 //Handle game and SFML events, draw game
@@ -140,10 +146,10 @@ bool UserInterface::run()
     Running = actions();
 
     //Set window
-    App.SetActive();
+    App.setActive();
 
     //Check SFML events  
-    while (App.GetEvent(lastEvent))
+    while (App.pollEvent(lastEvent))    //Do I want App.waitEvent(lastEvent) instead??
     {
         if (!handleSfEvent(lastEvent)) {
             //Stop running when Esc is pressed
@@ -155,9 +161,9 @@ bool UserInterface::run()
     //Handle mouselook toggle
     if (toggle_mouselook) {
         mouselooking=!mouselooking;
-        App.ShowMouseCursor(!mouselooking);
+        App.setMouseCursorVisible(!mouselooking);
         if (mouselooking) {
-            App.SetCursorPosition( center_X, center_Y);
+            sf::Mouse::setPosition( sf::Vector2<int>(center_X, center_Y), App);
             last_X = mouse_X = center_X;
             last_Y = mouse_Y = center_Y;
         }
@@ -166,25 +172,25 @@ bool UserInterface::run()
     
     //Handle keyboard state (they might be pressed down)
     if (!handleKeys()) { Running = false; }
-
+    
     //Handle mouse position changes (if there were inputs)
     if (inputs && handleMouse()) {;}
-
+    
     //Increment item spin
     viewer.item_rotation += 0.5;
     if (viewer.item_rotation >= 360) {
         viewer.item_rotation = 0.0;
     }
-
+    
     //Clear the view
     viewer.clear();
-
+    
     //Redraw the entities, items, etc.
     viewer.drawMobiles(mobiles);
     
     //Redraw the world (terrain)
     viewer.drawWorld(world);    
-
+    
     //2D overlay
     //Update status display
     if (showStatus) {
@@ -201,7 +207,7 @@ bool UserInterface::run()
         glDisable(GL_DEPTH_TEST);
 
         //Draw status text to screen
-        App.Draw(status_string);
+        App.draw(status_string);
         
         //Reload PROJECTION, MODEL_VIEW states
         glMatrixMode(GL_PROJECTION); glPopMatrix();
@@ -209,12 +215,10 @@ bool UserInterface::run()
         
         //Reload attribute bits
         glPopAttrib( );
-        
     }
-
     
     //Update the window
-    App.Display();
+    App.display();
 
     return Running;
 }
@@ -228,7 +232,7 @@ void UserInterface::setDebug()
     frames_elapsed++;
     
     //Track longest frame draw time
-    totalFrameTime += App.GetFrameTime();
+    //totalFrameTime += App.GetFrameTime();
     
     //Every 100 frames, update the status message
     if (frames_elapsed > 100) {
@@ -237,12 +241,12 @@ void UserInterface::setDebug()
         char buf[128];
         sprintf(buf, "%3u chunks  Camera @ %3.3f, %3.3f, %3.3f   FPS %3.3f",
             (unsigned int)viewer.glListMap.size(), viewer.cam_X/pixratio,
-            viewer.cam_Y/pixratio, viewer.cam_Z/pixratio, 100.f / totalFrameTime);
-        status_string.SetText(buf);
+            viewer.cam_Y/pixratio, viewer.cam_Z/pixratio, 100 / gameClock.getElapsedTime().asSeconds());
+        status_string.setString(buf);
         
         //Start over
         frames_elapsed = 0;
-        totalFrameTime = 0;
+        //totalFrameTime = 0;
     }
 }
 
@@ -307,31 +311,31 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
     
     //Input state variables?
     
-    switch( Event.Type) {
+    switch( Event.type) {
       
         //Window resize (DISABLED) or restore
         case sf::Event::Resized:
-            viewer.viewport(0,0, Event.Size.Width, Event.Size.Height);
+            viewer.viewport(0,0, Event.size.width, Event.size.height);
             break;
         
         //Key pressed
         case sf::Event::KeyPressed:
         
             //If key was pressed for the first time
-            if (key_held[Event.Key.Code] == false) {
+            if (key_held[Event.key.code] == false) {
                 
                 //Add to keypress buffer
-                key_buffer[keys_typed++] = Event.Key.Code;
+                key_buffer[keys_typed++] = Event.key.code;
             }
-            key_held[Event.Key.Code] = true;
+            key_held[Event.key.code] = true;
             break;
             
         //Key released
         case sf::Event::KeyReleased:
-            key_held[Event.Key.Code] = false;
+            key_held[Event.key.code] = false;
             
             //DEBUG
-            if (Event.Key.Code == sf::Key::Quote) {
+            if (Event.key.code == sf::Keyboard::Key::Quote) {
                 int view_X = (int)viewer.cam_X >> 4;
                 int view_Y = (int)viewer.cam_Y >> 4;
                 int view_Z = (int)viewer.cam_Z >> 4;
@@ -344,7 +348,7 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         //Mousewheel scroll
         case sf::Event::MouseWheelMoved: {
             //Change camera position (in increments of 16).
-            viewer.move(0,0,Event.MouseWheel.Delta << 4);   //Zoom forward
+            viewer.move(0,0,Event.mouseWheel.delta << 4);   //Zoom forward
             break;
         }
         
@@ -352,12 +356,12 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         case sf::Event::MouseButtonPressed:
         
             //Remember where this mouse button was pressed
-            mouse_press[Event.MouseButton.Button] = true;
-            mouse_press_X[Event.MouseButton.Button] = mouse_X;
-            mouse_press_Y[Event.MouseButton.Button] = mouse_Y;
+            mouse_press[Event.mouseButton.button] = true;
+            mouse_press_X[Event.mouseButton.button] = mouse_X;
+            mouse_press_Y[Event.mouseButton.button] = mouse_Y;
             
             //Handle button pressed
-            switch( Event.MouseButton.Button ) {
+            switch( Event.mouseButton.button ) {
                 case sf::Mouse::Right:
                     //Toggle mouselook
                     toggle_mouselook=true;
@@ -376,7 +380,7 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
         case sf::Event::MouseButtonReleased:
         
             //Forget that this mouse button was pressed
-            mouse_press[Event.MouseButton.Button] = false;
+            mouse_press[Event.mouseButton.button] = false;
             break;
         
         //Mouse move
@@ -384,11 +388,11 @@ bool UserInterface::handleSfEvent( const sf::Event& Event )
 
             //Update virtual mouse pointer, depending on mouselook
             if (mouselooking) {
-                mouse_X += (Event.MouseMove.X - center_X);
-                mouse_Y += (Event.MouseMove.Y - center_Y);
+                mouse_X += (Event.mouseMove.x - center_X);
+                mouse_Y += (Event.mouseMove.y - center_Y);
             } else {
-                mouse_X = Event.MouseMove.X;
-                mouse_Y = Event.MouseMove.Y;
+                mouse_X = Event.mouseMove.x;
+                mouse_Y = Event.mouseMove.y;
             }
             
             break;
@@ -485,7 +489,7 @@ bool UserInterface::handleMouse()
     
     //Trap real mouse pointer in center of window if mouselooking
     if (mouselooking) {
-        App.SetCursorPosition( center_X, center_Y);
+        sf::Mouse::setPosition( sf::Vector2<int>(center_X, center_Y), App);
         
         //Remember last mouse position for mouselooking
         last_X = mouse_X;
@@ -512,64 +516,72 @@ bool UserInterface::handleKeys()
         //  if (inputState == PLAYING)
         switch ( key_buffer[index]) {
             //Quit
-            case sf::Key::Escape:
+            case sf::Keyboard::Key::Escape:
                 result = false;
                 break;
             //Move Up
-            case sf::Key::PageUp:
-            case sf::Key::Space:
+            case sf::Keyboard::Key::PageUp:
+            case sf::Keyboard::Key::Space:
                 movement[MOVE_UP] = true;
                 break;
             //Move Down
-            case sf::Key::Home:
-            case sf::Key::X:
+            case sf::Keyboard::Key::Home:
+            case sf::Keyboard::Key::X:
                 movement[MOVE_DOWN] = true;
                 break;
             //Move left
-            case sf::Key::Left:
-            case sf::Key::A:
+            case sf::Keyboard::Key::Left:
+            case sf::Keyboard::Key::A:
                 movement[MOVE_LEFT] = true;
                 break;
             //Move right
-            case sf::Key::Right:
-            case sf::Key::D:
+            case sf::Keyboard::Key::Right:
+            case sf::Keyboard::Key::D:
                 movement[MOVE_RIGHT] = true;
                 break;
             //Zoom in
-            case sf::Key::W:
-            case sf::Key::Up:
+            case sf::Keyboard::Key::W:
+            case sf::Keyboard::Key::Up:
                 movement[MOVE_FORWARD] = true;
                 break;
             //Zoom out
-            case sf::Key::Down:
-            case sf::Key::S:
+            case sf::Keyboard::Key::Down:
+            case sf::Keyboard::Key::S:
                 movement[MOVE_BACK] = true;
                 break;                        
             //Turn left
-            case sf::Key::Q:
-            case sf::Key::End:
+            case sf::Keyboard::Key::Q:
+            case sf::Keyboard::Key::End:
                 movement[TURN_LEFT] = true;
                 break;
             //Turn right
-            case sf::Key::E:
-            case sf::Key::PageDown:
+            case sf::Keyboard::Key::E:
+            case sf::Keyboard::Key::PageDown:
                 movement[TURN_RIGHT] = true;
                 break;
             //Return camera to player
-            case sf::Key::Back:
+            case sf::Keyboard::Key::BackSpace:
                 resetCamera();
                 break;
             //Toggle status display
-            case sf::Key::F3:
+            case sf::Keyboard::Key::F3:
                 showStatus = !showStatus;
                 break;
+            //Debug current location
+            case sf::Keyboard::Key::Num2:
+                cout << "Cam @ " << ((int)viewer.cam_X >> 4)
+                    << ", " << ((int)viewer.cam_Y >> 4)
+                    << ", " << ((int)viewer.cam_Z >> 4)
+                    << " Player @ " << player.abs_X
+                    << ", " << player.abs_Y << ", " << player.abs_Z << endl;
+                break;
             //Write block information near camera
-            case sf::Key::F4:
+            case sf::Keyboard::Key::F4:
                 viewer.saveLocalBlocks(world);
                 cout << "Wrote nearby block info to local_blocks.txt" << endl;
                 break;
             //Redraw everything
-            case sf::Key::F5:
+            case sf::Keyboard::Key::F5:
                 cout << "Recalculating visibility of all chunks" << endl;
                 world.redraw();
                 break;
@@ -582,61 +594,61 @@ bool UserInterface::handleKeys()
     
     //Game actions in response to held keys
     //Moving up
-    if (key_held[sf::Key::PageUp] || key_held[sf::Key::Space]) {
+    if (key_held[sf::Keyboard::Key::PageUp] || key_held[sf::Keyboard::Key::Space]) {
         movement[MOVE_UP] = true;
     }
 
     //Moving down
-    if (key_held[sf::Key::Home] || key_held[sf::Key::X]) {
+    if (key_held[sf::Keyboard::Key::Home] || key_held[sf::Keyboard::Key::X]) {
         movement[MOVE_DOWN] = true;
     }
     
     //Moving left
-    if (key_held[sf::Key::Left] || key_held[sf::Key::A]) {
+    if (key_held[sf::Keyboard::Key::Left] || key_held[sf::Keyboard::Key::A]) {
         movement[MOVE_LEFT] = true;
     }
 
     //Moving right
-    if (key_held[sf::Key::Right] || key_held[sf::Key::D]) {
+    if (key_held[sf::Keyboard::Key::Right] || key_held[sf::Keyboard::Key::D]) {
         movement[MOVE_RIGHT] = true;
     }
 
     //Moving forward
-    if (key_held[sf::Key::W] || key_held[sf::Key::Up]) {
+    if (key_held[sf::Keyboard::Key::W] || key_held[sf::Keyboard::Key::Up]) {
         movement[MOVE_FORWARD] = true;
     }
     
     //Moving back
-    if (key_held[sf::Key::S] || key_held[sf::Key::Down]) {
+    if (key_held[sf::Keyboard::Key::S] || key_held[sf::Keyboard::Key::Down]) {
         movement[MOVE_BACK] = true;
     }
 
     //Turning left
-    if (key_held[sf::Key::Q] || key_held[sf::Key::End]) {
+    if (key_held[sf::Keyboard::Key::Q] || key_held[sf::Keyboard::Key::End]) {
         movement[TURN_LEFT] = true;
     }
     
     //Turning right
-    if (key_held[sf::Key::E] || key_held[sf::Key::PageDown]) {
+    if (key_held[sf::Keyboard::Key::E] || key_held[sf::Keyboard::Key::PageDown]) {
         movement[TURN_RIGHT] = true;
     }
     
     //Change red color in tree leaves
-    if (key_held[sf::Key::R]) {
+    if (key_held[sf::Keyboard::Key::R]) {
         viewer.leaf_color[0] += 2;
     }
     //Change green color in tree leaves
-    if (key_held[sf::Key::G]) {
+    if (key_held[sf::Keyboard::Key::G]) {
         viewer.leaf_color[1] += 2;
     }
     //Change blue color in tree leaves
-    if (key_held[sf::Key::B]) {
+    if (key_held[sf::Keyboard::Key::B]) {
         viewer.leaf_color[2] += 2;
     }
 
     //Movement speed, changes if Shift key is held
     GLfloat moveRate = 4.0;
-    if (key_held[sf::Key::LShift] || key_held[sf::Key::RShift]) {
+    if (key_held[sf::Keyboard::Key::LShift] || key_held[sf::Keyboard::Key::RShift]) {
         moveRate = 2.0;
     }
 
@@ -670,18 +682,18 @@ bool UserInterface::handleKeys()
 }
 
 //Additional key responses.  Override this if you don't want to rewrite
-void UserInterface::customHandleKey(sf::Key::Code keycode)
+void UserInterface::customHandleKey(sf::Keyboard::Key keycode)
 {
     switch (keycode) {
-        case sf::Key::Tilde:
+        case sf::Keyboard::Key::Tilde:
             //Write chunk data to files
             viewer.saveChunks(world);
             break;
-        case sf::Key::BackSlash:
+        case sf::Keyboard::Key::BackSlash:
             //Print chunk information to stdout
             viewer.printChunks(world);
             break;
-        case sf::Key::J:
+        case sf::Keyboard::Key::J:
         {
             //Drop inventory item to world
             mc__::InvItem& item = player.inventory[player.held_slot];
